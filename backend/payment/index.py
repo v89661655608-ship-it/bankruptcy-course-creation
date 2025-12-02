@@ -340,18 +340,80 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
                 amount=amount_value
             )
             
-            if chat_token_data:
-                print(f"[WEBHOOK] External chat token received: {chat_token_data['token']}, saving to DB")
+            if chat_token_data and chat_token_data.get('token'):
+                token = chat_token_data['token']
+                chat_url = chat_token_data.get('chat_url', 'https://chat-bankrot.ru')
+                expires_at = chat_token_data.get('expires_at')
+                expires_date = expires_at.strftime('%d.%m.%Y') if isinstance(expires_at, datetime) else expires_at
+                
+                print(f"[WEBHOOK] ✅ Token received from webhook: {token[:20]}...")
+                
                 save_external_chat_token(
                     user_id=int(user_id),
                     user_email=user['email'],
-                    token=chat_token_data['token'],
-                    expires_at=chat_token_data['expires_at'],
+                    token=token,
+                    expires_at=expires_at,
                     product_type=current_product_type
                 )
+                
+                # КРИТИЧНО: Отправляем email с токеном доступа к чату
+                try:
+                    smtp_host = os.environ.get('SMTP_HOST', 'smtp.yandex.ru')
+                    smtp_port = int(os.environ.get('SMTP_PORT', 465))
+                    smtp_email = os.environ.get('SMTP_USER', 'bankrotkurs@yandex.ru')
+                    smtp_password = os.environ.get('SMTP_PASSWORD')
+                    
+                    if smtp_password:
+                        msg = MIMEMultipart()
+                        msg['From'] = smtp_email
+                        msg['To'] = user['email']
+                        msg['Subject'] = 'Доступ к закрытому чату "Банкротство физических лиц"'
+                        
+                        email_body = f"""Здравствуйте, {user['full_name']}!
+
+Спасибо за покупку комбо-пакета!
+
+Ваш доступ к закрытому чату активирован до {expires_date}.
+
+🔑 Ваш персональный токен доступа:
+{token}
+
+📱 Ссылка на чат:
+{chat_url}
+
+Инструкция по входу:
+1. Перейдите по ссылке: {chat_url}
+2. Нажмите "Войти с токеном"
+3. Вставьте ваш токен доступа
+4. Готово! Вы в чате
+
+Важно:
+- Сохраните этот токен - он понадобится для входа
+- Токен действителен до {expires_date}
+- Не передавайте токен другим людям
+
+По всем вопросам пишите на bankrotkurs@yandex.ru
+
+С уважением,
+Команда курса "Банкротство физических лиц"
+Валентина Голосова"""
+                        
+                        msg.attach(MIMEText(email_body, 'plain', 'utf-8'))
+                        
+                        with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+                            server.login(smtp_email, smtp_password)
+                            server.send_message(msg)
+                        
+                        print(f"[WEBHOOK] ✅ Email с токеном чата отправлен на {user['email']}")
+                    else:
+                        print(f"[WEBHOOK] ⚠️ SMTP_PASSWORD не настроен, email не отправлен")
+                except Exception as email_error:
+                    print(f"[WEBHOOK] ❌ Ошибка отправки email с токеном: {email_error}")
+                    import traceback
+                    print(f"[WEBHOOK] Traceback: {traceback.format_exc()}")
             else:
-                print(f"[WEBHOOK] ERROR: Failed to get token from external system (chat-bankrot.ru)")
-                print(f"[WEBHOOK] User will NOT receive chat access token!")
+                print(f"[WEBHOOK] ⚠️ Webhook не вернул токен! Ответ: {chat_token_data}")
+                print(f"[WEBHOOK] ERROR: User will NOT receive chat access token!")
         
         if current_product_type in ['course', 'combo']:
             print(f"[WEBHOOK] Sending course credentials to {user['email']}")
@@ -792,68 +854,10 @@ def register_in_chat_system(email: str, amount: float):
             if token and expires_at_str:
                 from datetime import datetime
                 expires_at = datetime.fromisoformat(expires_at_str.replace('Z', '+00:00'))
+                chat_url = response_data.get('chat_url', f'https://chat-bankrot.ru/?token={token}')
                 print(f"[CHAT_WEBHOOK] Successfully registered {email} in chat, token: {token}")
                 
-                # Отправляем email с токеном доступа к чату
-                try:
-                    smtp_host = os.environ.get('SMTP_HOST', 'smtp.yandex.ru')
-                    smtp_port = int(os.environ.get('SMTP_PORT', 465))
-                    smtp_email = os.environ.get('SMTP_USER', 'bankrotkurs@yandex.ru')
-                    smtp_password = os.environ.get('SMTP_PASSWORD')
-                    
-                    if smtp_password:
-                        msg = MIMEMultipart()
-                        msg['From'] = smtp_email
-                        msg['To'] = email
-                        msg['Subject'] = 'Доступ к закрытому чату "Банкротство физических лиц"'
-                        
-                        chat_url = response_data.get('chat_url', f'https://chat-bankrot.ru/?token={token}')
-                        expires_date = expires_at.strftime('%d.%m.%Y')
-                        
-                        email_body = f"""Здравствуйте!
-
-Спасибо за покупку комбо-пакета!
-
-Ваш доступ к закрытому чату активирован до {expires_date}.
-
-🔑 Ваш персональный токен доступа:
-{token}
-
-📱 Ссылка на чат:
-{chat_url}
-
-Инструкция по входу:
-1. Перейдите по ссылке: {chat_url}
-2. Нажмите "Войти с токеном"
-3. Вставьте ваш токен доступа
-4. Готово! Вы в чате
-
-Важно:
-- Сохраните этот токен - он понадобится для входа
-- Токен действителен до {expires_date}
-- Не передавайте токен другим людям
-
-По всем вопросам пишите на bankrotkurs@yandex.ru
-
-С уважением,
-Команда курса "Банкротство физических лиц"
-Валентина Голосова"""
-                        
-                        msg.attach(MIMEText(email_body, 'plain', 'utf-8'))
-                        
-                        with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
-                            server.login(smtp_email, smtp_password)
-                            server.send_message(msg)
-                        
-                        print(f"[CHAT_WEBHOOK] ✅ Email с токеном чата отправлен на {email}")
-                    else:
-                        print(f"[CHAT_WEBHOOK] ⚠️ SMTP_PASSWORD не настроен, email не отправлен")
-                except Exception as email_error:
-                    import traceback
-                    print(f"[CHAT_WEBHOOK] ⚠️ Ошибка отправки email: {email_error}")
-                    print(f"[CHAT_WEBHOOK] Traceback: {traceback.format_exc()}")
-                
-                return {'token': token, 'expires_at': expires_at}
+                return {'token': token, 'expires_at': expires_at, 'chat_url': chat_url}
             else:
                 print(f"[CHAT_WEBHOOK] Response missing token or expires_at")
                 return None
