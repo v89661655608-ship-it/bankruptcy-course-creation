@@ -28,7 +28,7 @@
         "X-Api-Key": "bankrot_combo_secret_2025"
       },
       "body": {
-        "email": "test@example.com",
+        "email": "v89661655608@gmail.com",
         "amount": 4999
       },
       "expectedStatus": 200,

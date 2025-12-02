@@ -766,8 +766,8 @@ def send_admin_notification(user_email: str, user_name: str, amount: float, paym
         pass
 
 def register_in_chat_system(email: str, amount: float):
-    '''Call external bankrot chat webhook to register combo purchase and get token'''
-    webhook_url = 'https://functions.poehali.dev/66d27e23-0698-4d41-8708-9c7e34148508?action=register'
+    '''Call internal chat-notify webhook to register combo purchase and get token'''
+    webhook_url = 'https://functions.poehali.dev/002375a1-91ef-4076-9822-c2342937fb42?action=register'
     api_key = 'bankrot_combo_secret_2025'
     
     try:

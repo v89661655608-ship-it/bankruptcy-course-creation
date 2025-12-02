@@ -214,24 +214,59 @@ def handle_register(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str,
                 'body': json.dumps({'success': False, 'error': 'Email is required'})
             }
         
-        token = generate_custom_token(email, amount)
-        expires_at = datetime.utcnow() + timedelta(days=30)
-        expires_at_iso = expires_at.strftime('%Y-%m-%dT%H:%M:%SZ')
-        chat_url = f'https://chat-bankrot.ru/?token={token}'
-        
-        print(f"[CHAT-REGISTER] Generated token for {email}: {token}")
-        print(f"[CHAT-REGISTER] Amount: {amount}, Expires: {expires_at_iso}")
-        
-        return {
-            'statusCode': 200,
-            'headers': headers,
-            'body': json.dumps({
-                'success': True,
-                'token': token,
-                'chat_url': chat_url,
-                'expires_at': expires_at_iso
-            })
-        }
+        conn = get_db_connection()
+        try:
+            cur = conn.cursor()
+            
+            cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+            user_row = cur.fetchone()
+            
+            if not user_row:
+                print(f"[CHAT-REGISTER] User not found for email: {email}")
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'success': False, 'error': 'User not found'})
+                }
+            
+            user_id = user_row['id']
+            
+            token = generate_custom_token(email, amount)
+            expires_at = datetime.utcnow() + timedelta(days=30)
+            expires_at_iso = expires_at.strftime('%Y-%m-%dT%H:%M:%SZ')
+            chat_url = f'https://chat-bankrot.ru/?token={token}'
+            
+            print(f"[CHAT-REGISTER] Generated token for {email}: {token}")
+            print(f"[CHAT-REGISTER] Amount: {amount}, Expires: {expires_at_iso}")
+            
+            cur.execute(
+                """INSERT INTO chat_tokens 
+                (user_id, email, token, product_type, expires_at) 
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (token) DO UPDATE SET
+                    user_id = EXCLUDED.user_id,
+                    email = EXCLUDED.email,
+                    expires_at = EXCLUDED.expires_at""",
+                (user_id, email, token, 'combo', expires_at)
+            )
+            conn.commit()
+            
+            print(f"[CHAT-REGISTER] Token saved to DB for user_id={user_id}")
+            
+            cur.close()
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': True,
+                    'token': token,
+                    'chat_url': chat_url,
+                    'expires_at': expires_at_iso
+                })
+            }
+        finally:
+            conn.close()
     
     except Exception as e:
         import traceback
