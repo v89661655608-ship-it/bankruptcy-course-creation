@@ -334,8 +334,8 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
         
         chat_token_data = None
         if current_product_type in ['chat', 'combo']:
-            print(f"[WEBHOOK] Getting token from pool")
-            chat_token_data = get_token_from_pool(
+            print(f"[WEBHOOK] Creating chat token via API")
+            chat_token_data = create_chat_token_via_api(
                 user_id=int(user_id),
                 user_email=user['email'],
                 product_type=current_product_type
@@ -560,62 +560,73 @@ def check_payment_status(event: Dict[str, Any], headers: Dict[str, str]) -> Dict
 
 
 
-def get_token_from_pool(user_id: int, user_email: str, product_type: str):
-    '''Get free token from pool and mark as used'''
-    conn = get_db_connection()
+def create_chat_token_via_api(user_id: int, user_email: str, product_type: str):
+    '''Create chat token via chat-tokens API endpoint'''
     try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            # Берём первый свободный токен и сразу помечаем его как использованный
-            cur.execute(
-                """UPDATE chat_tokens_pool 
-                SET is_used = true,
-                    used_by_user_id = %s,
-                    used_by_email = %s,
-                    used_at = CURRENT_TIMESTAMP
-                WHERE id = (
-                    SELECT id FROM chat_tokens_pool 
-                    WHERE is_used = false 
-                    ORDER BY id 
-                    LIMIT 1
-                    FOR UPDATE SKIP LOCKED
-                )
-                RETURNING token, expires_at""",
-                (user_id, user_email)
-            )
-            
-            result = cur.fetchone()
-            if not result:
-                print(f"[TOKEN_POOL] ⚠️ WARNING: No free tokens available in pool!")
-                return None
-            
-            token = result['token']
-            expires_at = result['expires_at']
-            
-            # Сохраняем токен также в таблицу chat_tokens для совместимости
-            cur.execute(
-                """INSERT INTO chat_tokens 
-                (user_id, email, token, product_type, expires_at) 
-                VALUES (%s, %s, %s, %s, %s)
-                ON CONFLICT (token) DO UPDATE SET
-                    user_id = EXCLUDED.user_id,
-                    email = EXCLUDED.email,
-                    product_type = EXCLUDED.product_type,
-                    expires_at = EXCLUDED.expires_at""",
-                (user_id, user_email, token, product_type, expires_at)
-            )
-            
-            conn.commit()
-            print(f"[TOKEN_POOL] ✅ Token assigned to user {user_id} ({user_email}): {token[:20]}...")
-            
-            return {'token': token, 'expires_at': expires_at, 'chat_url': 'https://chat-bankrot.ru'}
-            
+        api_key = os.environ.get('CHAT_API_KEY')
+        if not api_key:
+            print(f"[CHAT_TOKEN_API] ❌ CHAT_API_KEY not configured")
+            return None
+        
+        days = 30 if product_type == 'chat' else 180
+        
+        func2url_path = '/var/task/func2url.json'
+        chat_tokens_url = None
+        
+        try:
+            with open(func2url_path, 'r') as f:
+                func2url = json.load(f)
+                chat_tokens_url = func2url.get('chat-tokens')
+        except Exception as e:
+            print(f"[CHAT_TOKEN_API] ⚠️ Could not read func2url.json: {e}")
+        
+        if not chat_tokens_url:
+            chat_tokens_url = 'https://functions.poehali.dev/4be60127-67a0-45a6-8940-0e875ec618ac'
+            print(f"[CHAT_TOKEN_API] Using fallback URL")
+        
+        response = requests.post(
+            chat_tokens_url,
+            json={
+                'user_id': user_id,
+                'email': user_email,
+                'product_type': product_type,
+                'days': days
+            },
+            headers={
+                'X-Api-Key': api_key,
+                'Content-Type': 'application/json'
+            },
+            timeout=10
+        )
+        
+        print(f"[CHAT_TOKEN_API] Response status: {response.status_code}")
+        
+        if response.status_code != 201:
+            print(f"[CHAT_TOKEN_API] ❌ Failed to create token: {response.text}")
+            return None
+        
+        result = response.json()
+        token = result.get('token')
+        expires_at_str = result.get('expires_at')
+        
+        if expires_at_str:
+            expires_at = datetime.fromisoformat(expires_at_str.replace('Z', '+00:00'))
+        else:
+            expires_at = datetime.now() + timedelta(days=days)
+        
+        print(f"[CHAT_TOKEN_API] ✅ Token created: {token[:20]}...")
+        
+        return {
+            'token': token,
+            'expires_at': expires_at,
+            'chat_url': 'https://chat-bankrot.ru'
+        }
+        
     except Exception as e:
-        print(f"[TOKEN_POOL] ❌ Error getting token from pool: {e}")
+        print(f"[CHAT_TOKEN_API] ❌ Error creating token via API: {e}")
         import traceback
-        print(f"[TOKEN_POOL] Traceback: {traceback.format_exc()}")
+        print(f"[CHAT_TOKEN_API] Traceback: {traceback.format_exc()}")
         return None
-    finally:
-        conn.close()
 
 def save_external_chat_token(user_id: int, user_email: str, token: str, expires_at: datetime, product_type: str):
     '''Save external chat token (from bankrot-kurs.ru) to our database'''

@@ -1,0 +1,49 @@
+{
+  "tests": [
+    {
+      "name": "Create new chat token",
+      "method": "POST",
+      "headers": {
+        "X-Api-Key": "${CHAT_API_KEY}"
+      },
+      "body": {
+        "user_id": 999,
+        "email": "test@example.com",
+        "product_type": "chat",
+        "days": 30
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "id": "number",
+        "token": "string",
+        "expires_at": "string",
+        "email": "test@example.com"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Verify existing token",
+      "method": "GET",
+      "path": "/?token=39d889c2-5461-45a5-8fb9-3cbcb6be5a44",
+      "headers": {
+        "X-Api-Key": "${CHAT_API_KEY}"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "valid": "boolean",
+        "email": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Unauthorized access without API key",
+      "method": "GET",
+      "path": "/?token=test",
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

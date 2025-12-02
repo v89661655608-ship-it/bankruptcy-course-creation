@@ -20,7 +20,6 @@ import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import ChatAccess from "./pages/ChatAccess";
-import TestEmail from "./pages/TestEmail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,7 +40,6 @@ const App = () => (
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/chat-access" element={<ChatAccess />} />
-            <Route path="/test-email" element={<TestEmail />} />
             <Route path="/oferta" element={<Oferta />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/personal-data-consent" element={<PersonalDataConsent />} />
