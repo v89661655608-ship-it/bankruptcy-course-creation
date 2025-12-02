@@ -279,22 +279,22 @@ def handle_generate_tokens(method: str, event: Dict[str, Any], headers: Dict[str
         count = body.get('count', 1000)
         
         expires_date = datetime.now() + timedelta(days=365)
-        generated_count = 0
         
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            for i in range(count):
-                unique_string = f"{time.time()}{i}{os.urandom(16).hex()}"
-                token = f"CHAT_{hashlib.sha256(unique_string.encode()).hexdigest()[:32].upper()}"
-                
-                try:
-                    cur.execute(
-                        "INSERT INTO chat_tokens_pool (token, expires_at) VALUES (%s, %s)",
-                        (token, expires_date)
-                    )
-                    generated_count += 1
-                except psycopg2.IntegrityError:
-                    continue
-            
+        tokens_batch = []
+        base_time = time.time()
+        for i in range(count):
+            unique_string = f"{base_time}{i}{os.urandom(8).hex()}"
+            token = f"CHAT_{hashlib.sha256(unique_string.encode()).hexdigest()[:32].upper()}"
+            tokens_batch.append((token, expires_date))
+        
+        with conn.cursor() as cur:
+            psycopg2.extras.execute_values(
+                cur,
+                "INSERT INTO chat_tokens_pool (token, expires_at) VALUES %s ON CONFLICT (token) DO NOTHING",
+                tokens_batch,
+                page_size=500
+            )
+            generated_count = cur.rowcount
             conn.commit()
         
         return {
