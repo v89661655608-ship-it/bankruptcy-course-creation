@@ -73,6 +73,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return handle_materials(method, event, headers_out)
         elif resource == 'generate-tokens':
             return handle_generate_tokens(method, event, headers_out)
+        elif resource == 'export-tokens':
+            return handle_export_tokens(method, event, headers_out)
         else:
             return {
                 'statusCode': 404,
@@ -306,6 +308,52 @@ def handle_generate_tokens(method: str, event: Dict[str, Any], headers: Dict[str
                 'expires_at': expires_date.isoformat()
             })
         }
+        
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': str(e)})
+        }
+    finally:
+        conn.close()
+
+def handle_export_tokens(method: str, event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
+    '''Export all unused tokens from chat_tokens_pool'''
+    
+    if method != 'GET':
+        return {
+            'statusCode': 405,
+            'headers': headers,
+            'body': json.dumps({'error': 'Method not allowed'})
+        }
+    
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            # Получаем ВСЕ неиспользованные токены без ограничений
+            cur.execute("""
+                SELECT token 
+                FROM chat_tokens_pool 
+                WHERE is_used = false 
+                ORDER BY created_at DESC
+            """)
+            
+            # Получаем все строки
+            rows = cur.fetchall()
+            
+            # Извлекаем только токены из кортежей
+            tokens = [row[0] for row in rows]
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': True,
+                    'count': len(tokens),
+                    'tokens': tokens
+                })
+            }
         
     except Exception as e:
         return {
