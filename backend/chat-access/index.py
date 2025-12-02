@@ -40,11 +40,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         if method == 'GET':
             return get_clients(event, headers)
         elif method == 'POST':
-            body_data = json.loads(event.get('body', '{}'))
-            if 'token' in body_data:
-                return verify_token(event, headers)
-            else:
-                return add_client(event, headers)
+            return add_client(event, headers)
         elif method == 'PUT':
             return update_client(event, headers)
         elif method == 'DELETE':
@@ -263,87 +259,3 @@ def delete_client(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, A
             'body': json.dumps({'error': 'Client not found'})
         }
 
-def verify_token(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
-    body_data = json.loads(event.get('body', '{}'))
-    token = body_data.get('token', '').strip().upper()
-    
-    if not token or not token.startswith('CHAT_'):
-        return {
-            'statusCode': 400,
-            'headers': headers,
-            'isBase64Encoded': False,
-            'body': json.dumps({
-                'valid': False,
-                'access_granted': False,
-                'error': 'Неверный формат токена'
-            })
-        }
-    
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    cur.execute("""
-        SELECT id, is_used, used_by_email, expires_at 
-        FROM chat_tokens_pool 
-        WHERE token = %s
-    """, (token,))
-    
-    token_data = cur.fetchone()
-    
-    if not token_data:
-        cur.close()
-        conn.close()
-        return {
-            'statusCode': 200,
-            'headers': headers,
-            'isBase64Encoded': False,
-            'body': json.dumps({
-                'valid': False,
-                'access_granted': False,
-                'error': 'Токен не найден'
-            })
-        }
-    
-    if token_data['is_used']:
-        cur.close()
-        conn.close()
-        return {
-            'statusCode': 200,
-            'headers': headers,
-            'isBase64Encoded': False,
-            'body': json.dumps({
-                'valid': True,
-                'access_granted': True,
-                'user_email': token_data['used_by_email'],
-                'access_end': token_data['expires_at'].isoformat() if token_data['expires_at'] else None
-            })
-        }
-    
-    expires_at = token_data['expires_at']
-    if expires_at and datetime.now() > expires_at:
-        cur.close()
-        conn.close()
-        return {
-            'statusCode': 200,
-            'headers': headers,
-            'isBase64Encoded': False,
-            'body': json.dumps({
-                'valid': False,
-                'access_granted': False,
-                'error': 'Срок действия токена истёк'
-            })
-        }
-    
-    cur.close()
-    conn.close()
-    
-    return {
-        'statusCode': 200,
-        'headers': headers,
-        'isBase64Encoded': False,
-        'body': json.dumps({
-            'valid': True,
-            'access_granted': True,
-            'access_end': expires_at.isoformat() if expires_at else None
-        })
-    }
