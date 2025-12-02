@@ -20,6 +20,8 @@ import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import ChatAccess from "./pages/ChatAccess";
+import ChatLogin from "./pages/ChatLogin";
+import Chat from "./pages/Chat";
 import TestEmail from "./pages/TestEmail";
 import NotFound from "./pages/NotFound";
 
@@ -41,6 +43,8 @@ const App = () => (
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/chat-access" element={<ChatAccess />} />
+            <Route path="/chat-login" element={<ChatLogin />} />
+            <Route path="/chat" element={<Chat />} />
             <Route path="/test-email" element={<TestEmail />} />
             <Route path="/oferta" element={<Oferta />} />
             <Route path="/privacy" element={<Privacy />} />
