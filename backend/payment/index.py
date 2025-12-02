@@ -334,10 +334,11 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
         
         chat_token_data = None
         if current_product_type in ['chat', 'combo']:
-            print(f"[WEBHOOK] Getting token from external chat system (chat-bankrot.ru)")
-            chat_token_data = register_in_chat_system(
-                email=user['email'],
-                amount=amount_value
+            print(f"[WEBHOOK] Getting token from pool")
+            chat_token_data = get_token_from_pool(
+                user_id=int(user_id),
+                user_email=user['email'],
+                product_type=current_product_type
             )
             
             if chat_token_data and chat_token_data.get('token'):
@@ -346,15 +347,7 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
                 expires_at = chat_token_data.get('expires_at')
                 expires_date = expires_at.strftime('%d.%m.%Y') if isinstance(expires_at, datetime) else expires_at
                 
-                print(f"[WEBHOOK] ✅ Token received from webhook: {token[:20]}...")
-                
-                save_external_chat_token(
-                    user_id=int(user_id),
-                    user_email=user['email'],
-                    token=token,
-                    expires_at=expires_at,
-                    product_type=current_product_type
-                )
+                print(f"[WEBHOOK] ✅ Token assigned from pool: {token[:20]}...")
                 
                 # КРИТИЧНО: Отправляем email с токеном доступа к чату
                 try:
@@ -412,7 +405,7 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
                     import traceback
                     print(f"[WEBHOOK] Traceback: {traceback.format_exc()}")
             else:
-                print(f"[WEBHOOK] ⚠️ Webhook не вернул токен! Ответ: {chat_token_data}")
+                print(f"[WEBHOOK] ⚠️ No token available in pool! Response: {chat_token_data}")
                 print(f"[WEBHOOK] ERROR: User will NOT receive chat access token!")
         
         if current_product_type in ['course', 'combo']:
@@ -566,6 +559,63 @@ def check_payment_status(event: Dict[str, Any], headers: Dict[str, str]) -> Dict
     }
 
 
+
+def get_token_from_pool(user_id: int, user_email: str, product_type: str):
+    '''Get free token from pool and mark as used'''
+    conn = get_db_connection()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # Берём первый свободный токен и сразу помечаем его как использованный
+            cur.execute(
+                """UPDATE chat_tokens_pool 
+                SET is_used = true,
+                    used_by_user_id = %s,
+                    used_by_email = %s,
+                    used_at = CURRENT_TIMESTAMP
+                WHERE id = (
+                    SELECT id FROM chat_tokens_pool 
+                    WHERE is_used = false 
+                    ORDER BY id 
+                    LIMIT 1
+                    FOR UPDATE SKIP LOCKED
+                )
+                RETURNING token, expires_at""",
+                (user_id, user_email)
+            )
+            
+            result = cur.fetchone()
+            if not result:
+                print(f"[TOKEN_POOL] ⚠️ WARNING: No free tokens available in pool!")
+                return None
+            
+            token = result['token']
+            expires_at = result['expires_at']
+            
+            # Сохраняем токен также в таблицу chat_tokens для совместимости
+            cur.execute(
+                """INSERT INTO chat_tokens 
+                (user_id, email, token, product_type, expires_at) 
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (token) DO UPDATE SET
+                    user_id = EXCLUDED.user_id,
+                    email = EXCLUDED.email,
+                    product_type = EXCLUDED.product_type,
+                    expires_at = EXCLUDED.expires_at""",
+                (user_id, user_email, token, product_type, expires_at)
+            )
+            
+            conn.commit()
+            print(f"[TOKEN_POOL] ✅ Token assigned to user {user_id} ({user_email}): {token[:20]}...")
+            
+            return {'token': token, 'expires_at': expires_at, 'chat_url': 'https://chat-bankrot.ru'}
+            
+    except Exception as e:
+        print(f"[TOKEN_POOL] ❌ Error getting token from pool: {e}")
+        import traceback
+        print(f"[TOKEN_POOL] Traceback: {traceback.format_exc()}")
+        return None
+    finally:
+        conn.close()
 
 def save_external_chat_token(user_id: int, user_email: str, token: str, expires_at: datetime, product_type: str):
     '''Save external chat token (from bankrot-kurs.ru) to our database'''

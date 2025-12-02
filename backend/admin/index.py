@@ -71,6 +71,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return handle_lessons(method, event, headers_out)
         elif resource == 'materials':
             return handle_materials(method, event, headers_out)
+        elif resource == 'generate-tokens':
+            return handle_generate_tokens(method, event, headers_out)
         else:
             return {
                 'statusCode': 404,
@@ -255,5 +257,61 @@ def handle_materials(method: str, event: Dict[str, Any], headers: Dict[str, str]
         
         return {'statusCode': 405, 'headers': headers, 'body': json.dumps({'error': 'Method not allowed'})}
     
+    finally:
+        conn.close()
+
+def handle_generate_tokens(method: str, event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
+    '''Generate 1000 tokens for chat access pool'''
+    import hashlib
+    import time
+    from datetime import datetime, timedelta
+    
+    if method != 'POST':
+        return {
+            'statusCode': 405,
+            'headers': headers,
+            'body': json.dumps({'error': 'Method not allowed'})
+        }
+    
+    conn = get_db_connection()
+    try:
+        body = json.loads(event.get('body', '{}'))
+        count = body.get('count', 1000)
+        
+        expires_date = datetime.now() + timedelta(days=365)
+        generated_count = 0
+        
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            for i in range(count):
+                unique_string = f"{time.time()}{i}{os.urandom(16).hex()}"
+                token = f"CHAT_{hashlib.sha256(unique_string.encode()).hexdigest()[:32].upper()}"
+                
+                try:
+                    cur.execute(
+                        "INSERT INTO chat_tokens_pool (token, expires_at) VALUES (%s, %s)",
+                        (token, expires_date)
+                    )
+                    generated_count += 1
+                except psycopg2.IntegrityError:
+                    continue
+            
+            conn.commit()
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'success': True,
+                'generated': generated_count,
+                'expires_at': expires_date.isoformat()
+            })
+        }
+        
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': str(e)})
+        }
     finally:
         conn.close()
