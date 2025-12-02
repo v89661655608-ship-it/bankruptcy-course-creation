@@ -797,7 +797,7 @@ def register_in_chat_system(email: str, amount: float):
                 # Отправляем email с токеном доступа к чату
                 try:
                     smtp_host = os.environ.get('SMTP_HOST', 'smtp.yandex.ru')
-                    smtp_port = int(os.environ.get('SMTP_PORT', 587))
+                    smtp_port = int(os.environ.get('SMTP_PORT', 465))
                     smtp_email = os.environ.get('SMTP_USER', 'bankrotkurs@yandex.ru')
                     smtp_password = os.environ.get('SMTP_PASSWORD')
                     
@@ -805,7 +805,7 @@ def register_in_chat_system(email: str, amount: float):
                         msg = MIMEMultipart()
                         msg['From'] = smtp_email
                         msg['To'] = email
-                        msg['Subject'] = 'Доступ к закрытому чату курса "Банкротство физических лиц"'
+                        msg['Subject'] = 'Доступ к закрытому чату "Банкротство физических лиц"'
                         
                         chat_url = response_data.get('chat_url', f'https://chat-bankrot.ru/?token={token}')
                         expires_date = expires_at.strftime('%d.%m.%Y')
@@ -841,8 +841,7 @@ def register_in_chat_system(email: str, amount: float):
                         
                         msg.attach(MIMEText(email_body, 'plain', 'utf-8'))
                         
-                        with smtplib.SMTP(smtp_host, smtp_port) as server:
-                            server.starttls()
+                        with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
                             server.login(smtp_email, smtp_password)
                             server.send_message(msg)
                         
@@ -850,7 +849,9 @@ def register_in_chat_system(email: str, amount: float):
                     else:
                         print(f"[CHAT_WEBHOOK] ⚠️ SMTP_PASSWORD не настроен, email не отправлен")
                 except Exception as email_error:
+                    import traceback
                     print(f"[CHAT_WEBHOOK] ⚠️ Ошибка отправки email: {email_error}")
+                    print(f"[CHAT_WEBHOOK] Traceback: {traceback.format_exc()}")
                 
                 return {'token': token, 'expires_at': expires_at}
             else:
