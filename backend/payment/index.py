@@ -570,7 +570,7 @@ def create_chat_token_via_api(user_id: int, user_email: str, product_type: str):
             print(f"[CHAT_TOKEN_API] ❌ CHAT_API_KEY not configured")
             return None
         
-        days = 30 if product_type == 'chat' else 180
+        days = 30 if product_type in ['chat', 'combo'] else 180
         
         func2url_path = '/var/task/func2url.json'
         chat_tokens_url = None
