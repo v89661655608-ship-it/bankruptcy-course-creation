@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import Icon from "@/components/ui/icon";
 
 export default function PricingSection() {
+  const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 59 });
 
   useEffect(() => {
@@ -82,7 +84,7 @@ export default function PricingSection() {
               <Button 
                 size="lg" 
                 className="w-full bg-accent hover:bg-accent/90 text-primary font-bold py-6"
-                onClick={() => window.location.href = '/payment-form?product=course'}
+                onClick={() => navigate('/payment-form?product=course')}
               >
                 Купить курс
               </Button>
@@ -149,7 +151,7 @@ export default function PricingSection() {
               <Button 
                 size="lg" 
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6"
-                onClick={() => window.location.href = '/payment-form?product=combo'}
+                onClick={() => navigate('/payment-form?product=combo')}
               >
                 Купить комбо со скидкой
               </Button>
@@ -213,7 +215,7 @@ export default function PricingSection() {
               <Button 
                 size="lg" 
                 className="w-full bg-accent hover:bg-accent/90 text-primary font-bold py-6"
-                onClick={() => window.location.href = '/payment-form?product=chat'}
+                onClick={() => navigate('/payment-form?product=chat')}
               >
                 Купить доступ к чату
               </Button>
