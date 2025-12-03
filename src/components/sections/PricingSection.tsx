@@ -82,7 +82,7 @@ export default function PricingSection() {
               <Button 
                 size="lg" 
                 className="w-full bg-accent hover:bg-accent/90 text-primary font-bold py-6"
-                onClick={() => window.location.href = '/payment/form?product=course'}
+                onClick={() => window.location.href = '/payment-form?product=course'}
               >
                 Купить курс
               </Button>
@@ -149,7 +149,7 @@ export default function PricingSection() {
               <Button 
                 size="lg" 
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6"
-                onClick={() => window.location.href = '/payment/form?product=combo'}
+                onClick={() => window.location.href = '/payment-form?product=combo'}
               >
                 Купить комбо со скидкой
               </Button>
@@ -213,7 +213,7 @@ export default function PricingSection() {
               <Button 
                 size="lg" 
                 className="w-full bg-accent hover:bg-accent/90 text-primary font-bold py-6"
-                onClick={() => window.location.href = '/payment/form?product=chat'}
+                onClick={() => window.location.href = '/payment-form?product=chat'}
               >
                 Купить доступ к чату
               </Button>

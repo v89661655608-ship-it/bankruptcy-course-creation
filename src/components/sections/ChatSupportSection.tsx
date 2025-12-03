@@ -82,7 +82,7 @@ export default function ChatSupportSection({ user }: ChatSupportSectionProps) {
 
               <div className="text-3xl font-bold text-primary mb-2">3 999 ₽</div>
               <p className="text-sm text-muted-foreground mb-4">за месяц доступа</p>
-              <Button onClick={() => navigate('/payment/form?product=chat')} className="w-full bg-accent hover:bg-accent/90 text-primary">
+              <Button onClick={() => navigate('/payment-form?product=chat')} className="w-full bg-accent hover:bg-accent/90 text-primary">
                 Купить доступ
               </Button>
             </CardContent>
