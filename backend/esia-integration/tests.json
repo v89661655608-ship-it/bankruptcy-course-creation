@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "ESIA auth without code",
+      "method": "POST",
+      "body": {},
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "ESIA auth with code (test mode)",
+      "method": "POST",
+      "body": {
+        "authCode": "test_code_12345"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "data": {
+          "fullName": "string",
+          "inn": "string"
+        }
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -29,6 +29,14 @@ export default function DashboardHeader({ user, onLogout }: DashboardHeaderProps
           </div>
           
           <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate('/document-constructor')}
+            >
+              <Icon name="FileText" size={16} className="mr-2" />
+              Конструктор документов
+            </Button>
             <Button variant="ghost" size="sm" onClick={onLogout}>
               <Icon name="LogOut" size={16} className="mr-2" />
               Выйти

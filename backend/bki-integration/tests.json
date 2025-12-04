@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "BKI without consent",
+      "method": "POST",
+      "body": {
+        "subjectCode": "TEST123"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "BKI with consent (test mode)",
+      "method": "POST",
+      "body": {
+        "subjectCode": "TEST123",
+        "consent": true
+      },
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
+    }
+  ]
+}

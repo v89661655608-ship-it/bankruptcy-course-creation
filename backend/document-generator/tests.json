@@ -1,0 +1,46 @@
+{
+  "tests": [
+    {
+      "name": "Generate document without data",
+      "method": "POST",
+      "body": {},
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Generate bankruptcy application",
+      "method": "POST",
+      "body": {
+        "personalData": {
+          "fullName": "Иванов Иван Иванович",
+          "inn": "123456789012",
+          "passport": {
+            "series": "4509",
+            "number": "123456"
+          }
+        },
+        "creditData": {
+          "totalDebt": 1000000,
+          "creditors": [
+            {
+              "name": "ПАО Сбербанк",
+              "inn": "7707083893"
+            }
+          ]
+        }
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "document": {
+          "text": "string",
+          "fileName": "string"
+        }
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
