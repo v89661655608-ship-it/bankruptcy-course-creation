@@ -1102,32 +1102,68 @@ def generate_property_list_document(
     doc.add_paragraph()
     
     # Заголовок
-    title = doc.add_heading("ОПИСЬ\nимущества гражданина", level=1)
+    title = doc.add_heading("Опись имущества гражданина", level=1)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     for run in title.runs:
         run.font.size = Pt(14)
         run.font.bold = True
     
-    # Информация о гражданине
-    p_citizen = doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # Таблица с информацией о гражданине
+    info_table = doc.add_table(rows=14, cols=2)
+    info_table.style = 'Table Grid'
+    
+    # Заголовок таблицы
+    info_header = info_table.rows[0].cells
+    info_header[0].merge(info_header[1])
+    info_header[0].text = "Информация о гражданине"
+    info_header[0].paragraphs[0].runs[0].font.bold = True
+    info_header[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Извлекаем данные
     full_name = personal.get('fullName', '_________________________')
-    inn = personal.get('inn', '_________________________')
-    snils = personal.get('snils', '_________________________')
+    full_name_parts = full_name.split()
+    surname = full_name_parts[0] if len(full_name_parts) > 0 else 'обязательно'
+    name = full_name_parts[1] if len(full_name_parts) > 1 else 'обязательно'
+    patronymic = full_name_parts[2] if len(full_name_parts) > 2 else 'при наличии'
+    
+    birth_date = personal.get('birthDate', 'обязательно')
+    birth_place = personal.get('birthPlace', 'обязательно')
+    snils = personal.get('snils', 'обязательно')
+    inn = personal.get('inn', 'при наличии')
     
     passport = personal.get('passport', {})
-    passport_series = passport.get('series', '__')
-    passport_number = passport.get('number', '______')
-    passport_issued_by = passport.get('issuedBy', '_________________________')
-    passport_issue_date = passport.get('issueDate', '__.__.____')
+    passport_series = passport.get('series', 'обязательно')
+    passport_number = passport.get('number', 'обязательно')
     
     registration = personal.get('registration', {})
-    address = registration.get('address', '_________________________')
+    address = registration.get('address', 'обязательно')
     
-    p_citizen.add_run(f"Гражданин: {full_name}\n")
-    p_citizen.add_run(f"ИНН: {inn}\n")
-    p_citizen.add_run(f"СНИЛС: {snils}\n")
-    p_citizen.add_run(f"Паспорт: серия {passport_series} номер {passport_number}, выдан {passport_issued_by} {passport_issue_date}\n")
-    p_citizen.add_run(f"Адрес регистрации: {address}")
+    # Заполняем строки таблицы
+    rows_data = [
+        ('фамилия', surname),
+        ('имя', name),
+        ('отчество', patronymic),
+        ('в случае изменения фамилии, имени, отчества указать прежние фамилии, имена, отчества', 'обязательно'),
+        ('дата рождения', birth_date),
+        ('место рождения', birth_place),
+        ('СНИЛС', snils),
+        ('ИНН', inn),
+        ('документ, удостоверяющий личность', ''),
+        ('вид документа', 'обязательно'),
+        ('серия (при наличии) и номер', 'обязательно'),
+        ('адрес регистрации по месту жительства в Российской Федерации*', ''),
+        ('субъект Российской Федерации', 'обязательно'),
+    ]
+    
+    for idx, (label, value) in enumerate(rows_data, 1):
+        row = info_table.rows[idx].cells
+        row[0].text = label
+        row[1].text = value
+        row[0].paragraphs[0].runs[0].font.size = Pt(9)
+        if row[1].text:
+            row[1].paragraphs[0].runs[0].font.size = Pt(9)
     
     doc.add_paragraph()
     
@@ -1135,187 +1171,210 @@ def generate_property_list_document(
     section1_heading = doc.add_paragraph()
     section1_heading.add_run("I. Недвижимое имущество").bold = True
     
-    table1 = doc.add_table(rows=1, cols=7)
+    table1 = doc.add_table(rows=2, cols=6)
     table1.style = 'Table Grid'
     
-    # Заголовки таблицы недвижимости
-    headers1 = table1.rows[0].cells
-    headers1[0].text = "№ п/п"
-    headers1[1].text = "Вид и наименование имущества"
-    headers1[2].text = "Вид собственности"
-    headers1[3].text = "Местонахождение (адрес)"
-    headers1[4].text = "Площадь (кв. м)"
-    headers1[5].text = "Основание приобретения и стоимость"
-    headers1[6].text = "Сведения о залоге и залогодержателе"
+    # Первая строка заголовков
+    headers1_row1 = table1.rows[0].cells
+    headers1_row1[0].text = "№ п/п"
+    headers1_row1[1].text = "Вид и наименование имущества"
+    headers1_row1[2].text = "Вид собственности¹"
+    headers1_row1[3].text = "Местонахождение (адрес)"
+    headers1_row1[4].text = "Площадь (кв. м)"
+    headers1_row1[5].text = "Сведения о залоге и залогодержателе ¹"
+    
+    # Вторая строка (подзаголовки) - оставляем пустой для большинства колонок
+    headers1_row2 = table1.rows[1].cells
+    
+    # Объединяем ячейки для колонок без подзаголовков
+    for idx in [0, 1, 2, 3, 4, 5]:
+        headers1_row1[idx].merge(headers1_row2[idx])
     
     # Форматирование заголовков
-    for cell in headers1:
+    for cell in headers1_row1:
         cell.paragraphs[0].runs[0].font.bold = True
         cell.paragraphs[0].runs[0].font.size = Pt(9)
         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
     
-    # Заполнение данными о недвижимости
+    # Добавляем данные о недвижимости (или пустую строку)
     real_estate = property.get('realEstate', []) if property else []
-    
-    if real_estate:
-        for idx, item in enumerate(real_estate, 1):
-            row = table1.add_row().cells
-            row[0].text = str(idx)
-            row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-            
-            item_type = item.get('type', 'недвижимость')
-            row[1].text = item_type
-            
-            row[2].text = "Индивидуальная"
-            
-            item_address = item.get('address', 'не указано')
-            row[3].text = item_address
-            
-            area = item.get('area', 0)
-            land_area = item.get('landArea', 0)
-            if land_area:
-                row[4].text = f"Дом: {area}\nУчасток: {land_area}"
-            else:
-                row[4].text = str(area)
-            
-            cadastral = item.get('cadastralNumber', 'не указано')
-            value = format_number(item.get('value', 0))
-            row[5].text = f"Кадастровый номер: {cadastral}\nСтоимость: {value} руб."
-            
-            if item.get('isSoleResidence', False):
-                row[6].text = "Единственное жилье, не подлежит реализации"
-            else:
-                row[6].text = "Не обременено"
-            
-            # Форматирование ячеек
-            for cell in row:
-                cell.paragraphs[0].runs[0].font.size = Pt(9)
-    else:
-        row = table1.add_row().cells
-        row[0].text = "-"
-        row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-        row[1].text = "Недвижимое имущество отсутствует"
-        row[2].text = "-"
-        row[3].text = "-"
-        row[4].text = "-"
-        row[5].text = "-"
-        row[6].text = "-"
+    if not real_estate:
+        # Добавляем пустую строку если нет данных
+        empty_row = table1.add_row().cells
+        empty_row[0].text = ""
+        empty_row[1].text = ""
+        empty_row[2].text = ""
+        empty_row[3].text = ""
+        empty_row[4].text = ""
+        empty_row[5].text = ""
     
     doc.add_paragraph()
     
-    # II. Транспортные средства
+    # II. Движимое имущество
     section2_heading = doc.add_paragraph()
-    section2_heading.add_run("II. Транспортные средства").bold = True
+    section2_heading.add_run("II. Движимое имущество").bold = True
     
-    table2 = doc.add_table(rows=1, cols=7)
+    table2 = doc.add_table(rows=2, cols=5)
     table2.style = 'Table Grid'
     
-    # Заголовки таблицы транспортных средств
-    headers2 = table2.rows[0].cells
-    headers2[0].text = "№ п/п"
-    headers2[1].text = "Вид, марка, модель"
-    headers2[2].text = "Год выпуска"
-    headers2[3].text = "Идентификационный номер (VIN)"
-    headers2[4].text = "Регистрационный номер"
-    headers2[5].text = "Место нахождения"
-    headers2[6].text = "Сведения о залоге"
+    # Заголовки таблицы
+    headers2_row1 = table2.rows[0].cells
+    headers2_row1[0].text = "№ п/п"
+    headers2_row1[1].text = "Вид, марка, модель транспортного средства, год изготовления"
+    headers2_row1[2].text = "Идентификационный номер⁴"
+    headers2_row1[3].text = "Вид собственности⁵"
+    headers2_row1[4].text = "Сведения о залоге и залогодержателе⁸"
     
-    # Форматирование заголовков
-    for cell in headers2:
+    headers2_row2 = table2.rows[1].cells
+    # Объединяем ячейки
+    for idx in [0, 1, 2, 3, 4]:
+        headers2_row1[idx].merge(headers2_row2[idx])
+    
+    for cell in headers2_row1:
         cell.paragraphs[0].runs[0].font.bold = True
         cell.paragraphs[0].runs[0].font.size = Pt(9)
         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
     
-    # Заполнение данными о транспортных средствах
-    vehicles = property.get('vehicles', []) if property else []
-    
-    if vehicles:
-        for idx, vehicle in enumerate(vehicles, 1):
-            row = table2.add_row().cells
-            row[0].text = str(idx)
-            row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-            
-            vehicle_type = vehicle.get('type', 'Автомобиль')
-            brand = vehicle.get('brand', '')
-            model = vehicle.get('model', '')
-            row[1].text = f"{vehicle_type} {brand} {model}"
-            
-            year = vehicle.get('year', '')
-            row[2].text = str(year)
-            row[2].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-            
-            vin = vehicle.get('vin', 'не указан')
-            row[3].text = vin
-            
-            reg_number = vehicle.get('registrationNumber', 'не указан')
-            row[4].text = reg_number
-            row[4].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-            
-            row[5].text = address
-            
-            row[6].text = "Не обременено"
-            
-            # Форматирование ячеек
-            for cell in row:
-                cell.paragraphs[0].runs[0].font.size = Pt(9)
-    else:
-        row = table2.add_row().cells
-        row[0].text = "-"
-        row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-        row[1].text = "Транспортные средства отсутствуют"
-        row[2].text = "-"
-        row[3].text = "-"
-        row[4].text = "-"
-        row[5].text = "-"
-        row[6].text = "-"
+    # Пустая строка
+    empty_row2 = table2.add_row().cells
+    for cell in empty_row2:
+        cell.text = ""
     
     doc.add_paragraph()
     
-    # III. Иное имущество
+    # III. Сведения о счетах в банках и иных кредитных организациях
     section3_heading = doc.add_paragraph()
-    section3_heading.add_run("III. Иное ценное имущество").bold = True
+    section3_heading.add_run("III. Сведения о счетах в банках и иных кредитных организациях").bold = True
     
-    table3 = doc.add_table(rows=1, cols=4)
+    table3 = doc.add_table(rows=2, cols=4)
     table3.style = 'Table Grid'
     
-    headers3 = table3.rows[0].cells
-    headers3[0].text = "№ п/п"
-    headers3[1].text = "Вид имущества"
-    headers3[2].text = "Описание"
-    headers3[3].text = "Стоимость"
+    headers3_row1 = table3.rows[0].cells
+    headers3_row1[0].text = "№ п/п"
+    headers3_row1[1].text = "Наименование и адрес банка или иной кредитной организации"
+    headers3_row1[2].text = "Вид и валюта счета⁹"
+    headers3_row1[3].text = "Дата открытия счета"
     
-    for cell in headers3:
+    headers3_row2 = table3.rows[1].cells
+    headers3_row2[0].text = ""
+    headers3_row2[1].text = ""
+    headers3_row2[2].text = ""
+    headers3_row2[3].text = "-"
+    
+    for idx in [0, 1, 2]:
+        headers3_row1[idx].merge(headers3_row2[idx])
+    
+    for cell in headers3_row1:
         cell.paragraphs[0].runs[0].font.bold = True
         cell.paragraphs[0].runs[0].font.size = Pt(9)
         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
     
-    # Пустая строка (иное имущество обычно отсутствует)
-    row3 = table3.add_row().cells
-    row3[0].text = "-"
-    row3[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-    row3[1].text = "Иное ценное имущество отсутствует"
-    row3[2].text = "-"
-    row3[3].text = "0"
-    row3[3].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    doc.add_paragraph()
+    
+    # IV. Акции и иное участие в коммерческих организациях
+    section4_heading = doc.add_paragraph()
+    section4_heading.add_run("IV. Акции и иное участие в коммерческих организациях").bold = True
+    doc.add_paragraph()
+    
+    # V. Иные ценные бумаги
+    section5_heading = doc.add_paragraph()
+    section5_heading.add_run("V. Иные ценные бумаги").bold = True
+    
+    table5 = doc.add_table(rows=2, cols=5)
+    table5.style = 'Table Grid'
+    
+    headers5_row1 = table5.rows[0].cells
+    headers5_row1[0].text = "№ п/п"
+    headers5_row1[1].text = "Вид ценной бумаги¹⁵"
+    headers5_row1[2].text = "Лицо, выпустившее ценную бумагу"
+    headers5_row1[3].text = "Номинальная величина обязательства (руб.)"
+    headers5_row1[4].text = "Общее количество"
+    
+    headers5_row2 = table5.rows[1].cells
+    headers5_row2[0].text = "5.1"
+    headers5_row2[1].text = ""
+    headers5_row2[2].text = ""
+    headers5_row2[3].text = ""
+    headers5_row2[4].text = ""
+    
+    for idx in [0, 1, 2, 3, 4]:
+        headers5_row1[idx].merge(headers5_row2[idx])
+    
+    for cell in headers5_row1:
+        cell.paragraphs[0].runs[0].font.bold = True
+        cell.paragraphs[0].runs[0].font.size = Pt(9)
+        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Строки 5.2, 5.3
+    for num in ['5.2', '5.3']:
+        row = table5.add_row().cells
+        row[0].text = num
+        row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    doc.add_paragraph()
+    
+    # VI. Сведения о наличных денежных средствах и ином ценном имуществе
+    section6_heading = doc.add_paragraph()
+    section6_heading.add_run("VI. Сведения о наличных денежных средствах и ином ценном имуществе").bold = True
+    
+    table6 = doc.add_table(rows=2, cols=4)
+    table6.style = 'Table Grid'
+    
+    headers6 = table6.rows[0].cells
+    headers6[0].text = "№ п/п"
+    headers6[1].text = "Вид и наименование имущества"
+    headers6[2].text = "Стоимость (сумма в валюте)¹⁶"
+    headers6[3].text = "Место нахождения/ место хранения¹⁸ (адрес)"
+    
+    headers6_row2 = table6.rows[1].cells
+    for idx in range(4):
+        headers6[idx].merge(headers6_row2[idx])
+    
+    for cell in headers6:
+        cell.paragraphs[0].runs[0].font.bold = True
+        cell.paragraphs[0].runs[0].font.size = Pt(9)
+        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    doc.add_paragraph()
+    
+    # Подтверждение достоверности
+    p_confirm = doc.add_paragraph()
+    p_confirm.add_run("Достоверность и полноту настоящих сведений подтверждаю.")
+    p_confirm.paragraph_format.first_line_indent = Cm(1)
+    
+    doc.add_paragraph()
+    
+    # Подпись и дата
+    p_date_line = doc.add_paragraph()
+    p_date_line.add_run(f'"___" _________ 20___ г.')
+    p_date_line.add_run("\t\t\t")
+    p_date_line.add_run("_(подпись гражданина)_")
+    p_date_line.add_run("\t\t")
+    p_date_line.add_run("_(расшифровка подписи)_")
     
     doc.add_paragraph()
     doc.add_paragraph()
     
-    # Примечание
-    p_note = doc.add_paragraph()
-    p_note.add_run("Примечание: ").bold = True
-    p_note.add_run("В соответствии с п. 3 ст. 213.25 Федерального закона \"О несостоятельности (банкротстве)\" и ст. 446 ГПК РФ, единственное пригодное для постоянного проживания помещение не подлежит реализации.")
-    p_note.paragraph_format.first_line_indent = Cm(1)
+    # Сноски
+    p_footnotes_separator = doc.add_paragraph()
+    p_footnotes_separator.add_run("_" * 50)
     
-    doc.add_paragraph()
+    footnotes = [
+        "¹ Указывается вид собственности (индивидуальная, долевая, общая); для совместной собственности указывается также иные лица (фамилия, имя и отчество (последнее - при наличии) или наименование), в собственности которых находится имущество; для долевой собственности указывается размер доли гражданина.",
+        "⁴ Указывается при наличии документов, содержащих сведения о стоимости имущества (например, отчет о стоимости имущества, подготовленный независимой оценочной компанией либо данные оценки для целей налогообложения).",
+        "⁵ Указывается лицо, в пользу которого установлен залог, и сведения о договоре залога (номер и дата).",
+        "⁸ Указывается полное наименование юридического лица или фамилия, имя, отчество (последнее - при наличии), участником (акционером) которого является гражданин, а также размер доли участия в голосующих акциях или уставном капитале юридического лица либо количество принадлежащих акций (для акционера).",
+        "⁹ Указывается сведения о депозитах, включая номинальные (опосредованно, договор, депозит, счет на котором возложит исполнение иска или иную вещь на лицо - владельца либо пользователя, либо и изложения акций, указываемых в разделе IV (настоящий пункт для выгодоприобретателя).",
+        "¹⁵ Указывается вид ценной бумаги, например, вексель, чек, облигация, опцион, фьючерсный договор, коносамент, складское свидетельство, закладная, инвестиционный пай, сертификат участия, сертификат долей, депозит, иной депозит.",
+        "¹⁶ Указывается сумма в валюте, включенная при внесении документов, содержащих сведения о стоимости имущества (например, отчет о стоимости имущества, подготовленный независимой оценочной компанией либо данные кассового аппарата, которые подтверждает акт или иное принадлежности выдаче в курсе Банка России на дату составления описи имущества гражданина.",
+        "¹⁸ Указывается сведения о договоре аренды, лизинга, прочей сделке, на основании которой возложит право или же лицо обязано передачу в иностранном банке - на рабочее указывается также или факт банка и место курса Банка России на дату составления описи имущества гражданина."
+    ]
     
-    # Подпись
-    p_signature = doc.add_paragraph()
-    p_signature.add_run(f"Гражданин: {full_name}")
-    p_signature.add_run("\t\t_______________")
-    
-    p_date = doc.add_paragraph()
-    p_date.add_run(f"Дата: {datetime.now().strftime('%d.%m.%Y')}")
+    for footnote in footnotes:
+        p_fn = doc.add_paragraph(footnote)
+        p_fn.runs[0].font.size = Pt(8)
+        p_fn.paragraph_format.space_before = Pt(2)
+        p_fn.paragraph_format.space_after = Pt(2)
     
     # Сохранение в base64
     buffer = io.BytesIO()
