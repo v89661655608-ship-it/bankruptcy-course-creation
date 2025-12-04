@@ -37,6 +37,8 @@ export default function AdminSupport() {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -109,12 +111,59 @@ export default function AdminSupport() {
     }
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: 'Ошибка',
+          description: 'Размер файла не должен превышать 5 МБ',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('https://functions.poehali.dev/c9a0fff3-73c4-4f4b-9a92-f6aaf3e7cb2a', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.url;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  };
+
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedChatUserId) return;
+    if ((!newMessage.trim() && !selectedImage) || !selectedChatUserId) return;
     
     setIsSending(true);
     
     try {
+      let imageUrl = null;
+      if (selectedImage) {
+        imageUrl = await uploadImage(selectedImage);
+      }
+      
       const response = await fetch(
         'https://functions.poehali.dev/92d0eff0-8de5-4a02-b849-378019f1af28?action=send',
         {
@@ -122,7 +171,8 @@ export default function AdminSupport() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user_id: selectedChatUserId,
-            message: newMessage.trim(),
+            message: newMessage.trim() || (imageUrl ? '📎 Изображение' : ''),
+            image_url: imageUrl,
             is_from_admin: true
           })
         }
@@ -130,6 +180,8 @@ export default function AdminSupport() {
       
       if (response.ok) {
         setNewMessage('');
+        setSelectedImage(null);
+        setImagePreview('');
         await loadMessages(selectedChatUserId);
         await loadChats();
         toast({
@@ -363,7 +415,41 @@ export default function AdminSupport() {
                 </CardContent>
 
                 <div className="border-t p-4">
+                  {imagePreview && (
+                    <div className="mb-3 relative inline-block">
+                      <img
+                        src={imagePreview}
+                        alt="Предпросмотр"
+                        className="max-h-32 rounded-lg"
+                      />
+                      <button
+                        onClick={() => {
+                          setSelectedImage(null);
+                          setImagePreview('');
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  
                   <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                      id="admin-image-upload"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => document.getElementById('admin-image-upload')?.click()}
+                    >
+                      <Icon name="Image" size={20} />
+                    </Button>
+
                     <Input
                       placeholder="Напишите ответ клиенту..."
                       value={newMessage}
@@ -379,7 +465,7 @@ export default function AdminSupport() {
 
                     <Button
                       onClick={handleSendMessage}
-                      disabled={isSending || !newMessage.trim()}
+                      disabled={isSending || (!newMessage.trim() && !selectedImage)}
                     >
                       {isSending ? (
                         <Icon name="Loader2" size={20} className="animate-spin" />

@@ -140,7 +140,7 @@ export default function Support() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user_id: userId,
-            message: newMessage.trim(),
+            message: newMessage.trim() || (imageUrl ? '📎 Изображение' : ''),
             image_url: imageUrl,
             is_from_admin: false
           })

@@ -153,17 +153,20 @@ def send_message(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
     body_data = json.loads(body)
     
     user_id = body_data.get('user_id')
-    message = body_data.get('message')
+    message = body_data.get('message', '')
     image_url = body_data.get('image_url')
     is_from_admin = body_data.get('is_from_admin', False)
     
-    if not user_id or not message:
+    if not user_id or (not message and not image_url):
         return {
             'statusCode': 400,
             'headers': headers,
-            'body': json.dumps({'error': 'user_id and message are required'}),
+            'body': json.dumps({'error': 'user_id and (message or image_url) are required'}),
             'isBase64Encoded': False
         }
+    
+    if not message and image_url:
+        message = '📎 Изображение'
     
     conn = get_db_connection()
     try:
