@@ -30,6 +30,7 @@ export default function TransactionsForm({ initialData, onSave, onCancel }: Tran
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
+    alert("Данные о сделках сохранены");
   };
 
   const addTransaction = () => {
