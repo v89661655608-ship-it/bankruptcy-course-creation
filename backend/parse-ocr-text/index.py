@@ -4,9 +4,9 @@ from typing import Dict, Any, Optional
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Парсинг распознанного OCR-текста для извлечения структурированных данных
+    Умный парсинг OCR-текста для автоматического извлечения данных
     Args: event - dict с httpMethod, body (содержит text и documentType)
-    Returns: HTTP response с распарсенными данными
+    Returns: HTTP response с распарсенными данными из документов
     '''
     method: str = event.get('httpMethod', 'GET')
     

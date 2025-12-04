@@ -6,7 +6,7 @@ import requests
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Распознавание текста на документах через Яндекс Vision API
+    Распознавание текста на документах через Яндекс Vision API с авторизацией
     Args: event - dict с httpMethod, body (содержит base64 изображения)
           context - object с атрибутами request_id, function_name
     Returns: HTTP response dict с распознанным текстом
