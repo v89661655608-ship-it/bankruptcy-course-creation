@@ -4,8 +4,8 @@ import io
 from typing import Dict, Any
 from datetime import datetime
 from docx import Document
-from docx.shared import Pt, Inches, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Pt, Inches, RGBColor, Cm
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
 try:
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas
@@ -261,37 +261,47 @@ def generate_docx_document(
     phone = additional.get('phone', 'Место для ввода текста.')
     email = additional.get('email', 'Место для ввода текста.')
     
-    doc.add_paragraph(f"В {court_name}")
-    doc.add_paragraph(f"Адрес: {court_address}")
-    doc.add_paragraph()
+    # Шапка документа с форматированием
+    def add_header_paragraph(text):
+        p = doc.add_paragraph(text)
+        p_format = p.paragraph_format
+        p_format.space_before = Pt(0)
+        p_format.space_after = Pt(0)
+        p_format.line_spacing_rule = WD_LINE_SPACING.SINGLE
+        p_format.left_indent = Cm(7)
+        return p
     
-    doc.add_paragraph(f"Заявитель (Должник):")
-    doc.add_paragraph(f"{personal.get('fullName', 'Место для ввода текста.')}")
-    doc.add_paragraph(f"Адрес: {registration.get('address', 'Место для ввода текста.')}")
-    doc.add_paragraph()
+    add_header_paragraph(f"В {court_name}")
+    add_header_paragraph(f"Адрес: {court_address}")
+    add_header_paragraph("")
     
-    doc.add_paragraph(f"Паспорт: серия {passport.get('series', 'Место для ввода текста.')} номер {passport.get('number', 'Место для ввода текста.')}")
-    doc.add_paragraph(f"выдан: {passport.get('issuedBy', 'Место для ввода текста.')}")
-    doc.add_paragraph(f"дата выдачи: {passport.get('issueDate', 'Место для ввода текста.')}")
-    doc.add_paragraph(f"код подразделения: {passport.get('code', 'Место для ввода текста.')}")
-    doc.add_paragraph(f"тел. 8 {phone}")
-    doc.add_paragraph(f"e-mail: {email}")
-    doc.add_paragraph()
-    doc.add_paragraph()
+    add_header_paragraph(f"Заявитель (Должник):")
+    add_header_paragraph(f"{personal.get('fullName', 'Место для ввода текста.')}")
+    add_header_paragraph(f"Адрес: {registration.get('address', 'Место для ввода текста.')}")
+    add_header_paragraph("")
     
-    doc.add_paragraph("Кредиторы:")
+    add_header_paragraph(f"Паспорт: серия {passport.get('series', 'Место для ввода текста.')} номер {passport.get('number', 'Место для ввода текста.')}")
+    add_header_paragraph(f"выдан: {passport.get('issuedBy', 'Место для ввода текста.')}")
+    add_header_paragraph(f"дата выдачи: {passport.get('issueDate', 'Место для ввода текста.')}")
+    add_header_paragraph(f"код подразделения: {passport.get('code', 'Место для ввода текста.')}")
+    add_header_paragraph(f"тел. 8 {phone}")
+    add_header_paragraph(f"e-mail: {email}")
+    add_header_paragraph("")
+    add_header_paragraph("")
+    
+    add_header_paragraph("Кредиторы:")
     for idx, creditor in enumerate(creditors[:4], 1):
-        doc.add_paragraph(f"{idx}. {creditor.get('name', 'Место для ввода текста.')}")
-        doc.add_paragraph(f"ИНН {creditor.get('inn', 'Место для ввода текста.')}")
-        doc.add_paragraph(f"Юридический адрес: Место для ввода текста.")
-        doc.add_paragraph()
+        add_header_paragraph(f"{idx}. {creditor.get('name', 'Место для ввода текста.')}")
+        add_header_paragraph(f"ИНН {creditor.get('inn', 'Место для ввода текста.')}")
+        add_header_paragraph(f"Юридический адрес: Место для ввода текста.")
+        add_header_paragraph("")
     
     if len(creditors) < 4:
         for i in range(len(creditors) + 1, 5):
-            doc.add_paragraph(f"{i}. Место для ввода текста.")
-            doc.add_paragraph(f"ИНН Место для ввода текста.")
-            doc.add_paragraph(f"Юридический адрес: Место для ввода текста.")
-            doc.add_paragraph()
+            add_header_paragraph(f"{i}. Место для ввода текста.")
+            add_header_paragraph(f"ИНН Место для ввода текста.")
+            add_header_paragraph(f"Юридический адрес: Место для ввода текста.")
+            add_header_paragraph("")
     
     doc.add_paragraph()
     
