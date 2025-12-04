@@ -21,7 +21,7 @@ export default function HeroSection({ user, scrollToSection }: HeroSectionProps)
               <span className="block text-accent mt-2">без юристов</span>
             </h2>
             <p className="text-xl text-muted-foreground mb-4 leading-relaxed">
-              Пошаговая инструкция по самостоятельной подаче на банкротство. Выберите формат самостоятельного банкротства за 2 999 рублей или с личным юристом +3 999 рублей.
+              Пошаговая инструкция по самостоятельной подаче на банкротство с профессиональной поддержкой юристов. Получите знания и защиту своих интересов.
             </p>
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 mb-8">
               <div className="flex items-start gap-3">

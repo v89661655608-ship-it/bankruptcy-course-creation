@@ -67,18 +67,18 @@ export default function FeaturesSection({ scrollToSection }: FeaturesSectionProp
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-primary/30 hover:border-primary transition-all hover:shadow-lg bg-gradient-to-br from-primary/5 to-white">
+          <Card className="border-2 border-purple-300 hover:border-purple-500 transition-all hover:shadow-lg bg-gradient-to-br from-purple-50 to-white">
             <CardContent className="pt-8">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-                <Icon name="ShieldCheck" className="text-primary" size={32} />
+              <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mb-6">
+                <Icon name="MessageCircle" className="text-purple-600" size={32} />
               </div>
-              <h4 className="text-2xl font-bold mb-4">Проверка юристами</h4>
+              <h4 className="text-2xl font-bold mb-4">Поддержка юристов</h4>
               <p className="text-muted-foreground mb-4">
-                При покупке сопровождения — профессиональная проверка ваших документов
+                Личный чат с юристом для ответов на все вопросы. Уже включено в курс!
               </p>
               <button 
-                onClick={() => scrollToSection('price')} 
-                className="text-primary hover:text-accent font-semibold text-sm flex items-center gap-1 transition-colors"
+                onClick={() => scrollToSection('support')} 
+                className="text-purple-600 hover:text-purple-700 font-semibold text-sm flex items-center gap-1 transition-colors"
               >
                 Подробнее <Icon name="ArrowRight" size={16} />
               </button>
