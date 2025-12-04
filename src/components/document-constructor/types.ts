@@ -52,6 +52,7 @@ export interface IncomeData {
   monthlyIncome: number;
   source: string;
   lastYear: number;
+  noIncome?: boolean;
 }
 
 export interface PropertyData {
