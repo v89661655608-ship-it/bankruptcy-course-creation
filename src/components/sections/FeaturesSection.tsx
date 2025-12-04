@@ -19,6 +19,18 @@ export default function FeaturesSection({ scrollToSection }: FeaturesSectionProp
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <Card className="border-2 hover:border-green-500 transition-all hover:shadow-lg bg-gradient-to-br from-green-50 to-white">
+            <CardContent className="pt-8">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-6">
+                <Icon name="Sparkles" className="text-green-600" size={32} />
+              </div>
+              <h4 className="text-2xl font-bold mb-4">Конструктор документов</h4>
+              <p className="text-muted-foreground">
+                Автоматическая генерация заявления на банкротство на основе ваших данных
+              </p>
+            </CardContent>
+          </Card>
+
           <Card className="border-2 hover:border-accent transition-all hover:shadow-lg">
             <CardContent className="pt-8">
               <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mb-6">

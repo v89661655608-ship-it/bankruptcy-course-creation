@@ -20,9 +20,22 @@ export default function HeroSection({ user, scrollToSection }: HeroSectionProps)
               Банкротство физического лица
               <span className="block text-accent mt-2">без юристов</span>
             </h2>
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+            <p className="text-xl text-muted-foreground mb-4 leading-relaxed">
               Пошаговая инструкция по самостоятельной подаче на банкротство. Выберите формат самостоятельного банкротства за 2 999 рублей или с личным юристом +3 999 рублей.
             </p>
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 mb-8">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">🤖</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-green-900 mb-1">Автоматизированный конструктор документов</h3>
+                  <p className="text-sm text-green-800">
+                    Система автоматически заполнит заявление на банкротство на основе ваших данных — быстро, точно и без ошибок!
+                  </p>
+                </div>
+              </div>
+            </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button onClick={() => user ? navigate('/dashboard') : navigate('/payment')} size="lg" className="bg-accent hover:bg-accent/90 text-primary font-semibold text-lg px-8 py-6">
                 {user ? 'Получить доступ' : 'Получить курс за 2 999 ₽'}
