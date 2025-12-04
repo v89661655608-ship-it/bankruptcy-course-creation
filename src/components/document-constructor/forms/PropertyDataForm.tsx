@@ -360,6 +360,7 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
           Добавить транспортное средство
         </Button>
       </div>
+      )}
 
       {properties.length > 0 && (
         <div className="space-y-2">
