@@ -24,6 +24,7 @@ import ChatAccess from "./pages/ChatAccess";
 import Support from "./pages/Support";
 import AdminSupport from "./pages/AdminSupport";
 import DocumentConstructor from "./pages/DocumentConstructor";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/support" element={<Support />} />
             <Route path="/admin-support" element={<AdminSupport />} />
             <Route path="/document-constructor" element={<DocumentConstructor />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/oferta" element={<Oferta />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/personal-data-consent" element={<PersonalDataConsent />} />

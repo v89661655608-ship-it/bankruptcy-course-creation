@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS request returns CORS headers",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET without auth token returns 401",
+      "method": "GET",
+      "path": "/?action=get_settings",
+      "expectedStatus": 401
+    }
+  ]
+}

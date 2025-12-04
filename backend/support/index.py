@@ -204,7 +204,7 @@ def send_message(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
             conn.commit()
             
             cur.execute(
-                "SELECT email, full_name FROM users WHERE id = %s",
+                "SELECT email, full_name, email_notifications_enabled FROM t_p19166386_bankruptcy_course_cr.users WHERE id = %s",
                 (int(user_id),)
             )
             user = cur.fetchone()
@@ -217,11 +217,13 @@ def send_message(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
                         message=message
                     )
                 else:
-                    send_client_notification(
-                        user_email=user['email'],
-                        user_name=user['full_name'],
-                        message=message
-                    )
+                    email_enabled = user.get('email_notifications_enabled')
+                    if email_enabled is None or email_enabled:
+                        send_client_notification(
+                            user_email=user['email'],
+                            user_name=user['full_name'],
+                            message=message
+                        )
     finally:
         conn.close()
     

@@ -49,6 +49,14 @@ export default function DashboardHeader({ user, onLogout }: DashboardHeaderProps
                 NEW
               </span>
             </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/settings')}
+            >
+              <Icon name="Settings" size={16} className="mr-2" />
+              Настройки
+            </Button>
             <Button variant="ghost" size="sm" onClick={onLogout}>
               <Icon name="LogOut" size={16} className="mr-2" />
               Выйти

@@ -1,0 +1,2 @@
+ALTER TABLE t_p19166386_bankruptcy_course_cr.users 
+ADD COLUMN email_notifications_enabled BOOLEAN DEFAULT TRUE;
