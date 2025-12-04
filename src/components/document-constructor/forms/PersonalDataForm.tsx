@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Icon from "@/components/ui/icon";
 import { PersonalData } from "../types";
+
+interface AddressSuggestion {
+  value: string;
+  unrestricted_value: string;
+}
 
 interface ValidationErrors {
   [key: string]: string;
@@ -33,6 +38,93 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
     marriageDate: "",
     divorceDate: "",
   });
+
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const addressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const addressSuggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Закрытие подсказок адресов при клике вне
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (addressSuggestionsRef.current && !addressSuggestionsRef.current.contains(event.target as Node)) {
+        setShowAddressSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Поиск адресов через backend функцию
+  const searchAddress = async (query: string) => {
+    if (query.length < 3) {
+      setAddressSuggestions([]);
+      return;
+    }
+
+    setIsSearchingAddress(true);
+
+    try {
+      const response = await fetch(`https://functions.poehali.dev/e70430d4-8e99-429d-bbad-1362dfe63771?query=${encodeURIComponent(query)}&type=address`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      const results: AddressSuggestion[] = data.suggestions || [];
+
+      setAddressSuggestions(results);
+      setShowAddressSuggestions(results.length > 0);
+      
+      if (results.length === 0) {
+        setAddressSuggestions([{
+          value: '❌ Ничего не найдено. Попробуйте другой запрос.',
+          unrestricted_value: ''
+        }]);
+        setShowAddressSuggestions(true);
+      }
+    } catch (error) {
+      console.error('Ошибка поиска адреса:', error);
+      setAddressSuggestions([{
+        value: '⚠️ Ошибка сервиса поиска. Введите адрес вручную.',
+        unrestricted_value: ''
+      }]);
+      setShowAddressSuggestions(true);
+    } finally {
+      setIsSearchingAddress(false);
+    }
+  };
+
+  // Обработчик изменения поля адреса
+  const handleAddressChange = (value: string) => {
+    setPersonalForm({ ...personalForm, registrationAddress: value });
+
+    if (addressTimeoutRef.current) {
+      clearTimeout(addressTimeoutRef.current);
+    }
+
+    addressTimeoutRef.current = setTimeout(() => {
+      searchAddress(value);
+    }, 500);
+  };
+
+  // Выбор адреса из подсказок
+  const selectAddress = (suggestion: AddressSuggestion) => {
+    if (!suggestion.unrestricted_value) {
+      setShowAddressSuggestions(false);
+      return;
+    }
+    
+    setPersonalForm({
+      ...personalForm,
+      registrationAddress: suggestion.value
+    });
+    setAddressSuggestions([]);
+    setShowAddressSuggestions(false);
+  };
 
   const validateInn = (inn: string): boolean => {
     if (!/^\d{12}$/.test(inn)) return false;
@@ -305,22 +397,43 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
       <div className="border-t pt-4 mt-4">
         <h3 className="font-medium mb-3">Адрес регистрации</h3>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 relative">
             <Label htmlFor="registrationAddress">Адрес *</Label>
-            <Input
-              id="registrationAddress"
-              value={personalForm.registrationAddress}
-              onChange={(e) =>
-                setPersonalForm({
-                  ...personalForm,
-                  registrationAddress: e.target.value,
-                })
-              }
-              required
-              className={errors.registrationAddress ? 'border-red-500' : ''}
-            />
+            <div className="relative">
+              <Input
+                id="registrationAddress"
+                value={personalForm.registrationAddress}
+                onChange={(e) => handleAddressChange(e.target.value)}
+                onFocus={() => addressSuggestions.length > 0 && setShowAddressSuggestions(true)}
+                required
+                className={errors.registrationAddress ? 'border-red-500' : ''}
+                placeholder="г. Москва, ул. Ленина, д. 1, кв. 1"
+              />
+              {isSearchingAddress && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                </div>
+              )}
+            </div>
             {errors.registrationAddress && (
               <p className="text-sm text-red-500 mt-1">{errors.registrationAddress}</p>
+            )}
+            
+            {showAddressSuggestions && addressSuggestions.length > 0 && (
+              <div 
+                ref={addressSuggestionsRef}
+                className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto"
+              >
+                {addressSuggestions.map((suggestion, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => selectAddress(suggestion)}
+                    className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
+                  >
+                    <p className="text-sm">{suggestion.value}</p>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
           <div>

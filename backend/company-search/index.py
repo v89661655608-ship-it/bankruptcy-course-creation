@@ -6,10 +6,10 @@ import urllib.request
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
-    Поиск реквизитов организаций по ИНН или названию через DaData API
-    Args: event - dict с httpMethod, queryStringParameters (query - поисковый запрос)
+    Универсальный поиск через DaData API: организации и адреса
+    Args: event - dict с httpMethod, queryStringParameters (query, type: party|address)
           context - объект с атрибутами request_id, function_name
-    Returns: HTTP response dict с найденными организациями
+    Returns: HTTP response dict с найденными результатами
     """
     method: str = event.get('httpMethod', 'GET')
     
@@ -35,9 +35,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'isBase64Encoded': False
         }
     
-    # Получаем поисковый запрос
+    # Получаем параметры
     params = event.get('queryStringParameters') or {}
     query = params.get('query', '').strip()
+    search_type = params.get('type', 'party')  # party или address
     
     if not query or len(query) < 3:
         return {
@@ -57,19 +58,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'isBase64Encoded': False
         }
     
-    # Запрос к DaData API
-    url = 'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party'
+    # Определяем URL и тело запроса в зависимости от типа
+    if search_type == 'address':
+        url = 'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address'
+        request_body = json.dumps({
+            'query': query,
+            'count': 10
+        }).encode('utf-8')
+    else:  # party
+        url = 'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party'
+        request_body = json.dumps({
+            'query': query,
+            'count': 10,
+            'status': ['ACTIVE']
+        }).encode('utf-8')
+    
     headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Authorization': f'Token {api_key}'
     }
-    
-    request_body = json.dumps({
-        'query': query,
-        'count': 10,
-        'status': ['ACTIVE']
-    }).encode('utf-8')
     
     req = urllib.request.Request(url, data=request_body, headers=headers, method='POST')
     
@@ -77,21 +85,29 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         with urllib.request.urlopen(req, timeout=10) as response:
             result = json.loads(response.read().decode('utf-8'))
             
-            # Форматируем результаты
+            # Форматируем результаты в зависимости от типа
             suggestions = []
-            for item in result.get('suggestions', []):
-                data_obj = item.get('data', {})
-                name_obj = data_obj.get('name', {})
-                address_obj = data_obj.get('address', {})
-                
-                suggestions.append({
-                    'inn': data_obj.get('inn', ''),
-                    'name': name_obj.get('short_with_opf') or name_obj.get('full') or item.get('value', ''),
-                    'fullName': name_obj.get('full', ''),
-                    'address': address_obj.get('unrestricted_value') or address_obj.get('value', ''),
-                    'ogrn': data_obj.get('ogrn', ''),
-                    'kpp': data_obj.get('kpp', ''),
-                })
+            
+            if search_type == 'address':
+                for item in result.get('suggestions', []):
+                    suggestions.append({
+                        'value': item.get('value', ''),
+                        'unrestricted_value': item.get('unrestricted_value', ''),
+                    })
+            else:  # party
+                for item in result.get('suggestions', []):
+                    data_obj = item.get('data', {})
+                    name_obj = data_obj.get('name', {})
+                    address_obj = data_obj.get('address', {})
+                    
+                    suggestions.append({
+                        'inn': data_obj.get('inn', ''),
+                        'name': name_obj.get('short_with_opf') or name_obj.get('full') or item.get('value', ''),
+                        'fullName': name_obj.get('full', ''),
+                        'address': address_obj.get('unrestricted_value') or address_obj.get('value', ''),
+                        'ogrn': data_obj.get('ogrn', ''),
+                        'kpp': data_obj.get('kpp', ''),
+                    })
             
             return {
                 'statusCode': 200,
