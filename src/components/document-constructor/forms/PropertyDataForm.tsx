@@ -158,6 +158,7 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
       </div>
 
       {!noProperty && (
+      <>
       <div className="border rounded-lg p-4 bg-muted/50">
         <h3 className="font-medium mb-3">Добавить имущество</h3>
         <div className="grid sm:grid-cols-2 gap-4">
@@ -360,6 +361,7 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
           Добавить транспортное средство
         </Button>
       </div>
+      </>
       )}
 
       {properties.length > 0 && (
