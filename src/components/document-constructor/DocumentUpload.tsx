@@ -24,9 +24,11 @@ export default function DocumentUpload({
     bki?: File;
     income?: File;
     property?: File;
+    inn?: File;
+    snils?: File;
   }>({});
 
-  const handleFileUpload = (type: "passport" | "bki" | "income" | "property", file: File) => {
+  const handleFileUpload = (type: "passport" | "bki" | "income" | "property" | "inn" | "snils", file: File) => {
     setUploadedFiles({ ...uploadedFiles, [type]: file });
   };
 
@@ -335,7 +337,7 @@ export default function DocumentUpload({
                 <Icon name="Wallet" size={20} className="text-primary" />
                 <div>
                   <p className="font-medium">Справка о доходах</p>
-                  <p className="text-xs text-muted-foreground">2-НДФЛ или справка с работы</p>
+                  <p className="text-xs text-muted-foreground">2-НДФЛ или справка с работы (необязательно)</p>
                 </div>
               </div>
               {uploadedFiles.income && (
@@ -381,7 +383,7 @@ export default function DocumentUpload({
                 <Icon name="Home" size={20} className="text-primary" />
                 <div>
                   <p className="font-medium">Выписка из ЕГРН</p>
-                  <p className="text-xs text-muted-foreground">Сведения об имуществе</p>
+                  <p className="text-xs text-muted-foreground">Сведения об имуществе (необязательно)</p>
                 </div>
               </div>
               {uploadedFiles.property && (
@@ -417,6 +419,84 @@ export default function DocumentUpload({
             {uploadedFiles.property && (
               <p className="text-xs text-muted-foreground mt-2">
                 Загружен: {uploadedFiles.property.name}
+              </p>
+            )}
+          </div>
+
+          <div className="border rounded-lg p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Icon name="FileDigit" size={20} className="text-primary" />
+                <div>
+                  <p className="font-medium">Свидетельство ИНН</p>
+                  <p className="text-xs text-muted-foreground">Индивидуальный номер налогоплательщика (необязательно)</p>
+                </div>
+              </div>
+              {uploadedFiles.inn && (
+                <Icon name="CheckCircle" size={20} className="text-green-500" />
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.accept = "image/*,.pdf";
+                  input.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) handleFileUpload("inn", file);
+                  };
+                  input.click();
+                }}
+              >
+                <Icon name="Upload" className="mr-2" size={16} />
+                Загрузить
+              </Button>
+            </div>
+            {uploadedFiles.inn && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Загружен: {uploadedFiles.inn.name}
+              </p>
+            )}
+          </div>
+
+          <div className="border rounded-lg p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Icon name="CreditCard" size={20} className="text-primary" />
+                <div>
+                  <p className="font-medium">Свидетельство СНИЛС</p>
+                  <p className="text-xs text-muted-foreground">Страховой номер индивидуального лицевого счёта (необязательно)</p>
+                </div>
+              </div>
+              {uploadedFiles.snils && (
+                <Icon name="CheckCircle" size={20} className="text-green-500" />
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.accept = "image/*,.pdf";
+                  input.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) handleFileUpload("snils", file);
+                  };
+                  input.click();
+                }}
+              >
+                <Icon name="Upload" className="mr-2" size={16} />
+                Загрузить
+              </Button>
+            </div>
+            {uploadedFiles.snils && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Загружен: {uploadedFiles.snils.name}
               </p>
             )}
           </div>

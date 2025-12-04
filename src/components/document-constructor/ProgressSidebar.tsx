@@ -21,8 +21,10 @@ export default function ProgressSidebar({
   isGenerating,
   onGenerateDocument
 }: ProgressSidebarProps) {
-  const totalDataLoaded = [personalData, creditData, incomeData, propertyData].filter(Boolean).length;
-  const progress = (totalDataLoaded / 4) * 100;
+  const requiredData = [personalData, creditData].filter(Boolean).length;
+  const optionalData = [incomeData, propertyData].filter(Boolean).length;
+  const totalDataLoaded = requiredData + optionalData;
+  const progress = (requiredData / 2) * 100;
 
   return (
     <div className="space-y-6">
@@ -33,8 +35,8 @@ export default function ProgressSidebar({
         <CardContent className="space-y-4">
           <div>
             <div className="flex justify-between text-sm mb-2">
-              <span>Готовность</span>
-              <span className="font-medium">{totalDataLoaded}/4</span>
+              <span>Обязательные данные</span>
+              <span className="font-medium">{requiredData}/2</span>
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div 
@@ -68,6 +70,7 @@ export default function ProgressSidebar({
                 <Icon name="Circle" size={16} className="text-muted-foreground" />
               )}
               <span>Сведения о доходах</span>
+              <span className="text-xs text-muted-foreground ml-auto">(необязательно)</span>
             </div>
             <div className="flex items-center gap-2">
               {propertyData ? (
@@ -76,6 +79,7 @@ export default function ProgressSidebar({
                 <Icon name="Circle" size={16} className="text-muted-foreground" />
               )}
               <span>Имущество</span>
+              <span className="text-xs text-muted-foreground ml-auto">(необязательно)</span>
             </div>
           </div>
 
@@ -100,7 +104,7 @@ export default function ProgressSidebar({
           </Button>
 
           <p className="text-xs text-muted-foreground">
-            Будет сформировано заявление о признании гражданина банкротом по форме, утвержденной законодательством РФ
+            Для генерации заявления необходимы только персональные данные и кредитная история. Остальные документы можно добавить позже.
           </p>
         </CardContent>
       </Card>
