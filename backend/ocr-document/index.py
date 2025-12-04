@@ -120,6 +120,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     line_text = ' '.join([word.get('text', '') for word in words])
                     extracted_text += line_text + '\n'
     
+    if not extracted_text.strip():
+        return {
+            'statusCode': 400,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps({
+                'error': 'Не удалось распознать текст на изображении. Попробуйте загрузить более четкое фото или скан документа.',
+                'fullResponse': result
+            }),
+            'isBase64Encoded': False
+        }
+    
     return {
         'statusCode': 200,
         'headers': {
