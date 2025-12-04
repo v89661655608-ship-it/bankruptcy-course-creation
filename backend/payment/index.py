@@ -213,13 +213,13 @@ def create_payment(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
     payment_response = response.json()
     
     if product_type == 'course':
-        expires_interval = "6 months"
+        expires_interval = "3 months"
     elif product_type == 'chat':
         expires_interval = "1 month"
     elif product_type == 'combo':
-        expires_interval = "6 months"
+        expires_interval = "3 months"
     else:
-        expires_interval = "6 months"
+        expires_interval = "3 months"
     
     conn = get_db_connection()
     try:
@@ -289,13 +289,13 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
             
             if existing_purchase and existing_purchase['expires_at']:
                 if current_product_type == 'course':
-                    extension_days = 180
+                    extension_days = 90
                 elif current_product_type == 'chat':
                     extension_days = 30
                 elif current_product_type == 'combo':
-                    extension_days = 180
+                    extension_days = 90
                 else:
-                    extension_days = 180
+                    extension_days = 90
                 
                 if existing_purchase['expires_at'] > datetime.now():
                     new_expires_at = existing_purchase['expires_at'] + timedelta(days=extension_days)
