@@ -392,32 +392,57 @@ def generate_docx_document(
         p2_format.space_before = Pt(0)
         p2_format.space_after = Pt(0)
         p2_format.line_spacing = 1.0
-    p3 = doc.add_paragraph("На основании справки № Место для ввода текста. от Место для ввода текста. г. Должник отнесен к категории малоимущих граждан. Кроме того, Должник является матерью одиночкой (инвалидом, пр.).")
-    p3.runs[0].font.color.rgb = RGBColor(255, 0, 0)
-    p3_format = p3.paragraph_format
-    p3_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-    p3_format.first_line_indent = Cm(1)
-    p3_format.space_before = Pt(0)
-    p3_format.space_after = Pt(0)
-    p3_format.line_spacing = 1.0
+    if benefits and benefits.get('isLowIncome'):
+        cert_num = benefits.get('certificateNumber', 'Место для ввода текста.')
+        cert_date = benefits.get('certificateDate', 'Место для ввода текста.')
+        special_status = benefits.get('specialStatus', 'матерью одиночкой (инвалидом, пр.)')
+        benefits_text = f"На основании справки № {cert_num} от {cert_date} г. Должник отнесен к категории малоимущих граждан. Кроме того, Должник является {special_status}."
+        p3 = doc.add_paragraph(benefits_text)
+        p3_format = p3.paragraph_format
+        p3_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p3_format.first_line_indent = Cm(1)
+        p3_format.space_before = Pt(0)
+        p3_format.space_after = Pt(0)
+        p3_format.line_spacing = 1.0
     
-    p4 = doc.add_paragraph("На иждивении у Должника находится несовершеннолетняя сын / дочь ФИО года рождения, проживающая вместе с Должником.")
-    p4.runs[0].font.color.rgb = RGBColor(255, 0, 0)
-    p4_format = p4.paragraph_format
-    p4_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-    p4_format.first_line_indent = Cm(1)
-    p4_format.space_before = Pt(0)
-    p4_format.space_after = Pt(0)
-    p4_format.line_spacing = 1.0
+    if children and not children.get('noChildren', True):
+        children_list = children.get('children', [])
+        if children_list:
+            for child in children_list:
+                child_name = child.get('fullName', 'ФИО')
+                birth_date = child.get('birthDate', 'года рождения')
+                lives_with = 'проживающая вместе с Должником' if child.get('livesWithDebtor', False) else 'проживающая отдельно от Должника'
+                p4 = doc.add_paragraph(f"На иждивении у Должника находится несовершеннолетний(яя) {child_name} {birth_date} года рождения, {lives_with}.")
+                p4_format = p4.paragraph_format
+                p4_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                p4_format.first_line_indent = Cm(1)
+                p4_format.space_before = Pt(0)
+                p4_format.space_after = Pt(0)
+                p4_format.line_spacing = 1.0
     
-    p5 = doc.add_paragraph("В соответствии с Соглашением об оплате алиментов на содержание несовершеннолетнего ребенка, удостоверенного нотариусом 01.01.2021 г., заключенного между Должником и матерью несовершеннолетнего сына Должника ФИО, Должник обязался выплачивать в пользу своего несовершеннолетнего сына алименты в размере рублей ежемесячно до достижения сыном восемнадцатилетнего возраста.")
-    p5.runs[0].font.color.rgb = RGBColor(255, 0, 0)
-    p5_format = p5.paragraph_format
-    p5_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-    p5_format.first_line_indent = Cm(1)
-    p5_format.space_before = Pt(0)
-    p5_format.space_after = Pt(0)
-    p5_format.line_spacing = 1.0
+    if children and children.get('alimonyInfo', {}).get('isPayingAlimony', False):
+        alimony = children.get('alimonyInfo', {})
+        doc_type = alimony.get('documentType', 'notarial')
+        
+        if doc_type == 'notarial':
+            notary_date = alimony.get('notaryDate', '01.01.2021')
+            child_name = alimony.get('childFullName', 'ФИО')
+            amount = format_number(alimony.get('monthlyAmount', 0))
+            alimony_text = f"В соответствии с Соглашением об оплате алиментов на содержание несовершеннолетнего ребенка, удостоверенного нотариусом {notary_date} г., заключенного между Должником и матерью несовершеннолетнего ребенка Должника {child_name}, Должник обязался выплачивать в пользу своего несовершеннолетнего ребенка алименты в размере {amount} рублей ежемесячно до достижения ребенком восемнадцатилетнего возраста."
+        elif doc_type == 'court':
+            doc_details = alimony.get('documentDetails', 'решению суда')
+            alimony_text = f"В соответствии с {doc_details} Должник обязан выплачивать алименты на содержание несовершеннолетнего ребенка."
+        else:
+            other_details = alimony.get('otherDetails', 'документу об алиментах')
+            alimony_text = f"В соответствии с {other_details} Должник обязан выплачивать алименты на содержание несовершеннолетнего ребенка."
+        
+        p5 = doc.add_paragraph(alimony_text)
+        p5_format = p5.paragraph_format
+        p5_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p5_format.first_line_indent = Cm(1)
+        p5_format.space_before = Pt(0)
+        p5_format.space_after = Pt(0)
+        p5_format.line_spacing = 1.0
     
     if property and property.get('realEstate'):
         real_estate = property.get('realEstate', [])
@@ -441,17 +466,22 @@ def generate_docx_document(
         p6_format.space_after = Pt(0)
         p6_format.line_spacing = 1.0
     
-    p7 = doc.add_paragraph("Кроме того, в собственности Должника находится автомобиль марки Место для ввода текста. г., идентификационный номер VIN: Место для ввода текста.")
-    p7.runs[0].font.color.rgb = RGBColor(255, 0, 0)
-    p7_format = p7.paragraph_format
-    p7_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-    p7_format.first_line_indent = Cm(1)
-    p7_format.space_before = Pt(0)
-    p7_format.space_after = Pt(0)
-    p7_format.line_spacing = 1.0
+    if property and property.get('vehicles'):
+        vehicles = property.get('vehicles', [])
+        if vehicles:
+            vehicle = vehicles[0]
+            vehicle_model = vehicle.get('model', 'Место для ввода текста.')
+            vehicle_year = vehicle.get('year', 'Место для ввода текста.')
+            vehicle_reg = vehicle.get('registrationNumber', 'Место для ввода текста.')
+            p7 = doc.add_paragraph(f"Кроме того, в собственности Должника находится автомобиль марки {vehicle_model} {vehicle_year} г., государственный регистрационный номер: {vehicle_reg}.")
+            p7_format = p7.paragraph_format
+            p7_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            p7_format.first_line_indent = Cm(1)
+            p7_format.space_before = Pt(0)
+            p7_format.space_after = Pt(0)
+            p7_format.line_spacing = 1.0
     
     p8 = doc.add_paragraph("Какое-либо другое имущество, на которое может быть обращено взыскание в соответствии с действующим законодательством, у Должника отсутствует.")
-    p8.runs[0].font.color.rgb = RGBColor(255, 0, 0)
     p8_format = p8.paragraph_format
     p8_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p8_format.first_line_indent = Cm(1)
