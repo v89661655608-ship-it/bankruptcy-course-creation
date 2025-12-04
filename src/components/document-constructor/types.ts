@@ -56,11 +56,15 @@ export interface IncomeData {
 }
 
 export interface PropertyData {
+  noProperty?: boolean;
   realEstate: Array<{
     type: string;
     address: string;
     cadastralNumber: string;
     value: number;
+    area?: number;
+    landArea?: number;
+    isSoleResidence?: boolean;
   }>;
   vehicles: Array<{
     type: string;

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import Icon from "@/components/ui/icon";
 import { PropertyData } from "../types";
 
@@ -15,11 +16,15 @@ interface PropertyDataFormProps {
 
 export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [noProperty, setNoProperty] = useState(false);
   const [propertyForm, setPropertyForm] = useState({
     propertyType: "",
     address: "",
     cadastralNumber: "",
     value: "",
+    area: "",
+    landArea: "",
+    isSoleResidence: false,
   });
 
   const [vehicleForm, setVehicleForm] = useState({
@@ -69,6 +74,9 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
       address: propertyForm.address,
       cadastralNumber: propertyForm.cadastralNumber,
       value: parseFloat(propertyForm.value) || 0,
+      area: parseFloat(propertyForm.area) || undefined,
+      landArea: parseFloat(propertyForm.landArea) || undefined,
+      isSoleResidence: propertyForm.isSoleResidence,
     };
 
     setProperties([...properties, newProperty]);
@@ -77,6 +85,9 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
       address: "",
       cadastralNumber: "",
       value: "",
+      area: "",
+      landArea: "",
+      isSoleResidence: false,
     });
   };
 
@@ -125,6 +136,7 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const data: PropertyData = {
+      noProperty: noProperty,
       realEstate: properties,
       vehicles: vehicles,
     };
@@ -134,6 +146,18 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex items-center space-x-2 p-4 border rounded-lg bg-background">
+        <Checkbox
+          id="noProperty"
+          checked={noProperty}
+          onCheckedChange={(checked) => setNoProperty(checked as boolean)}
+        />
+        <Label htmlFor="noProperty" className="text-sm font-normal cursor-pointer">
+          Имущество отсутствует
+        </Label>
+      </div>
+
+      {!noProperty && (
       <div className="border rounded-lg p-4 bg-muted/50">
         <h3 className="font-medium mb-3">Добавить имущество</h3>
         <div className="grid sm:grid-cols-2 gap-4">
@@ -202,6 +226,44 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
             {errors.value && (
               <p className="text-sm text-red-500 mt-1">{errors.value}</p>
             )}
+          </div>
+          <div>
+            <Label htmlFor="area">Площадь (кв. м)</Label>
+            <Input
+              id="area"
+              type="number"
+              value={propertyForm.area}
+              onChange={(e) =>
+                setPropertyForm({ ...propertyForm, area: e.target.value })
+              }
+              min="0"
+              placeholder="Общая площадь"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="landArea">Площадь земельного участка (кв. м)</Label>
+            <Input
+              id="landArea"
+              type="number"
+              value={propertyForm.landArea}
+              onChange={(e) =>
+                setPropertyForm({ ...propertyForm, landArea: e.target.value })
+              }
+              min="0"
+              placeholder="Если есть земельный участок"
+            />
+          </div>
+          <div className="sm:col-span-2 flex items-center space-x-2">
+            <Checkbox
+              id="isSoleResidence"
+              checked={propertyForm.isSoleResidence}
+              onCheckedChange={(checked) =>
+                setPropertyForm({ ...propertyForm, isSoleResidence: checked as boolean })
+              }
+            />
+            <Label htmlFor="isSoleResidence" className="text-sm font-normal cursor-pointer">
+              Является единственным пригодным для постоянного проживания жильем и не подлежит реализации
+            </Label>
           </div>
         </div>
         <Button
@@ -309,6 +371,15 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
               <p className="text-sm">
                 Стоимость: {property.value.toLocaleString()} ₽
               </p>
+              {property.area && (
+                <p className="text-sm">Площадь: {property.area} кв. м</p>
+              )}
+              {property.landArea && (
+                <p className="text-sm">Земельный участок: {property.landArea} кв. м</p>
+              )}
+              {property.isSoleResidence && (
+                <p className="text-sm text-green-600">✓ Единственное жилье</p>
+              )}
             </div>
           ))}
         </div>
