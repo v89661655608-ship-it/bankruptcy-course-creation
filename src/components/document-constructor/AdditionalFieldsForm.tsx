@@ -29,13 +29,6 @@ export default function AdditionalFieldsForm({ initialData, onSave, onCancel }: 
 
   return (
     <Card className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Icon name="FileText" size={20} className="text-primary" />
-          <h3 className="text-lg font-semibold">Дополнительные данные для документа</h3>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="courtName">Название суда</Label>

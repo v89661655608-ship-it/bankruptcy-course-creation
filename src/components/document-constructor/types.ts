@@ -76,3 +76,28 @@ export interface AdditionalFields {
   phone: string;
   email: string;
 }
+
+export interface BenefitsData {
+  certificateNumber?: string;
+  certificateDate?: string;
+  isLowIncome: boolean;
+  specialStatus?: string;
+}
+
+export interface ChildrenData {
+  noChildren: boolean;
+  children: Array<{
+    fullName: string;
+    birthDate: string;
+    livesWithDebtor: boolean;
+  }>;
+  alimonyInfo?: {
+    isPayingAlimony: boolean;
+    documentType?: 'notarial' | 'court' | 'other';
+    documentDetails?: string;
+    notaryDate?: string;
+    childFullName?: string;
+    monthlyAmount?: number;
+    otherDetails?: string;
+  };
+}

@@ -7,7 +7,7 @@ import ProgressSidebar from "@/components/document-constructor/ProgressSidebar";
 import ManualInputForm from "@/components/document-constructor/ManualInputForm";
 import DocumentUpload from "@/components/document-constructor/DocumentUpload";
 import AdditionalFieldsForm from "@/components/document-constructor/AdditionalFieldsForm";
-import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields } from "@/components/document-constructor/types";
+import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields, BenefitsData, ChildrenData } from "@/components/document-constructor/types";
 import funcUrls from "../../backend/func2url.json";
 
 export default function DocumentConstructor() {
@@ -22,6 +22,8 @@ export default function DocumentConstructor() {
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [showAdditionalFields, setShowAdditionalFields] = useState(false);
   const [additionalFields, setAdditionalFields] = useState<AdditionalFields | null>(null);
+  const [benefitsData, setBenefitsData] = useState<BenefitsData | null>(null);
+  const [childrenData, setChildrenData] = useState<ChildrenData | null>(null);
 
   const handleEsiaAuth = async () => {
     alert('Интеграция с ЕСИА/Госуслуги в разработке. Требуется регистрация в ЕСИА и получение сертификатов.');
@@ -51,6 +53,8 @@ export default function DocumentConstructor() {
           incomeData,
           propertyData,
           additionalFields,
+          benefitsData,
+          childrenData,
           format
         })
       });
@@ -223,6 +227,12 @@ export default function DocumentConstructor() {
               onCreditDataSubmit={setCreditData}
               onIncomeDataSubmit={setIncomeData}
               onPropertyDataSubmit={setPropertyData}
+              onAdditionalFieldsSubmit={setAdditionalFields}
+              onBenefitsSubmit={setBenefitsData}
+              onChildrenSubmit={setChildrenData}
+              additionalFieldsData={additionalFields || undefined}
+              benefitsData={benefitsData || undefined}
+              childrenData={childrenData || undefined}
             />
           )}
 
@@ -235,16 +245,7 @@ export default function DocumentConstructor() {
             />
           )}
 
-          {showAdditionalFields && (
-            <AdditionalFieldsForm
-              initialData={additionalFields || undefined}
-              onSave={(data) => {
-                setAdditionalFields(data);
-                setShowAdditionalFields(false);
-              }}
-              onCancel={() => setShowAdditionalFields(false)}
-            />
-          )}
+
 
           <DataDisplayCards
             personalData={personalData}
@@ -260,13 +261,7 @@ export default function DocumentConstructor() {
           incomeData={incomeData}
           propertyData={propertyData}
           isGenerating={isGenerating}
-          additionalFields={additionalFields}
           onGenerateDocument={handleGenerateDocument}
-          onEditAdditionalFields={() => {
-            setShowAdditionalFields(true);
-            setShowManualInput(false);
-            setShowDocumentUpload(false);
-          }}
         />
       </div>
     </div>

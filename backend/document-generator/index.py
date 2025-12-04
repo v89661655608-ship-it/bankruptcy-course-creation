@@ -48,6 +48,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         income_data = body_data.get('incomeData')
         property_data = body_data.get('propertyData')
         additional_fields = body_data.get('additionalFields', {})
+        benefits_data = body_data.get('benefitsData', {})
+        children_data = body_data.get('childrenData', {})
         doc_format = body_data.get('format', 'docx')
         
         if not personal_data or not credit_data:
@@ -60,7 +62,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if doc_format == 'pdf':
             pdf_base64 = generate_pdf_document(
-                personal_data, credit_data, income_data, property_data, additional_fields
+                personal_data, credit_data, income_data, property_data, additional_fields, benefits_data, children_data
             )
             result = {
                 'success': True,
@@ -73,7 +75,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         elif doc_format == 'docx':
             docx_base64 = generate_docx_document(
-                personal_data, credit_data, income_data, property_data, additional_fields
+                personal_data, credit_data, income_data, property_data, additional_fields, benefits_data, children_data
             )
             result = {
                 'success': True,
@@ -239,7 +241,9 @@ def generate_docx_document(
     credit: Dict[str, Any],
     income: Dict[str, Any],
     property: Dict[str, Any],
-    additional: Dict[str, Any] = None
+    additional: Dict[str, Any] = None,
+    benefits: Dict[str, Any] = None,
+    children: Dict[str, Any] = None
 ) -> str:
     '''Генерирует DOCX документ по шаблону и возвращает base64'''
     
@@ -551,7 +555,9 @@ def generate_pdf_document(
     credit: Dict[str, Any],
     income: Dict[str, Any],
     property: Dict[str, Any],
-    additional: Dict[str, Any] = None
+    additional: Dict[str, Any] = None,
+    benefits: Dict[str, Any] = None,
+    children: Dict[str, Any] = None
 ) -> str:
     '''Генерирует PDF документ по шаблону и возвращает base64'''
     
