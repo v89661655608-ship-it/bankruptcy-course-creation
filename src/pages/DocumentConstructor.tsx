@@ -22,9 +22,10 @@ const loadFromStorage = () => {
 };
 
 export default function DocumentConstructor() {
+  const savedData = useState(() => loadFromStorage())[0];
+  
   const [isLoadingEsia] = useState(false);
   const [isLoadingBki] = useState(false);
-  const savedData = loadFromStorage();
   const [personalData, setPersonalData] = useState<PersonalData | null>(savedData.personalData || null);
   const [creditData, setCreditData] = useState<CreditData | null>(savedData.creditData || null);
   const [incomeData, setIncomeData] = useState<IncomeData | null>(savedData.incomeData || null);
