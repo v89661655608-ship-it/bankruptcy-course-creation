@@ -687,7 +687,7 @@ def generate_pdf_document(
     c.drawString(2*cm, y, "Кредиторы:")
     y -= 0.5*cm
     
-    for idx, creditor in enumerate(creditors[:4], 1):
+    for idx, creditor in enumerate(creditors, 1):
         c.drawString(2*cm, y, f"{idx}. {creditor.get('name', 'Место для ввода текста.')}")
         y -= 0.5*cm
         c.drawString(2*cm, y, f"ИНН {creditor.get('inn', 'Место для ввода текста.')}")
