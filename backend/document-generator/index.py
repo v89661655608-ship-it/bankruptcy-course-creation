@@ -1141,6 +1141,10 @@ def generate_property_list_document(
     registration = personal.get('registration', {})
     address = registration.get('address', 'обязательно')
     
+    # Извлекаем субъект РФ из адреса (первая часть до запятой)
+    address_parts = address.split(',')
+    subject_rf = address_parts[0].strip() if len(address_parts) > 0 else 'обязательно'
+    
     # Заполняем строки таблицы
     rows_data = [
         ('фамилия', surname),
@@ -1152,10 +1156,10 @@ def generate_property_list_document(
         ('СНИЛС', snils),
         ('ИНН', inn),
         ('документ, удостоверяющий личность', ''),
-        ('вид документа', 'обязательно'),
-        ('серия (при наличии) и номер', 'обязательно'),
+        ('вид документа', 'паспорт'),
+        ('серия (при наличии) и номер', f'{passport_series} {passport_number}'),
         ('адрес регистрации по месту жительства в Российской Федерации*', ''),
-        ('субъект Российской Федерации', 'обязательно'),
+        ('субъект Российской Федерации', subject_rf),
     ]
     
     for idx, (label, value) in enumerate(rows_data, 1):
