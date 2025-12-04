@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
+import { useNavigate } from "react-router-dom";
 import DataAuthSection from "@/components/document-constructor/DataAuthSection";
 import DataDisplayCards from "@/components/document-constructor/DataDisplayCards";
 import ProgressSidebar from "@/components/document-constructor/ProgressSidebar";
@@ -22,6 +24,7 @@ const loadFromStorage = () => {
 };
 
 export default function DocumentConstructor() {
+  const navigate = useNavigate();
   const savedData = useState(() => loadFromStorage())[0];
   
   const [isLoadingEsia] = useState(false);
@@ -137,6 +140,17 @@ export default function DocumentConstructor() {
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
       <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/dashboard')}
+            className="-ml-2"
+          >
+            <Icon name="ArrowLeft" size={20} className="mr-2" />
+            Назад в личный кабинет
+          </Button>
+        </div>
         <h1 className="text-3xl font-bold mb-2">Конструктор судебных документов</h1>
         <p className="text-muted-foreground">
           Автоматическая генерация заявлений о банкротстве на основе данных из государственных реестров
