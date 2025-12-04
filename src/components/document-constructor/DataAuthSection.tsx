@@ -36,11 +36,15 @@ export default function DataAuthSection({
           <div className="flex items-start gap-3 mb-4">
             <Icon name="Info" size={20} className="text-primary mt-0.5" />
             <div className="text-sm">
-              <p className="font-medium mb-1">Для работы конструктора требуется:</p>
-              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                <li>Интеграция с ЕСИА (Госуслуги) для получения личных данных</li>
-                <li>Подключение к Бюро кредитных историй для данных о кредитах</li>
-                <li>API интеграции с ФССП для исполнительных производств</li>
+              <p className="font-medium mb-2">Интеграции с ЕСИА (Госуслуги) и БКИ находятся в разработке</p>
+              <p className="text-muted-foreground mb-3">
+                Автоматическая загрузка данных появится совсем скоро. А пока используйте ручной ввод данных — все поля с автозаполнением адресов и реквизитов организаций для вашего удобства.
+              </p>
+              <p className="text-xs text-muted-foreground font-medium">Планируемые интеграции:</p>
+              <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground mt-1">
+                <li>ЕСИА (Госуслуги) — автозагрузка личных данных, паспорта, СНИЛС, ИНН</li>
+                <li>Бюро кредитных историй — автозагрузка данных о кредиторах и долгах</li>
+                <li>ФССП — автозагрузка исполнительных производств</li>
               </ul>
             </div>
           </div>
