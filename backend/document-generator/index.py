@@ -74,6 +74,19 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'fileName': f"приложение1_список_кредиторов_{personal_data.get('inn', 'doc')}.docx"
                 }
             }
+        elif doc_format == 'property-list':
+            docx_base64 = generate_property_list_document(
+                personal_data, property_data
+            )
+            result = {
+                'success': True,
+                'document': {
+                    'data': docx_base64,
+                    'createdAt': datetime.now().isoformat(),
+                    'format': 'docx',
+                    'fileName': f"приложение2_опись_имущества_{personal_data.get('inn', 'doc')}.docx"
+                }
+            }
         elif doc_format == 'pdf':
             pdf_base64 = generate_pdf_document(
                 personal_data, credit_data, income_data, property_data, additional_fields, benefits_data, children_data, transactions_data
@@ -960,6 +973,250 @@ def generate_creditors_list_document(
     doc.add_paragraph("Должников перед гражданином не имеется.")
     
     doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # Подпись
+    p_signature = doc.add_paragraph()
+    p_signature.add_run(f"Гражданин: {full_name}")
+    p_signature.add_run("\t\t_______________")
+    
+    p_date = doc.add_paragraph()
+    p_date.add_run(f"Дата: {datetime.now().strftime('%d.%m.%Y')}")
+    
+    # Сохранение в base64
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return base64.b64encode(buffer.read()).decode('utf-8')
+
+
+def generate_property_list_document(
+    personal: Dict[str, Any],
+    property: Dict[str, Any]
+) -> str:
+    '''
+    Генерирует Приложение №2 - Опись имущества гражданина
+    по форме из Приказа Минэкономразвития от 05.08.2015 N 530
+    '''
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    
+    doc = Document()
+    
+    # Заголовок документа
+    p_header = doc.add_paragraph()
+    p_header.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    run = p_header.add_run("Приложение № 2\nк приказу Минэкономразвития России\nот 5 августа 2015 г. № 530")
+    run.font.size = Pt(10)
+    
+    doc.add_paragraph()
+    
+    # Заголовок
+    title = doc.add_heading("ОПИСЬ\nимущества гражданина", level=1)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    for run in title.runs:
+        run.font.size = Pt(14)
+        run.font.bold = True
+    
+    # Информация о гражданине
+    p_citizen = doc.add_paragraph()
+    full_name = personal.get('fullName', '_________________________')
+    inn = personal.get('inn', '_________________________')
+    snils = personal.get('snils', '_________________________')
+    
+    passport = personal.get('passport', {})
+    passport_series = passport.get('series', '__')
+    passport_number = passport.get('number', '______')
+    passport_issued_by = passport.get('issuedBy', '_________________________')
+    passport_issue_date = passport.get('issueDate', '__.__.____')
+    
+    registration = personal.get('registration', {})
+    address = registration.get('address', '_________________________')
+    
+    p_citizen.add_run(f"Гражданин: {full_name}\n")
+    p_citizen.add_run(f"ИНН: {inn}\n")
+    p_citizen.add_run(f"СНИЛС: {snils}\n")
+    p_citizen.add_run(f"Паспорт: серия {passport_series} номер {passport_number}, выдан {passport_issued_by} {passport_issue_date}\n")
+    p_citizen.add_run(f"Адрес регистрации: {address}")
+    
+    doc.add_paragraph()
+    
+    # I. Недвижимое имущество
+    section1_heading = doc.add_paragraph()
+    section1_heading.add_run("I. Недвижимое имущество").bold = True
+    
+    table1 = doc.add_table(rows=1, cols=7)
+    table1.style = 'Table Grid'
+    
+    # Заголовки таблицы недвижимости
+    headers1 = table1.rows[0].cells
+    headers1[0].text = "№ п/п"
+    headers1[1].text = "Вид и наименование имущества"
+    headers1[2].text = "Вид собственности"
+    headers1[3].text = "Местонахождение (адрес)"
+    headers1[4].text = "Площадь (кв. м)"
+    headers1[5].text = "Основание приобретения и стоимость"
+    headers1[6].text = "Сведения о залоге и залогодержателе"
+    
+    # Форматирование заголовков
+    for cell in headers1:
+        cell.paragraphs[0].runs[0].font.bold = True
+        cell.paragraphs[0].runs[0].font.size = Pt(9)
+        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Заполнение данными о недвижимости
+    real_estate = property.get('realEstate', []) if property else []
+    
+    if real_estate:
+        for idx, item in enumerate(real_estate, 1):
+            row = table1.add_row().cells
+            row[0].text = str(idx)
+            row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            
+            item_type = item.get('type', 'недвижимость')
+            row[1].text = item_type
+            
+            row[2].text = "Индивидуальная"
+            
+            item_address = item.get('address', 'не указано')
+            row[3].text = item_address
+            
+            area = item.get('area', 0)
+            land_area = item.get('landArea', 0)
+            if land_area:
+                row[4].text = f"Дом: {area}\nУчасток: {land_area}"
+            else:
+                row[4].text = str(area)
+            
+            cadastral = item.get('cadastralNumber', 'не указано')
+            value = format_number(item.get('value', 0))
+            row[5].text = f"Кадастровый номер: {cadastral}\nСтоимость: {value} руб."
+            
+            if item.get('isSoleResidence', False):
+                row[6].text = "Единственное жилье, не подлежит реализации"
+            else:
+                row[6].text = "Не обременено"
+            
+            # Форматирование ячеек
+            for cell in row:
+                cell.paragraphs[0].runs[0].font.size = Pt(9)
+    else:
+        row = table1.add_row().cells
+        row[0].text = "-"
+        row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        row[1].text = "Недвижимое имущество отсутствует"
+        row[2].text = "-"
+        row[3].text = "-"
+        row[4].text = "-"
+        row[5].text = "-"
+        row[6].text = "-"
+    
+    doc.add_paragraph()
+    
+    # II. Транспортные средства
+    section2_heading = doc.add_paragraph()
+    section2_heading.add_run("II. Транспортные средства").bold = True
+    
+    table2 = doc.add_table(rows=1, cols=7)
+    table2.style = 'Table Grid'
+    
+    # Заголовки таблицы транспортных средств
+    headers2 = table2.rows[0].cells
+    headers2[0].text = "№ п/п"
+    headers2[1].text = "Вид, марка, модель"
+    headers2[2].text = "Год выпуска"
+    headers2[3].text = "Идентификационный номер (VIN)"
+    headers2[4].text = "Регистрационный номер"
+    headers2[5].text = "Место нахождения"
+    headers2[6].text = "Сведения о залоге"
+    
+    # Форматирование заголовков
+    for cell in headers2:
+        cell.paragraphs[0].runs[0].font.bold = True
+        cell.paragraphs[0].runs[0].font.size = Pt(9)
+        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Заполнение данными о транспортных средствах
+    vehicles = property.get('vehicles', []) if property else []
+    
+    if vehicles:
+        for idx, vehicle in enumerate(vehicles, 1):
+            row = table2.add_row().cells
+            row[0].text = str(idx)
+            row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            
+            vehicle_type = vehicle.get('type', 'Автомобиль')
+            brand = vehicle.get('brand', '')
+            model = vehicle.get('model', '')
+            row[1].text = f"{vehicle_type} {brand} {model}"
+            
+            year = vehicle.get('year', '')
+            row[2].text = str(year)
+            row[2].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            
+            vin = vehicle.get('vin', 'не указан')
+            row[3].text = vin
+            
+            reg_number = vehicle.get('registrationNumber', 'не указан')
+            row[4].text = reg_number
+            row[4].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            
+            row[5].text = address
+            
+            row[6].text = "Не обременено"
+            
+            # Форматирование ячеек
+            for cell in row:
+                cell.paragraphs[0].runs[0].font.size = Pt(9)
+    else:
+        row = table2.add_row().cells
+        row[0].text = "-"
+        row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        row[1].text = "Транспортные средства отсутствуют"
+        row[2].text = "-"
+        row[3].text = "-"
+        row[4].text = "-"
+        row[5].text = "-"
+        row[6].text = "-"
+    
+    doc.add_paragraph()
+    
+    # III. Иное имущество
+    section3_heading = doc.add_paragraph()
+    section3_heading.add_run("III. Иное ценное имущество").bold = True
+    
+    table3 = doc.add_table(rows=1, cols=4)
+    table3.style = 'Table Grid'
+    
+    headers3 = table3.rows[0].cells
+    headers3[0].text = "№ п/п"
+    headers3[1].text = "Вид имущества"
+    headers3[2].text = "Описание"
+    headers3[3].text = "Стоимость"
+    
+    for cell in headers3:
+        cell.paragraphs[0].runs[0].font.bold = True
+        cell.paragraphs[0].runs[0].font.size = Pt(9)
+        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Пустая строка (иное имущество обычно отсутствует)
+    row3 = table3.add_row().cells
+    row3[0].text = "-"
+    row3[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    row3[1].text = "Иное ценное имущество отсутствует"
+    row3[2].text = "-"
+    row3[3].text = "0"
+    row3[3].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # Примечание
+    p_note = doc.add_paragraph()
+    p_note.add_run("Примечание: ").bold = True
+    p_note.add_run("В соответствии с п. 3 ст. 213.25 Федерального закона \"О несостоятельности (банкротстве)\" и ст. 446 ГПК РФ, единственное пригодное для постоянного проживания помещение не подлежит реализации.")
+    p_note.paragraph_format.first_line_indent = Cm(1)
+    
     doc.add_paragraph()
     
     # Подпись

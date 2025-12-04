@@ -60,7 +60,7 @@ export default function DocumentConstructor() {
     alert('Интеграция с БКИ в разработке. Требуется подключение к API Бюро кредитных историй.');
   };
 
-  const handleGenerateDocument = async (format: 'pdf' | 'docx' | 'creditors-list') => {
+  const handleGenerateDocument = async (format: 'pdf' | 'docx' | 'creditors-list' | 'property-list') => {
     if (!personalData || !creditData) {
       alert('Необходимо загрузить персональные данные и кредитную историю (минимальные требования)');
       return;
@@ -110,7 +110,9 @@ export default function DocumentConstructor() {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
         
-        const docType = format === 'creditors-list' ? 'Приложение №1' : 'Заявление';
+        let docType = 'Заявление';
+        if (format === 'creditors-list') docType = 'Приложение №1';
+        if (format === 'property-list') docType = 'Приложение №2';
         alert(`${docType} успешно сгенерировано и загружается!`);
       }
     } catch (error) {
