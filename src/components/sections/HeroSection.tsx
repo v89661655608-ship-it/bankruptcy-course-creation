@@ -15,7 +15,7 @@ export default function HeroSection({ user, scrollToSection }: HeroSectionProps)
       <div className="container mx-auto max-w-6xl">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="animate-fade-in">
-            <Badge className="mb-4 bg-accent/20 text-accent-foreground border-accent">Эксклюзивный курс</Badge>
+            <Badge className="mb-4 bg-accent/20 text-accent-foreground border-accent">Эксклюзивная платформа</Badge>
             <h2 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
               Банкротство физического лица
               <span className="block text-accent mt-2">без юристов</span>
