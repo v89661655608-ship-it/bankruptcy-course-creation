@@ -25,7 +25,7 @@ export default function VideoSection() {
             <Badge className="mb-4">Как это работает</Badge>
             <h3 className="text-4xl md:text-5xl font-bold mb-6">Узнайте о курсе подробнее</h3>
             <p className="text-lg text-muted-foreground mb-8">
-              Видео о том, как наш курс поможет вам пройти банкротство самостоятельно и сэкономить до 150 000 ₽
+              Видео о том, как наш курс поможет вам пройти банкротство самостоятельно и сэкономить до 150&nbsp;000&nbsp;₽
             </p>
             
             <div className="space-y-4">
