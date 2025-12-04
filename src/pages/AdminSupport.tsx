@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
   id: number;
@@ -39,12 +40,12 @@ export default function AdminSupport() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-  const isAdmin = currentUser.is_admin;
+  const isAdmin = user?.is_admin;
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (!user || !isAdmin) {
       navigate('/dashboard');
       return;
     }

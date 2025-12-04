@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
   id: number;
@@ -31,19 +32,19 @@ export default function Support() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-  const userId = currentUser.id;
+  const userId = user?.id;
 
   useEffect(() => {
-    if (!userId) {
+    if (!user) {
       navigate('/login');
       return;
     }
     loadMessages();
     const interval = setInterval(loadMessages, 5000);
     return () => clearInterval(interval);
-  }, [userId]);
+  }, [user]);
 
   useEffect(() => {
     scrollToBottom();
