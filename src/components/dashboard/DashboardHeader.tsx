@@ -32,6 +32,14 @@ export default function DashboardHeader({ user, onLogout }: DashboardHeaderProps
             <Button 
               variant="outline" 
               size="sm" 
+              onClick={() => navigate('/support')}
+            >
+              <Icon name="MessageCircle" size={16} className="mr-2" />
+              Поддержка юристов
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
               onClick={() => navigate('/document-constructor')}
             >
               <Icon name="FileText" size={16} className="mr-2" />

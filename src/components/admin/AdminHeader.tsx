@@ -18,6 +18,13 @@ export default function AdminHeader({ onLogout, onSendTestEmail, sendingTestEmai
         <div className="flex items-center gap-4">
           <Button 
             variant="secondary" 
+            onClick={() => navigate('/admin-support')}
+          >
+            <Icon name="MessageCircle" size={16} className="mr-2" />
+            Чат поддержки
+          </Button>
+          <Button 
+            variant="secondary" 
             onClick={onSendTestEmail}
             disabled={sendingTestEmail}
           >
