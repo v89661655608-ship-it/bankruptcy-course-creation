@@ -66,6 +66,27 @@ export default function DocumentUpload({
     return data.text || '';
   };
 
+  const parseOcrText = async (text: string, documentType: string): Promise<any> => {
+    const response = await fetch(funcUrls["parse-ocr-text"], {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text,
+        documentType
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Parse API error');
+    }
+
+    const result = await response.json();
+    return result.data || {};
+  };
+
   const handleProcessPassport = async () => {
     if (!uploadedFiles.passport) {
       alert("Загрузите скан паспорта");
@@ -75,40 +96,33 @@ export default function DocumentUpload({
     setIsProcessing(true);
     try {
       const ocrText = await callOcrApi(uploadedFiles.passport);
+      const parsedData = await parseOcrText(ocrText, 'passport');
       
-      const mockData: PersonalData = {
-        fullName: "Петров Петр Петрович",
-        inn: "987654321012",
-        snils: "987-654-321 00",
-        birthDate: "15.05.1985",
-        birthPlace: "г. Санкт-Петербург",
+      const personalData: PersonalData = {
+        fullName: parsedData.fullName || "Не распознано",
+        inn: parsedData.inn || "",
+        snils: parsedData.snils || "",
+        birthDate: parsedData.birthDate || "",
+        birthPlace: parsedData.birthPlace || "",
         passport: {
-          series: "4010",
-          number: "654321",
-          issueDate: "15.05.2015",
-          issuedBy: "ОУФМС России по СПб",
-          code: "780-002",
+          series: parsedData.passportSeries || "",
+          number: parsedData.passportNumber || "",
+          issueDate: parsedData.passportIssueDate || "",
+          issuedBy: parsedData.passportIssuedBy || "",
+          code: parsedData.passportCode || "",
         },
         registration: {
-          address: "г. Санкт-Петербург, пр. Невский, д. 100, кв. 50",
-          date: "15.05.2015",
+          address: parsedData.registrationAddress || "",
+          date: parsedData.registrationDate || "",
         },
         maritalStatus: {
-          status: "женат",
-          spouseName: "Петрова Анна Ивановна",
-          marriageDate: "01.07.2010",
+          status: "",
         },
-        children: [
-          {
-            name: "Петрова Мария Петровна",
-            birthDate: "10.03.2012",
-            isMinor: true,
-          },
-        ],
+        children: [],
       };
 
-      onPersonalDataExtracted(mockData);
-      alert(`Распознано:\n${ocrText.substring(0, 200)}...\n\nДанные сохранены (демо-режим)`);
+      onPersonalDataExtracted(personalData);
+      alert(`Распознано и автоматически заполнено:\n\nФИО: ${personalData.fullName}\nПаспорт: ${personalData.passport.series} ${personalData.passport.number}\nАдрес: ${personalData.registration.address}`);
     } catch (error) {
       alert(`Ошибка распознавания: ${error}`);
     } finally {
@@ -125,47 +139,17 @@ export default function DocumentUpload({
     setIsProcessing(true);
     try {
       const ocrText = await callOcrApi(uploadedFiles.bki);
+      const parsedData = await parseOcrText(ocrText, 'bki');
 
-      const mockData: CreditData = {
-        creditors: [
-          {
-            name: "ВТБ (ПАО)",
-            inn: "7702070139",
-            credits: [
-              {
-                contractNumber: "VTB-2021-12345",
-                amount: 800000,
-                debt: 950000,
-                date: "15.03.2021",
-              },
-            ],
-          },
-          {
-            name: "АО «Альфа-Банк»",
-            inn: "7728168971",
-            credits: [
-              {
-                contractNumber: "ALFA-2020-67890",
-                amount: 200000,
-                debt: 280000,
-                date: "10.08.2020",
-              },
-            ],
-          },
-        ],
-        totalDebt: 1230000,
-        executiveDocuments: [
-          {
-            number: "98765432/2024",
-            date: "15.02.2024",
-            amount: 950000,
-            creditor: "ВТБ (ПАО)",
-          },
-        ],
+      const creditData: CreditData = {
+        creditors: parsedData.creditors || [],
+        totalDebt: parsedData.totalDebt || 0,
+        executiveDocuments: [],
       };
 
-      onCreditDataExtracted(mockData);
-      alert(`Распознано:\n${ocrText.substring(0, 200)}...\n\nДанные сохранены (демо-режим)`);
+      onCreditDataExtracted(creditData);
+      const creditorsNames = creditData.creditors.map(c => c.name).join(', ');
+      alert(`Распознано и автоматически заполнено:\n\nКредиторы: ${creditorsNames}\nОбщий долг: ${creditData.totalDebt.toLocaleString()} ₽`);
     } catch (error) {
       alert(`Ошибка распознавания: ${error}`);
     } finally {
@@ -182,15 +166,16 @@ export default function DocumentUpload({
     setIsProcessing(true);
     try {
       const ocrText = await callOcrApi(uploadedFiles.income);
+      const parsedData = await parseOcrText(ocrText, 'income');
 
-      const mockData: IncomeData = {
-        monthlyIncome: 45000,
-        source: "заработная плата",
-        lastYear: 540000,
+      const incomeData: IncomeData = {
+        monthlyIncome: parsedData.monthlyIncome || 0,
+        source: parsedData.source || "заработная плата",
+        lastYear: parsedData.lastYear || 0,
       };
 
-      onIncomeDataExtracted(mockData);
-      alert(`Распознано:\n${ocrText.substring(0, 200)}...\n\nДанные сохранены (демо-режим)`);
+      onIncomeDataExtracted(incomeData);
+      alert(`Распознано и автоматически заполнено:\n\nЕжемесячный доход: ${incomeData.monthlyIncome.toLocaleString()} ₽\nИсточник: ${incomeData.source}\nЗа год: ${incomeData.lastYear.toLocaleString()} ₽`);
     } catch (error) {
       alert(`Ошибка распознавания: ${error}`);
     } finally {
@@ -207,21 +192,16 @@ export default function DocumentUpload({
     setIsProcessing(true);
     try {
       const ocrText = await callOcrApi(uploadedFiles.property);
+      const parsedData = await parseOcrText(ocrText, 'property');
 
-      const mockData: PropertyData = {
-        realEstate: [
-          {
-            type: "квартира",
-            address: "г. Санкт-Петербург, пр. Невский, д. 100, кв. 50",
-            cadastralNumber: "78:01:0002003:5678",
-            value: 12000000,
-          },
-        ],
+      const propertyData: PropertyData = {
+        realEstate: parsedData.realEstate || [],
         vehicles: [],
       };
 
-      onPropertyDataExtracted(mockData);
-      alert(`Распознано:\n${ocrText.substring(0, 200)}...\n\nДанные сохранены (демо-режим)`);
+      onPropertyDataExtracted(propertyData);
+      const propertySummary = propertyData.realEstate.map(p => `${p.type}: ${p.address}`).join('\n');
+      alert(`Распознано и автоматически заполнено:\n\n${propertySummary}`);
     } catch (error) {
       alert(`Ошибка распознавания: ${error}`);
     } finally {

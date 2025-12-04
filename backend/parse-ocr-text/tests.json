@@ -1,0 +1,35 @@
+{
+  "tests": [
+    {
+      "name": "Test passport parsing",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "text": "Иванов Иван Иванович\n45 18 123456\nДата рождения: 01.01.1990\nМесто рождения: г. Москва\nДата выдачи: 10.05.2010\nКем выдан: ОУФМС России по г. Москве\nКод подразделения: 770-001\nЗарегистрирован: г. Москва, ул. Ленина, д. 1",
+        "documentType": "passport"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "documentType": "passport",
+        "data": {
+          "fullName": "string"
+        }
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test BKI parsing",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "text": "ПАО Сбербанк\nДоговор: 123/2020\nСумма кредита: 500000 руб\nЗадолженность: 150000 руб",
+        "documentType": "bki"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "documentType": "bki"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

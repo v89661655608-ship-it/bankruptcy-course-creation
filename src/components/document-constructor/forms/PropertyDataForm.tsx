@@ -5,11 +5,16 @@ import { Label } from "@/components/ui/label";
 import Icon from "@/components/ui/icon";
 import { PropertyData } from "../types";
 
+interface ValidationErrors {
+  [key: string]: string;
+}
+
 interface PropertyDataFormProps {
   onSubmit: (data: PropertyData) => void;
 }
 
 export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const [propertyForm, setPropertyForm] = useState({
     propertyType: "",
     address: "",
@@ -19,11 +24,35 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
 
   const [properties, setProperties] = useState<any[]>([]);
 
+  const validateCadastralNumber = (number: string): boolean => {
+    return /^\d{2}:\d{2}:\d{6,7}:\d{1,5}$/.test(number);
+  };
+
   const handleAddProperty = () => {
-    if (!propertyForm.propertyType || !propertyForm.address) {
-      alert("Заполните тип и адрес имущества");
+    const newErrors: ValidationErrors = {};
+
+    if (!propertyForm.propertyType || propertyForm.propertyType.length < 2) {
+      newErrors.propertyType = 'Укажите тип имущества (минимум 2 символа)';
+    }
+
+    if (!propertyForm.address || propertyForm.address.length < 10) {
+      newErrors.address = 'Укажите полный адрес (минимум 10 символов)';
+    }
+
+    if (propertyForm.cadastralNumber && !validateCadastralNumber(propertyForm.cadastralNumber)) {
+      newErrors.cadastralNumber = 'Неверный формат кадастрового номера (XX:XX:XXXXXXX:XXX)';
+    }
+
+    if (propertyForm.value && parseFloat(propertyForm.value) < 0) {
+      newErrors.value = 'Стоимость не может быть отрицательной';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({});
 
     const newProperty = {
       type: propertyForm.propertyType,
@@ -68,7 +97,11 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
                 })
               }
               placeholder="квартира, дом, гараж"
+              className={errors.propertyType ? 'border-red-500' : ''}
             />
+            {errors.propertyType && (
+              <p className="text-sm text-red-500 mt-1">{errors.propertyType}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="cadastralNumber">Кадастровый номер</Label>
@@ -81,7 +114,12 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
                   cadastralNumber: e.target.value,
                 })
               }
+              placeholder="XX:XX:XXXXXXX:XXX"
+              className={errors.cadastralNumber ? 'border-red-500' : ''}
             />
+            {errors.cadastralNumber && (
+              <p className="text-sm text-red-500 mt-1">{errors.cadastralNumber}</p>
+            )}
           </div>
           <div className="sm:col-span-2">
             <Label htmlFor="address">Адрес</Label>
@@ -91,7 +129,11 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
               onChange={(e) =>
                 setPropertyForm({ ...propertyForm, address: e.target.value })
               }
+              className={errors.address ? 'border-red-500' : ''}
             />
+            {errors.address && (
+              <p className="text-sm text-red-500 mt-1">{errors.address}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="value">Стоимость (₽)</Label>
@@ -102,7 +144,12 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
               onChange={(e) =>
                 setPropertyForm({ ...propertyForm, value: e.target.value })
               }
+              min="0"
+              className={errors.value ? 'border-red-500' : ''}
             />
+            {errors.value && (
+              <p className="text-sm text-red-500 mt-1">{errors.value}</p>
+            )}
           </div>
         </div>
         <Button

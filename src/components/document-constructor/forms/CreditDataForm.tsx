@@ -5,11 +5,16 @@ import { Label } from "@/components/ui/label";
 import Icon from "@/components/ui/icon";
 import { CreditData } from "../types";
 
+interface ValidationErrors {
+  [key: string]: string;
+}
+
 interface CreditDataFormProps {
   onSubmit: (data: CreditData) => void;
 }
 
 export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const [creditForm, setCreditForm] = useState({
     creditorName: "",
     creditorInn: "",
@@ -22,10 +27,26 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
   const [creditors, setCreditors] = useState<any[]>([]);
 
   const handleAddCreditor = () => {
-    if (!creditForm.creditorName || !creditForm.debtAmount) {
-      alert("Заполните название кредитора и сумму долга");
+    const newErrors: ValidationErrors = {};
+
+    if (!creditForm.creditorName || creditForm.creditorName.length < 3) {
+      newErrors.creditorName = 'Введите название кредитора (минимум 3 символа)';
+    }
+
+    if (!creditForm.debtAmount || parseFloat(creditForm.debtAmount) <= 0) {
+      newErrors.debtAmount = 'Укажите сумму долга (больше 0)';
+    }
+
+    if (creditForm.creditAmount && parseFloat(creditForm.creditAmount) < 0) {
+      newErrors.creditAmount = 'Сумма кредита не может быть отрицательной';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({});
 
     const newCreditor = {
       name: creditForm.creditorName,
@@ -88,7 +109,11 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
                 setCreditForm({ ...creditForm, creditorName: e.target.value })
               }
               placeholder="ПАО Сбербанк"
+              className={errors.creditorName ? 'border-red-500' : ''}
             />
+            {errors.creditorName && (
+              <p className="text-sm text-red-500 mt-1">{errors.creditorName}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="creditorInn">ИНН кредитора</Label>
@@ -133,7 +158,12 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
               onChange={(e) =>
                 setCreditForm({ ...creditForm, creditAmount: e.target.value })
               }
+              min="0"
+              className={errors.creditAmount ? 'border-red-500' : ''}
             />
+            {errors.creditAmount && (
+              <p className="text-sm text-red-500 mt-1">{errors.creditAmount}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="debtAmount">Сумма долга (₽)</Label>
@@ -144,7 +174,12 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
               onChange={(e) =>
                 setCreditForm({ ...creditForm, debtAmount: e.target.value })
               }
+              min="0"
+              className={errors.debtAmount ? 'border-red-500' : ''}
             />
+            {errors.debtAmount && (
+              <p className="text-sm text-red-500 mt-1">{errors.debtAmount}</p>
+            )}
           </div>
         </div>
         <Button

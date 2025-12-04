@@ -5,11 +5,16 @@ import { Label } from "@/components/ui/label";
 import Icon from "@/components/ui/icon";
 import { PersonalData } from "../types";
 
+interface ValidationErrors {
+  [key: string]: string;
+}
+
 interface PersonalDataFormProps {
   onSubmit: (data: PersonalData) => void;
 }
 
 export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const [personalForm, setPersonalForm] = useState({
     fullName: "",
     inn: "",
@@ -29,8 +34,74 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
     divorceDate: "",
   });
 
+  const validateInn = (inn: string): boolean => {
+    if (!/^\d{12}$/.test(inn)) return false;
+    const coefficients = [7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
+    let sum = 0;
+    for (let i = 0; i < 10; i++) {
+      sum += parseInt(inn[i]) * coefficients[i];
+    }
+    const checksum = (sum % 11) % 10;
+    return checksum === parseInt(inn[10]);
+  };
+
+  const validateSnils = (snils: string): boolean => {
+    const cleaned = snils.replace(/[^\d]/g, '');
+    return /^\d{11}$/.test(cleaned);
+  };
+
+  const validatePassportSeries = (series: string): boolean => {
+    const cleaned = series.replace(/\s/g, '');
+    return /^\d{4}$/.test(cleaned);
+  };
+
+  const validatePassportNumber = (number: string): boolean => {
+    return /^\d{6}$/.test(number);
+  };
+
+  const validatePassportCode = (code: string): boolean => {
+    return /^\d{3}-?\d{3}$/.test(code);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const newErrors: ValidationErrors = {};
+
+    if (!personalForm.fullName || personalForm.fullName.length < 5) {
+      newErrors.fullName = 'Введите полное ФИО (минимум 5 символов)';
+    }
+
+    if (personalForm.inn && !validateInn(personalForm.inn)) {
+      newErrors.inn = 'Неверный формат ИНН (12 цифр с контрольной суммой)';
+    }
+
+    if (personalForm.snils && !validateSnils(personalForm.snils)) {
+      newErrors.snils = 'Неверный формат СНИЛС (11 цифр)';
+    }
+
+    if (!personalForm.passportSeries || !validatePassportSeries(personalForm.passportSeries)) {
+      newErrors.passportSeries = 'Серия паспорта: 4 цифры';
+    }
+
+    if (!personalForm.passportNumber || !validatePassportNumber(personalForm.passportNumber)) {
+      newErrors.passportNumber = 'Номер паспорта: 6 цифр';
+    }
+
+    if (personalForm.passportCode && !validatePassportCode(personalForm.passportCode)) {
+      newErrors.passportCode = 'Код подразделения: формат XXX-XXX';
+    }
+
+    if (!personalForm.registrationAddress || personalForm.registrationAddress.length < 10) {
+      newErrors.registrationAddress = 'Введите полный адрес (минимум 10 символов)';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      alert('Пожалуйста, исправьте ошибки в форме');
+      return;
+    }
+
+    setErrors({});
     const data: PersonalData = {
       fullName: personalForm.fullName,
       inn: personalForm.inn,
@@ -72,7 +143,11 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
               setPersonalForm({ ...personalForm, fullName: e.target.value })
             }
             required
+            className={errors.fullName ? 'border-red-500' : ''}
           />
+          {errors.fullName && (
+            <p className="text-sm text-red-500 mt-1">{errors.fullName}</p>
+          )}
         </div>
         <div>
           <Label htmlFor="birthDate">Дата рождения *</Label>
@@ -105,8 +180,14 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
             onChange={(e) =>
               setPersonalForm({ ...personalForm, inn: e.target.value })
             }
+            placeholder="12 цифр"
+            maxLength={12}
             required
+            className={errors.inn ? 'border-red-500' : ''}
           />
+          {errors.inn && (
+            <p className="text-sm text-red-500 mt-1">{errors.inn}</p>
+          )}
         </div>
         <div>
           <Label htmlFor="snils">СНИЛС *</Label>
@@ -118,7 +199,11 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
               setPersonalForm({ ...personalForm, snils: e.target.value })
             }
             required
+            className={errors.snils ? 'border-red-500' : ''}
           />
+          {errors.snils && (
+            <p className="text-sm text-red-500 mt-1">{errors.snils}</p>
+          )}
         </div>
       </div>
 
@@ -136,8 +221,14 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
                   passportSeries: e.target.value,
                 })
               }
+              placeholder="45 18"
+              maxLength={5}
               required
+              className={errors.passportSeries ? 'border-red-500' : ''}
             />
+            {errors.passportSeries && (
+              <p className="text-sm text-red-500 mt-1">{errors.passportSeries}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="passportNumber">Номер *</Label>
@@ -150,8 +241,14 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
                   passportNumber: e.target.value,
                 })
               }
+              placeholder="123456"
+              maxLength={6}
               required
+              className={errors.passportNumber ? 'border-red-500' : ''}
             />
+            {errors.passportNumber && (
+              <p className="text-sm text-red-500 mt-1">{errors.passportNumber}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="passportIssueDate">Дата выдачи *</Label>
@@ -180,8 +277,13 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
                   passportCode: e.target.value,
                 })
               }
+              maxLength={7}
               required
+              className={errors.passportCode ? 'border-red-500' : ''}
             />
+            {errors.passportCode && (
+              <p className="text-sm text-red-500 mt-1">{errors.passportCode}</p>
+            )}
           </div>
           <div className="sm:col-span-2">
             <Label htmlFor="passportIssuedBy">Кем выдан *</Label>
@@ -215,7 +317,11 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
                 })
               }
               required
+              className={errors.registrationAddress ? 'border-red-500' : ''}
             />
+            {errors.registrationAddress && (
+              <p className="text-sm text-red-500 mt-1">{errors.registrationAddress}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="registrationDate">Дата регистрации</Label>
