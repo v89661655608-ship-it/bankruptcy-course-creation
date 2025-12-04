@@ -65,7 +65,7 @@ export default function AdminResendToken() {
         <Card>
           <CardHeader>
             <CardTitle>Пересоздать токен чата для пользователя</CardTitle>
-          </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="email">Email пользователя</Label>
