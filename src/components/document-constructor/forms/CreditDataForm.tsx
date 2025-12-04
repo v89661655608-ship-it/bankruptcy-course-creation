@@ -1,9 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Icon from "@/components/ui/icon";
 import { CreditData } from "../types";
+
+interface CompanySuggestion {
+  inn: string;
+  name: string;
+  fullName: string;
+  address: string;
+  ogrn: string;
+  kpp: string;
+}
 
 interface ValidationErrors {
   [key: string]: string;
@@ -26,6 +35,97 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
   });
 
   const [creditors, setCreditors] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<CompanySuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Закрытие подсказок при клике вне
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Поиск организаций через DaData
+  const searchCompany = async (query: string) => {
+    if (query.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    setIsSearching(true);
+
+    try {
+      const response = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Token 5f0b70f6c1f18a0b7e04b7485a7aa3c6ad30f4e0'
+        },
+        body: JSON.stringify({ query, count: 10 })
+      });
+
+      const data = await response.json();
+      const results: CompanySuggestion[] = data.suggestions?.map((item: any) => ({
+        inn: item.data?.inn || '',
+        name: item.data?.name?.short_with_opf || item.data?.name?.full || '',
+        fullName: item.data?.name?.full || '',
+        address: item.data?.address?.unrestricted_value || '',
+        ogrn: item.data?.ogrn || '',
+        kpp: item.data?.kpp || ''
+      })) || [];
+
+      setSuggestions(results);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error('Ошибка поиска организации:', error);
+      setSuggestions([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Обработчик изменения поля поиска
+  const handleSearchChange = (value: string, field: 'name' | 'inn') => {
+    setSearchQuery(value);
+    
+    if (field === 'name') {
+      setCreditForm({ ...creditForm, creditorName: value });
+    } else {
+      setCreditForm({ ...creditForm, creditorInn: value });
+    }
+
+    // Дебаунс для поиска
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      searchCompany(value);
+    }, 500);
+  };
+
+  // Выбор организации из подсказок
+  const selectSuggestion = (suggestion: CompanySuggestion) => {
+    setCreditForm({
+      ...creditForm,
+      creditorName: suggestion.name,
+      creditorInn: suggestion.inn,
+      creditorLegalAddress: suggestion.address
+    });
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setSearchQuery('');
+  };
 
   const handleAddCreditor = () => {
     const newErrors: ValidationErrors = {};
@@ -103,19 +203,46 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
       <div className="border rounded-lg p-4 bg-muted/50">
         <h3 className="font-medium mb-3">Добавить кредитора</h3>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div>
+          <div className="relative">
             <Label htmlFor="creditorName">Название кредитора</Label>
-            <Input
-              id="creditorName"
-              value={creditForm.creditorName}
-              onChange={(e) =>
-                setCreditForm({ ...creditForm, creditorName: e.target.value })
-              }
-              placeholder="ПАО Сбербанк"
-              className={errors.creditorName ? 'border-red-500' : ''}
-            />
+            <div className="relative">
+              <Input
+                id="creditorName"
+                value={creditForm.creditorName}
+                onChange={(e) => handleSearchChange(e.target.value, 'name')}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                placeholder="ПАО Сбербанк"
+                className={errors.creditorName ? 'border-red-500' : ''}
+              />
+              {isSearching && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                </div>
+              )}
+            </div>
             {errors.creditorName && (
               <p className="text-sm text-red-500 mt-1">{errors.creditorName}</p>
+            )}
+            
+            {showSuggestions && suggestions.length > 0 && (
+              <div 
+                ref={suggestionsRef}
+                className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto"
+              >
+                {suggestions.map((suggestion, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => selectSuggestion(suggestion)}
+                    className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
+                  >
+                    <p className="font-medium text-sm">{suggestion.name}</p>
+                    <p className="text-xs text-muted-foreground">ИНН: {suggestion.inn}</p>
+                    {suggestion.address && (
+                      <p className="text-xs text-muted-foreground truncate">{suggestion.address}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
           <div>
@@ -123,9 +250,9 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
             <Input
               id="creditorInn"
               value={creditForm.creditorInn}
-              onChange={(e) =>
-                setCreditForm({ ...creditForm, creditorInn: e.target.value })
-              }
+              onChange={(e) => handleSearchChange(e.target.value, 'inn')}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              placeholder="7707083893"
             />
           </div>
           <div className="sm:col-span-2">
