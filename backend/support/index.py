@@ -203,15 +203,21 @@ def send_message(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
             created_at = result['created_at']
             conn.commit()
             
-            if not is_from_admin:
-                cur.execute(
-                    "SELECT email, full_name FROM users WHERE id = %s",
-                    (int(user_id),)
-                )
-                user = cur.fetchone()
-                
-                if user:
+            cur.execute(
+                "SELECT email, full_name FROM users WHERE id = %s",
+                (int(user_id),)
+            )
+            user = cur.fetchone()
+            
+            if user:
+                if not is_from_admin:
                     send_admin_notification(
+                        user_email=user['email'],
+                        user_name=user['full_name'],
+                        message=message
+                    )
+                else:
+                    send_client_notification(
                         user_email=user['email'],
                         user_name=user['full_name'],
                         message=message
@@ -410,6 +416,62 @@ def send_admin_notification(user_email: str, user_name: str, message: str):
         print(f"[EMAIL] ✅ Admin notification sent to {admin_email}")
     except Exception as e:
         print(f"[EMAIL] ❌ Error sending admin notification: {e}")
+
+def send_client_notification(user_email: str, user_name: str, message: str):
+    '''Отправить уведомление клиенту о новом сообщении от админа'''
+    try:
+        smtp_host = os.environ.get('SMTP_HOST', 'smtp.yandex.ru')
+        smtp_port = int(os.environ.get('SMTP_PORT', 465))
+        smtp_user = os.environ.get('SMTP_USER', 'bankrotkurs@yandex.ru')
+        smtp_password = os.environ.get('SMTP_PASSWORD')
+        
+        if not smtp_password:
+            print(f"[EMAIL] ⚠️ SMTP_PASSWORD not configured")
+            return
+        
+        msg = MIMEMultipart('alternative')
+        msg['From'] = smtp_user
+        msg['To'] = user_email
+        msg['Subject'] = 'Вам ответили в чате поддержки'
+        
+        html_body = f'''<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 24px;">💬 Новое сообщение от поддержки</h1>
+    </div>
+    
+    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+        <p style="font-size: 16px; margin-bottom: 20px;">Здравствуйте, <strong>{user_name}</strong>!</p>
+        <p style="font-size: 16px; margin-bottom: 20px;">Вам ответили в чате поддержки:</p>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea;">
+            <p style="margin: 0; white-space: pre-wrap;">{message}</p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="https://bankrot-kurs.ru/support" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Открыть чат</a>
+        </div>
+        
+        <p style="font-size: 14px; color: #666; margin-top: 30px; text-align: center;">
+            Это автоматическое уведомление. Пожалуйста, не отвечайте на это письмо.
+        </p>
+    </div>
+</body>
+</html>'''
+        
+        msg.attach(MIMEText(html_body, 'html', 'utf-8'))
+        
+        with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+        
+        print(f"[EMAIL] ✅ Client notification sent to {user_email}")
+    except Exception as e:
+        print(f"[EMAIL] ❌ Error sending client notification: {e}")
 
 def edit_message(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
     '''Редактировать сообщение'''
