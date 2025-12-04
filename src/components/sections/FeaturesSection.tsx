@@ -9,7 +9,7 @@ interface FeaturesSectionProps {
 export default function FeaturesSection({ scrollToSection }: FeaturesSectionProps) {
   return (
     <section id="about" className="py-20 px-4 bg-white">
-      <div className="container mx-auto max-w-6xl">
+      <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-16">
           <Badge className="mb-4">О курсе</Badge>
           <h3 className="text-4xl md:text-5xl font-bold mb-6">Что вы получите</h3>
@@ -18,7 +18,7 @@ export default function FeaturesSection({ scrollToSection }: FeaturesSectionProp
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
           <Card className="border-2 hover:border-green-500 transition-all hover:shadow-lg bg-gradient-to-br from-green-50 to-white">
             <CardContent className="pt-8">
               <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-6">
