@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
 import { PersonalData, CreditData, IncomeData, PropertyData } from "./types";
+import funcUrls from "../../../backend/func2url.json";
 
 interface DocumentUploadProps {
   onPersonalDataExtracted: (data: PersonalData) => void;
@@ -29,6 +30,42 @@ export default function DocumentUpload({
     setUploadedFiles({ ...uploadedFiles, [type]: file });
   };
 
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const callOcrApi = async (file: File): Promise<string> => {
+    const base64Image = await convertFileToBase64(file);
+    
+    const response = await fetch(funcUrls["ocr-document"], {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        image: base64Image,
+        folderId: ''
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'OCR API error');
+    }
+
+    const data = await response.json();
+    return data.text || '';
+  };
+
   const handleProcessPassport = async () => {
     if (!uploadedFiles.passport) {
       alert("Загрузите скан паспорта");
@@ -37,8 +74,8 @@ export default function DocumentUpload({
 
     setIsProcessing(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
+      const ocrText = await callOcrApi(uploadedFiles.passport);
+      
       const mockData: PersonalData = {
         fullName: "Петров Петр Петрович",
         inn: "987654321012",
@@ -71,7 +108,9 @@ export default function DocumentUpload({
       };
 
       onPersonalDataExtracted(mockData);
-      alert("Данные из паспорта успешно распознаны!");
+      alert(`Распознано:\n${ocrText.substring(0, 200)}...\n\nДанные сохранены (демо-режим)`);
+    } catch (error) {
+      alert(`Ошибка распознавания: ${error}`);
     } finally {
       setIsProcessing(false);
     }
@@ -85,7 +124,7 @@ export default function DocumentUpload({
 
     setIsProcessing(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const ocrText = await callOcrApi(uploadedFiles.bki);
 
       const mockData: CreditData = {
         creditors: [
@@ -126,7 +165,9 @@ export default function DocumentUpload({
       };
 
       onCreditDataExtracted(mockData);
-      alert("Данные из БКИ успешно распознаны!");
+      alert(`Распознано:\n${ocrText.substring(0, 200)}...\n\nДанные сохранены (демо-режим)`);
+    } catch (error) {
+      alert(`Ошибка распознавания: ${error}`);
     } finally {
       setIsProcessing(false);
     }
@@ -140,7 +181,7 @@ export default function DocumentUpload({
 
     setIsProcessing(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const ocrText = await callOcrApi(uploadedFiles.income);
 
       const mockData: IncomeData = {
         monthlyIncome: 45000,
@@ -149,7 +190,9 @@ export default function DocumentUpload({
       };
 
       onIncomeDataExtracted(mockData);
-      alert("Данные о доходах успешно распознаны!");
+      alert(`Распознано:\n${ocrText.substring(0, 200)}...\n\nДанные сохранены (демо-режим)`);
+    } catch (error) {
+      alert(`Ошибка распознавания: ${error}`);
     } finally {
       setIsProcessing(false);
     }
@@ -163,7 +206,7 @@ export default function DocumentUpload({
 
     setIsProcessing(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const ocrText = await callOcrApi(uploadedFiles.property);
 
       const mockData: PropertyData = {
         realEstate: [
@@ -178,7 +221,9 @@ export default function DocumentUpload({
       };
 
       onPropertyDataExtracted(mockData);
-      alert("Данные об имуществе успешно распознаны!");
+      alert(`Распознано:\n${ocrText.substring(0, 200)}...\n\nДанные сохранены (демо-режим)`);
+    } catch (error) {
+      alert(`Ошибка распознавания: ${error}`);
     } finally {
       setIsProcessing(false);
     }
