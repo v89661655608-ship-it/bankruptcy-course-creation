@@ -72,7 +72,7 @@ export default function ChatSupportSection({ user }: ChatSupportSectionProps) {
                   <Icon name="MessageSquare" className="text-white" size={24} />
                 </div>
                 <div>
-                  <Badge className="bg-green-100 text-green-700 mb-1">Включено в курс</Badge>
+                  <Badge className="bg-purple-100 text-purple-700 mb-1">3 999 ₽/месяц</Badge>
                   <h4 className="text-2xl font-bold">Юридическая поддержка</h4>
                 </div>
               </div>
@@ -90,7 +90,7 @@ export default function ChatSupportSection({ user }: ChatSupportSectionProps) {
                       Одна консультация юриста — <strong className="text-red-600">от 5 000 ₽</strong>
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      У нас — <strong className="text-green-600">неограниченные консультации</strong> на весь период обучения
+                      У нас — <strong className="text-green-600">неограниченные консультации</strong> за 3 999 ₽/месяц
                     </p>
                   </div>
                 </div>
@@ -135,32 +135,23 @@ export default function ChatSupportSection({ user }: ChatSupportSectionProps) {
                 </div>
               </div>
 
-              <div className="bg-green-50 border-2 border-green-200 rounded-xl p-5 mb-6">
+              <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-5 mb-6">
                 <div className="flex items-center gap-2 mb-2">
-                  <Icon name="Gift" className="text-green-600" size={24} />
-                  <p className="font-bold text-green-900">Входит в стоимость курса</p>
+                  <Icon name="Tag" className="text-purple-600" size={24} />
+                  <p className="font-bold text-purple-900">Доступно отдельно или в комбо с курсом</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Поддержка юриста уже включена в курс. Никаких дополнительных платежей!
+                  Покупайте только чат за 3 999 ₽/мес или выгодный комбо курс+чат за 4 999 ₽ (экономия 1 000 ₽)
                 </p>
               </div>
 
-              {user ? (
-                <Button 
-                  onClick={() => navigate('/support')} 
-                  className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold text-base shadow-lg"
-                >
-                  <Icon name="MessageCircle" size={20} className="mr-2" />
-                  Открыть чат с юристом
-                </Button>
-              ) : (
-                <Button 
-                  onClick={() => navigate('/login')} 
-                  className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold text-base shadow-lg"
-                >
-                  Получить доступ к поддержке
-                </Button>
-              )}
+              <Button 
+                onClick={() => navigate('/payment-form?product=chat')} 
+                className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold text-base shadow-lg"
+              >
+                <Icon name="MessageCircle" size={20} className="mr-2" />
+                Купить доступ за 3 999 ₽
+              </Button>
             </CardContent>
           </Card>
 

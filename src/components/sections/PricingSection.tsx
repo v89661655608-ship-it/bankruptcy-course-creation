@@ -119,55 +119,49 @@ export default function PricingSection() {
             </CardContent>
           </Card>
 
-          <Card className="border-4 border-green-500 hover:shadow-2xl transition-all relative bg-gradient-to-br from-green-50 to-white">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <Badge className="bg-green-500 text-white font-bold px-6 py-1">🔥 Выгода 1 999 ₽</Badge>
-            </div>
+          <Card className="border-2 hover:border-purple-500 transition-all hover:shadow-2xl">
             <CardContent className="pt-12 pb-12">
               <div className="text-center mb-8">
-                <Badge className="mb-4 bg-green-100 text-green-700 border-green-300">Комбо-пакет</Badge>
-                <div className="flex items-center justify-center gap-3 mb-2">
-                  <span className="text-2xl text-muted-foreground line-through whitespace-nowrap">6 998 ₽</span>
-                  <span className="text-5xl font-bold text-green-600 whitespace-nowrap">4 999 ₽</span>
-                </div>
-                <p className="text-muted-foreground">Курс + Месяц чата</p>
+                <Badge className="mb-4 bg-purple-100 text-purple-700">Только чат</Badge>
+                <div className="text-5xl font-bold mb-2 text-purple-600">3 999 ₽</div>
+                <p className="text-muted-foreground">Доступ на 1 месяц</p>
               </div>
 
               <Separator className="mb-8" />
 
               <div className="space-y-3 mb-8">
                 <div className="flex gap-3">
-                  <Icon name="Check" className="text-green-600 flex-shrink-0 mt-1" size={20} />
-                  <span className="text-sm font-semibold">Все из пакета "Самостоятельно"</span>
+                  <Icon name="Check" className="text-purple-600 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Личный чат с юристом</span>
                 </div>
                 <div className="flex gap-3">
-                  <Icon name="Check" className="text-green-600 flex-shrink-0 mt-1" size={20} />
-                  <span className="text-sm">7 подробных видеомодулей</span>
+                  <Icon name="Check" className="text-purple-600 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Неограниченные консультации</span>
                 </div>
                 <div className="flex gap-3">
-                  <Icon name="Check" className="text-green-600 flex-shrink-0 mt-1" size={20} />
-                  <span className="text-sm">Все шаблоны документов</span>
+                  <Icon name="Check" className="text-purple-600 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Проверка документов</span>
                 </div>
                 <div className="flex gap-3">
-                  <Icon name="Plus" className="text-green-600 flex-shrink-0 mt-1" size={20} />
-                  <span className="text-sm font-semibold">Месяц доступа к чату с юристами</span>
+                  <Icon name="Check" className="text-purple-600 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Помощь с ходатайствами</span>
                 </div>
                 <div className="flex gap-3">
-                  <Icon name="Check" className="text-green-600 flex-shrink-0 mt-1" size={20} />
-                  <span className="text-sm">Консультации от профессионалов</span>
+                  <Icon name="Check" className="text-purple-600 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Ответ в течение 24 часов</span>
                 </div>
                 <div className="flex gap-3">
-                  <Icon name="Check" className="text-green-600 flex-shrink-0 mt-1" size={20} />
-                  <span className="text-sm">Проверка документов юристом</span>
+                  <Icon name="Check" className="text-purple-600 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Полная конфиденциальность</span>
                 </div>
               </div>
 
               <Button 
                 size="lg" 
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6"
-                onClick={() => navigate('/payment-form?product=combo')}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-6"
+                onClick={() => navigate('/payment-form?product=chat')}
               >
-                Купить комбо со скидкой
+                Купить доступ к чату
               </Button>
 
               <p className="text-[10px] text-muted-foreground text-center mt-3">
@@ -200,52 +194,55 @@ export default function PricingSection() {
             </CardContent>
           </Card>
 
-          <Card className="border-4 border-accent hover:shadow-2xl transition-all relative">
+          <Card className="border-4 border-green-500 hover:shadow-2xl transition-all relative bg-gradient-to-br from-green-50 to-white">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <Badge className="bg-accent text-primary font-bold px-6 py-1">Популярный выбор</Badge>
+              <Badge className="bg-green-500 text-white font-bold px-6 py-1">🔥 Выгода 1 000 ₽</Badge>
             </div>
             <CardContent className="pt-12 pb-12">
               <div className="text-center mb-8">
-                <Badge className="mb-4 bg-accent/20 text-accent border-accent">С юристом</Badge>
-                <div className="text-5xl font-bold mb-2 text-primary">3 999 ₽</div>
-                <p className="text-muted-foreground">Доступ на 1 месяц</p>
+                <Badge className="mb-4 bg-green-100 text-green-700 border-green-300">Комбо-пакет</Badge>
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <span className="text-2xl text-muted-foreground line-through whitespace-nowrap">6 998 ₽</span>
+                  <span className="text-5xl font-bold text-green-600 whitespace-nowrap">4 999 ₽</span>
+                </div>
+                <p className="text-muted-foreground">Курс + Месяц чата</p>
               </div>
 
               <Separator className="mb-8" />
 
               <div className="space-y-3 mb-8">
                 <div className="flex gap-3">
-                  <Icon name="Check" className="text-accent flex-shrink-0 mt-1" size={20} />
-                  <span className="text-sm">Ваш личный юрист</span>
+                  <Icon name="Check" className="text-green-600 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm font-semibold">Все из пакета "Самостоятельно"</span>
                 </div>
                 <div className="flex gap-3">
-                  <Icon name="Check" className="text-accent flex-shrink-0 mt-1" size={20} />
-                  <span className="text-sm">Чат с квалифицированными юристами</span>
+                  <Icon name="Check" className="text-green-600 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">7 подробных видеомодулей</span>
                 </div>
                 <div className="flex gap-3">
-                  <Icon name="Check" className="text-accent flex-shrink-0 mt-1" size={20} />
-                  <span className="text-sm">Неограниченное количество вопросов</span>
+                  <Icon name="Check" className="text-green-600 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Все шаблоны документов</span>
                 </div>
                 <div className="flex gap-3">
-                  <Icon name="Check" className="text-accent flex-shrink-0 mt-1" size={20} />
-                  <span className="text-sm">Ответы в течение дня</span>
+                  <Icon name="Plus" className="text-green-600 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm font-semibold">Месяц доступа к чату с юристами</span>
                 </div>
                 <div className="flex gap-3">
-                  <Icon name="Check" className="text-accent flex-shrink-0 mt-1" size={20} />
-                  <span className="text-sm">Сопровождение на каждом этапе</span>
+                  <Icon name="Check" className="text-green-600 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Неограниченные консультации</span>
                 </div>
                 <div className="flex gap-3">
-                  <Icon name="Check" className="text-accent flex-shrink-0 mt-1" size={20} />
-                  <span className="text-sm">Можно продлить в любой момент</span>
+                  <Icon name="Check" className="text-green-600 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Проверка документов юристом</span>
                 </div>
               </div>
 
               <Button 
                 size="lg" 
-                className="w-full bg-accent hover:bg-accent/90 text-primary font-bold py-6"
-                onClick={() => navigate('/payment-form?product=chat')}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6"
+                onClick={() => navigate('/payment-form?product=combo')}
               >
-                Купить доступ к чату
+                Купить комбо со скидкой
               </Button>
 
               <p className="text-[10px] text-muted-foreground text-center mt-3">
@@ -273,7 +270,7 @@ export default function PricingSection() {
               </div>
 
               <p className="text-sm text-muted-foreground text-center mt-4">
-                Для сложных случаев с юридической поддержкой
+                🔥 Самый популярный пакет! Экономия 1 000 ₽
               </p>
             </CardContent>
           </Card>
