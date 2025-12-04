@@ -52,6 +52,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return mark_as_read(event, headers_out)
         elif action == 'all_chats':
             return get_all_chats(event, headers_out)
+        elif action == 'edit':
+            return edit_message(event, headers_out)
+        elif action == 'delete':
+            return delete_message(event, headers_out)
         
         return {
             'statusCode': 400,
@@ -95,6 +99,11 @@ def get_messages(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
                     sm.user_id,
                     sm.message,
                     sm.image_url,
+                    sm.file_url,
+                    sm.file_name,
+                    sm.file_type,
+                    sm.edited_at,
+                    sm.reply_to_id,
                     sm.is_from_admin,
                     sm.created_at,
                     sm.read_by_admin,
@@ -113,7 +122,7 @@ def get_messages(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
                 FROM support_messages sm
                 JOIN users u ON sm.user_id = u.id
                 LEFT JOIN support_message_reactions smr ON sm.id = smr.message_id
-                WHERE sm.user_id = %s
+                WHERE sm.user_id = %s AND sm.message IS NOT NULL
                 GROUP BY sm.id, u.full_name, u.email
                 ORDER BY sm.created_at ASC""",
                 (int(user_id),)
@@ -133,7 +142,12 @@ def get_messages(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
                     'read_by_user': msg['read_by_user'],
                     'full_name': msg['full_name'],
                     'email': msg['email'],
-                    'reactions': msg['reactions']
+                    'reactions': msg['reactions'],
+                    'file_url': msg.get('file_url'),
+                    'file_name': msg.get('file_name'),
+                    'file_type': msg.get('file_type'),
+                    'edited_at': msg['edited_at'].isoformat() if msg.get('edited_at') else None,
+                    'reply_to_id': msg.get('reply_to_id')
                 })
     finally:
         conn.close()
@@ -155,28 +169,34 @@ def send_message(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
     user_id = body_data.get('user_id')
     message = body_data.get('message', '')
     image_url = body_data.get('image_url')
+    file_url = body_data.get('file_url')
+    file_name = body_data.get('file_name')
+    file_type = body_data.get('file_type')
+    reply_to_id = body_data.get('reply_to_id')
     is_from_admin = body_data.get('is_from_admin', False)
     
-    if not user_id or (not message and not image_url):
+    if not user_id or (not message and not image_url and not file_url):
         return {
             'statusCode': 400,
             'headers': headers,
-            'body': json.dumps({'error': 'user_id and (message or image_url) are required'}),
+            'body': json.dumps({'error': 'user_id and (message or image_url or file_url) are required'}),
             'isBase64Encoded': False
         }
     
     if not message and image_url:
         message = '📎 Изображение'
+    elif not message and file_url:
+        message = f'📄 {file_name or "Файл"}'
     
     conn = get_db_connection()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """INSERT INTO support_messages 
-                (user_id, message, image_url, is_from_admin, read_by_admin, read_by_user) 
-                VALUES (%s, %s, %s, %s, %s, %s) 
+                (user_id, message, image_url, file_url, file_name, file_type, reply_to_id, is_from_admin, read_by_admin, read_by_user) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
                 RETURNING id, created_at""",
-                (int(user_id), message, image_url, is_from_admin, is_from_admin, not is_from_admin)
+                (int(user_id), message, image_url, file_url, file_name, file_type, reply_to_id, is_from_admin, is_from_admin, not is_from_admin)
             )
             result = cur.fetchone()
             message_id = result['id']
@@ -390,3 +410,98 @@ def send_admin_notification(user_email: str, user_name: str, message: str):
         print(f"[EMAIL] ✅ Admin notification sent to {admin_email}")
     except Exception as e:
         print(f"[EMAIL] ❌ Error sending admin notification: {e}")
+
+def edit_message(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
+    '''Редактировать сообщение'''
+    body = event.get('body', '{}')
+    if not body or body == '':
+        body = '{}'
+    body_data = json.loads(body)
+    
+    message_id = body_data.get('message_id')
+    new_message = body_data.get('message')
+    user_id = body_data.get('user_id')
+    
+    if not message_id or not new_message or not user_id:
+        return {
+            'statusCode': 400,
+            'headers': headers,
+            'body': json.dumps({'error': 'message_id, message, and user_id are required'}),
+            'isBase64Encoded': False
+        }
+    
+    conn = get_db_connection()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """UPDATE support_messages 
+                SET message = %s, edited_at = CURRENT_TIMESTAMP 
+                WHERE id = %s AND user_id = %s
+                RETURNING id""",
+                (new_message, int(message_id), int(user_id))
+            )
+            result = cur.fetchone()
+            if not result:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Message not found or not authorized'}),
+                    'isBase64Encoded': False
+                }
+            conn.commit()
+    finally:
+        conn.close()
+    
+    return {
+        'statusCode': 200,
+        'headers': headers,
+        'body': json.dumps({'success': True}),
+        'isBase64Encoded': False
+    }
+
+def delete_message(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
+    '''Удалить сообщение (мягкое удаление - устанавливаем message в NULL)'''
+    body = event.get('body', '{}')
+    if not body or body == '':
+        body = '{}'
+    body_data = json.loads(body)
+    
+    message_id = body_data.get('message_id')
+    user_id = body_data.get('user_id')
+    
+    if not message_id or not user_id:
+        return {
+            'statusCode': 400,
+            'headers': headers,
+            'body': json.dumps({'error': 'message_id and user_id are required'}),
+            'isBase64Encoded': False
+        }
+    
+    conn = get_db_connection()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """UPDATE support_messages 
+                SET message = NULL, image_url = NULL, file_url = NULL, file_name = NULL, file_type = NULL
+                WHERE id = %s AND user_id = %s
+                RETURNING id""",
+                (int(message_id), int(user_id))
+            )
+            result = cur.fetchone()
+            if not result:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Message not found or not authorized'}),
+                    'isBase64Encoded': False
+                }
+            conn.commit()
+    finally:
+        conn.close()
+    
+    return {
+        'statusCode': 200,
+        'headers': headers,
+        'body': json.dumps({'success': True}),
+        'isBase64Encoded': False
+    }
