@@ -1,8 +1,8 @@
 {
+  "company-search": "https://functions.poehali.dev/e70430d4-8e99-429d-bbad-1362dfe63771",
   "parse-ocr-text": "https://functions.poehali.dev/984a2d58-d4a6-4439-a4f6-f33cba9d0eef",
   "ocr-document": "https://functions.poehali.dev/24646829-b62a-42f7-96df-64d5c0aa06b4",
   "esia-integration": "https://functions.poehali.dev/1cd9adc4-2a0a-49bd-9831-10d529bedb59",
-  "bki-integration": "https://functions.poehali.dev/711b203b-7b63-4f6d-8645-5d3e3cf8aa60",
   "document-generator": "https://functions.poehali.dev/29417053-b3c2-4b18-89d5-4c29cefca45e",
   "admin-password-check": "https://functions.poehali.dev/7e68f8a5-511f-4923-a068-5274992afb16",
   "reset-password": "https://functions.poehali.dev/cd285edd-2086-4c61-b70f-7a672e010afc",

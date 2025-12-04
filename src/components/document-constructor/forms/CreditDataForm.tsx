@@ -54,7 +54,7 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Поиск организаций через DaData API
+  // Поиск организаций через backend функцию с DaData API
   const searchCompany = async (query: string) => {
     if (query.length < 3) {
       setSuggestions([]);
@@ -64,42 +64,19 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
     setIsSearching(true);
 
     try {
-      // DaData API с бесплатным публичным токеном для демонстрации
-      const response = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party', {
-        method: 'POST',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Token 8b12b05c7b8c3e8ab4b7f3c8d9e1f2a3b4c5d6e7'
-        },
-        body: JSON.stringify({ 
-          query: query,
-          count: 10,
-          status: ['ACTIVE']
-        })
-      });
+      const response = await fetch(`https://functions.poehali.dev/e70430d4-8e99-429d-bbad-1362dfe63771?query=${encodeURIComponent(query)}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
 
       const data = await response.json();
-      
-      const results: CompanySuggestion[] = (data.suggestions || []).map((item: any) => ({
-        inn: item.data?.inn || '',
-        name: item.data?.name?.short_with_opf || item.data?.name?.full || item.value || '',
-        fullName: item.data?.name?.full || item.value || '',
-        address: item.data?.address?.unrestricted_value || item.data?.address?.value || '',
-        ogrn: item.data?.ogrn || '',
-        kpp: item.data?.kpp || ''
-      }));
+      const results: CompanySuggestion[] = data.suggestions || [];
 
       setSuggestions(results);
       setShowSuggestions(results.length > 0);
       
       if (results.length === 0) {
-        // Если ничего не найдено
         setSuggestions([{
           inn: '',
           name: '❌ Ничего не найдено. Попробуйте другой запрос или введите вручную.',
