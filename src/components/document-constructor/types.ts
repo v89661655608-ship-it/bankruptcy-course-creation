@@ -32,6 +32,7 @@ export interface CreditData {
   creditors: Array<{
     name: string;
     inn: string;
+    legalAddress?: string;
     credits: Array<{
       contractNumber: string;
       amount: number;

@@ -18,6 +18,7 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
   const [creditForm, setCreditForm] = useState({
     creditorName: "",
     creditorInn: "",
+    creditorLegalAddress: "",
     contractNumber: "",
     creditAmount: "",
     debtAmount: "",
@@ -51,6 +52,7 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
     const newCreditor = {
       name: creditForm.creditorName,
       inn: creditForm.creditorInn,
+      legalAddress: creditForm.creditorLegalAddress,
       credits: [
         {
           contractNumber: creditForm.contractNumber,
@@ -65,6 +67,7 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
     setCreditForm({
       creditorName: "",
       creditorInn: "",
+      creditorLegalAddress: "",
       contractNumber: "",
       creditAmount: "",
       debtAmount: "",
@@ -123,6 +126,17 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
               onChange={(e) =>
                 setCreditForm({ ...creditForm, creditorInn: e.target.value })
               }
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="creditorLegalAddress">Юридический адрес кредитора</Label>
+            <Input
+              id="creditorLegalAddress"
+              value={creditForm.creditorLegalAddress}
+              onChange={(e) =>
+                setCreditForm({ ...creditForm, creditorLegalAddress: e.target.value })
+              }
+              placeholder="г. Москва, ул. Вавилова, д. 19"
             />
           </div>
           <div>
@@ -199,6 +213,11 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
           {creditors.map((creditor, idx) => (
             <div key={idx} className="border rounded p-3 bg-background">
               <p className="font-medium">{creditor.name}</p>
+              {creditor.legalAddress && (
+                <p className="text-sm text-muted-foreground">
+                  Адрес: {creditor.legalAddress}
+                </p>
+              )}
               <p className="text-sm text-muted-foreground">
                 Долг: {creditor.credits[0].debt.toLocaleString()} ₽
               </p>

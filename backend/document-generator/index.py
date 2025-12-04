@@ -305,7 +305,8 @@ def generate_docx_document(
     for idx, creditor in enumerate(creditors, 1):
         add_header_paragraph(f"{idx}. {creditor.get('name', 'Место для ввода текста.')}")
         add_header_paragraph(f"ИНН {creditor.get('inn', 'Место для ввода текста.')}")
-        add_header_paragraph(f"Юридический адрес: Место для ввода текста.")
+        legal_address = creditor.get('legalAddress', 'Место для ввода текста.')
+        add_header_paragraph(f"Юридический адрес: {legal_address}")
         add_header_paragraph("")
     
     doc.add_paragraph()
@@ -697,7 +698,8 @@ def generate_pdf_document(
         y -= 0.5*cm
         c.drawString(2*cm, y, f"ИНН {creditor.get('inn', 'Место для ввода текста.')}")
         y -= 0.5*cm
-        c.drawString(2*cm, y, f"Юридический адрес: Место для ввода текста.")
+        legal_address = creditor.get('legalAddress', 'Место для ввода текста.')
+        c.drawString(2*cm, y, f"Юридический адрес: {legal_address}")
         y -= 0.7*cm
         
         if y < 5*cm:
