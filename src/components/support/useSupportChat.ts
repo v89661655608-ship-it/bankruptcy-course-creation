@@ -49,7 +49,12 @@ export function useSupportChat() {
       
       if (response.ok) {
         const data = await response.json();
-        setMessages(data.messages || []);
+        const loadedMessages = data.messages || [];
+        setMessages(loadedMessages);
+        
+        if (loadedMessages.length === 0) {
+          await sendWelcomeMessage();
+        }
         
         await fetch(
           'https://functions.poehali.dev/92d0eff0-8de5-4a02-b849-378019f1af28?action=mark_read',
@@ -62,6 +67,42 @@ export function useSupportChat() {
       }
     } catch (error) {
       console.error('Error loading messages:', error);
+    }
+  };
+
+  const sendWelcomeMessage = async () => {
+    if (!userId) return;
+    
+    const welcomeText = `Здравствуйте! 👋
+
+Рады приветствовать вас в чате поддержки. Наши юристы готовы помочь вам с любыми вопросами по процедуре банкротства.
+
+📋 Вы можете задать вопросы о:
+• Процедуре банкротства физических лиц
+• Необходимых документах
+• Сроках рассмотрения дела
+• Работе с финансовым управляющим
+• Любых других юридических вопросах
+
+⏱ По регламенту мы ответим в течение 24 часов, но обычно отвечаем значительно быстрее.
+
+Задавайте свой вопрос, и мы обязательно поможем!`;
+
+    try {
+      await fetch(
+        'https://functions.poehali.dev/92d0eff0-8de5-4a02-b849-378019f1af28?action=send',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: userId,
+            message: welcomeText,
+            is_from_admin: true
+          })
+        }
+      );
+    } catch (error) {
+      console.error('Error sending welcome message:', error);
     }
   };
 
