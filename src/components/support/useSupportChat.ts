@@ -91,7 +91,7 @@ export function useSupportChat() {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await fetch('https://functions.poehali.dev/c9a0fff3-73c4-4f4b-9a92-f6aaf3e7cb2a', {
+      const response = await fetch('https://functions.poehali.dev/b233c85a-373c-4aa0-919e-68298ebe6c1b', {
         method: 'POST',
         body: formData
       });
@@ -143,7 +143,7 @@ export function useSupportChat() {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await fetch('https://functions.poehali.dev/c9a0fff3-73c4-4f4b-9a92-f6aaf3e7cb2a', {
+      const response = await fetch('https://functions.poehali.dev/b233c85a-373c-4aa0-919e-68298ebe6c1b', {
         method: 'POST',
         body: formData
       });
