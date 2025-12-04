@@ -446,15 +446,7 @@ def generate_docx_document(
         p5_format.space_after = Pt(0)
         p5_format.line_spacing = 1.0
     
-    if property and property.get('noProperty', False):
-        p6 = doc.add_paragraph("Имущество у Должника отсутствует.")
-        p6_format = p6.paragraph_format
-        p6_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-        p6_format.first_line_indent = Cm(1)
-        p6_format.space_before = Pt(0)
-        p6_format.space_after = Pt(0)
-        p6_format.line_spacing = 1.0
-    elif property and property.get('realEstate'):
+    if property and property.get('realEstate'):
         real_estate = property.get('realEstate', [])
         if real_estate:
             item = real_estate[0]
