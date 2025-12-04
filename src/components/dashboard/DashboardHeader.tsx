@@ -41,9 +41,13 @@ export default function DashboardHeader({ user, onLogout }: DashboardHeaderProps
               variant="outline" 
               size="sm" 
               onClick={() => navigate('/document-constructor')}
+              className="relative"
             >
               <Icon name="FileText" size={16} className="mr-2" />
               Конструктор документов
+              <span className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-lg animate-pulse">
+                NEW
+              </span>
             </Button>
             <Button variant="ghost" size="sm" onClick={onLogout}>
               <Icon name="LogOut" size={16} className="mr-2" />
