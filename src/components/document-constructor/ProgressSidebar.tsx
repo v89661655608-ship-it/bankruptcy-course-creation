@@ -1,0 +1,124 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Icon from "@/components/ui/icon";
+import { Separator } from "@/components/ui/separator";
+import { PersonalData, CreditData, IncomeData, PropertyData } from "./types";
+
+interface ProgressSidebarProps {
+  personalData: PersonalData | null;
+  creditData: CreditData | null;
+  incomeData: IncomeData | null;
+  propertyData: PropertyData | null;
+  isGenerating: boolean;
+  onGenerateDocument: () => void;
+}
+
+export default function ProgressSidebar({
+  personalData,
+  creditData,
+  incomeData,
+  propertyData,
+  isGenerating,
+  onGenerateDocument
+}: ProgressSidebarProps) {
+  const totalDataLoaded = [personalData, creditData, incomeData, propertyData].filter(Boolean).length;
+  const progress = (totalDataLoaded / 4) * 100;
+
+  return (
+    <div className="space-y-6">
+      <Card className="sticky top-4">
+        <CardHeader>
+          <CardTitle className="text-lg">Прогресс сбора данных</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span>Готовность</span>
+              <span className="font-medium">{totalDataLoaded}/4</span>
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center gap-2">
+              {personalData ? (
+                <Icon name="CheckCircle" size={16} className="text-green-500" />
+              ) : (
+                <Icon name="Circle" size={16} className="text-muted-foreground" />
+              )}
+              <span>Персональные данные</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {creditData ? (
+                <Icon name="CheckCircle" size={16} className="text-green-500" />
+              ) : (
+                <Icon name="Circle" size={16} className="text-muted-foreground" />
+              )}
+              <span>Кредитная история</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {incomeData ? (
+                <Icon name="CheckCircle" size={16} className="text-green-500" />
+              ) : (
+                <Icon name="Circle" size={16} className="text-muted-foreground" />
+              )}
+              <span>Сведения о доходах</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {propertyData ? (
+                <Icon name="CheckCircle" size={16} className="text-green-500" />
+              ) : (
+                <Icon name="Circle" size={16} className="text-muted-foreground" />
+              )}
+              <span>Имущество</span>
+            </div>
+          </div>
+
+          <Separator />
+
+          <Button
+            onClick={onGenerateDocument}
+            disabled={!personalData || !creditData || isGenerating}
+            className="w-full"
+          >
+            {isGenerating ? (
+              <>
+                <Icon name="Loader2" className="mr-2 animate-spin" size={18} />
+                Генерация...
+              </>
+            ) : (
+              <>
+                <Icon name="FileText" className="mr-2" size={18} />
+                Сгенерировать заявление
+              </>
+            )}
+          </Button>
+
+          <p className="text-xs text-muted-foreground">
+            Будет сформировано заявление о признании гражданина банкротом по форме, утвержденной законодательством РФ
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Icon name="AlertCircle" size={18} />
+            Важная информация
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm space-y-2 text-muted-foreground">
+          <p>• Все данные передаются через защищенное соединение</p>
+          <p>• Документы формируются в соответствии с действующим законодательством</p>
+          <p>• Для подачи в суд требуется электронная подпись</p>
+          <p>• Рекомендуем консультацию юриста перед подачей</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
