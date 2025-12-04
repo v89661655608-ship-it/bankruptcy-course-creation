@@ -138,10 +138,10 @@ export default function ChatSupportSection({ user }: ChatSupportSectionProps) {
               <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-5 mb-6">
                 <div className="flex items-center gap-2 mb-2">
                   <Icon name="Tag" className="text-purple-600" size={24} />
-                  <p className="font-bold text-purple-900">Доступно отдельно или в комбо с курсом</p>
+                  <p className="font-bold text-purple-900">Доступен только для владельцев курса</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Покупайте только чат за 3 999 ₽/мес или выгодный комбо курс+чат за 4 999 ₽ (экономия 1 000 ₽)
+                  Докупите чат отдельно за 3 999 ₽/мес или купите выгодный комбо курс+чат за 4 999 ₽ (экономия 1 999 ₽)
                 </p>
               </div>
 
