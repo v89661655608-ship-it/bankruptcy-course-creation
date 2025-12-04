@@ -12,6 +12,8 @@ interface DataAuthSectionProps {
   onEsiaAuth: () => void;
   onBkiAuth: () => void;
   onLoadTestData: () => void;
+  onShowManualInput: () => void;
+  onShowDocumentUpload: () => void;
 }
 
 export default function DataAuthSection({
@@ -21,7 +23,9 @@ export default function DataAuthSection({
   creditData,
   onEsiaAuth,
   onBkiAuth,
-  onLoadTestData
+  onLoadTestData,
+  onShowManualInput,
+  onShowDocumentUpload
 }: DataAuthSectionProps) {
   return (
     <Card>
@@ -88,14 +92,22 @@ export default function DataAuthSection({
 
         <Separator />
 
-        <Button
-          onClick={onLoadTestData}
-          variant="outline"
-          className="w-full"
-        >
-          <Icon name="FlaskConical" className="mr-2" size={18} />
-          Загрузить тестовые данные
-        </Button>
+        <div className="grid sm:grid-cols-3 gap-3">
+          <Button onClick={onShowManualInput} variant="outline">
+            <Icon name="Pencil" className="mr-2" size={18} />
+            Ручной ввод
+          </Button>
+          
+          <Button onClick={onShowDocumentUpload} variant="outline">
+            <Icon name="Upload" className="mr-2" size={18} />
+            Загрузить сканы
+          </Button>
+          
+          <Button onClick={onLoadTestData} variant="outline">
+            <Icon name="FlaskConical" className="mr-2" size={18} />
+            Тестовые данные
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

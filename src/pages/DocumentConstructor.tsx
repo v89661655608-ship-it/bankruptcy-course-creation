@@ -4,6 +4,8 @@ import Icon from "@/components/ui/icon";
 import DataAuthSection from "@/components/document-constructor/DataAuthSection";
 import DataDisplayCards from "@/components/document-constructor/DataDisplayCards";
 import ProgressSidebar from "@/components/document-constructor/ProgressSidebar";
+import ManualInputForm from "@/components/document-constructor/ManualInputForm";
+import DocumentUpload from "@/components/document-constructor/DocumentUpload";
 import { PersonalData, CreditData, IncomeData, PropertyData } from "@/components/document-constructor/types";
 
 export default function DocumentConstructor() {
@@ -14,6 +16,8 @@ export default function DocumentConstructor() {
   const [incomeData, setIncomeData] = useState<IncomeData | null>(null);
   const [propertyData, setPropertyData] = useState<PropertyData | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
 
   const handleEsiaAuth = async () => {
     alert('Интеграция с ЕСИА/Госуслуги в разработке. Требуется регистрация в ЕСИА и получение сертификатов.');
@@ -152,7 +156,33 @@ export default function DocumentConstructor() {
             onEsiaAuth={handleEsiaAuth}
             onBkiAuth={handleBkiAuth}
             onLoadTestData={handleLoadTestData}
+            onShowManualInput={() => {
+              setShowManualInput(true);
+              setShowDocumentUpload(false);
+            }}
+            onShowDocumentUpload={() => {
+              setShowDocumentUpload(true);
+              setShowManualInput(false);
+            }}
           />
+
+          {showManualInput && (
+            <ManualInputForm
+              onPersonalDataSubmit={setPersonalData}
+              onCreditDataSubmit={setCreditData}
+              onIncomeDataSubmit={setIncomeData}
+              onPropertyDataSubmit={setPropertyData}
+            />
+          )}
+
+          {showDocumentUpload && (
+            <DocumentUpload
+              onPersonalDataExtracted={setPersonalData}
+              onCreditDataExtracted={setCreditData}
+              onIncomeDataExtracted={setIncomeData}
+              onPropertyDataExtracted={setPropertyData}
+            />
+          )}
 
           <DataDisplayCards
             personalData={personalData}
