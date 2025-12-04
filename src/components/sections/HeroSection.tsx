@@ -25,7 +25,7 @@ export default function HeroSection({ user, scrollToSection }: HeroSectionProps)
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button onClick={() => user ? navigate('/dashboard') : navigate('/payment')} size="lg" className="bg-accent hover:bg-accent/90 text-primary font-semibold text-lg px-8 py-6">
-                {user ? 'Перейти к курсу' : 'Получить курс за 2 999 ₽'}
+                {user ? 'Получить доступ' : 'Получить курс за 2 999 ₽'}
               </Button>
               <Button onClick={() => scrollToSection("program")} variant="outline" size="lg" className="text-lg px-8 py-6">
                 Узнать больше
@@ -35,7 +35,7 @@ export default function HeroSection({ user, scrollToSection }: HeroSectionProps)
             <div className="mt-6 bg-gradient-to-r from-accent/20 via-accent/10 to-accent/20 rounded-xl p-4 border-2 border-accent/30">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-1">Курс доступен по цене</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-1">Доступ к платформе по цене</p>
                   <p className="text-2xl sm:text-3xl font-bold text-primary whitespace-nowrap">от 2 999 ₽</p>
                 </div>
                 <div className="text-right">
