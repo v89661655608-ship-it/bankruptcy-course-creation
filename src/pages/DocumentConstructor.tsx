@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import Icon from "@/components/ui/icon";
 import DataAuthSection from "@/components/document-constructor/DataAuthSection";
@@ -10,20 +10,45 @@ import AdditionalFieldsForm from "@/components/document-constructor/AdditionalFi
 import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields, BenefitsData, ChildrenData } from "@/components/document-constructor/types";
 import funcUrls from "../../backend/func2url.json";
 
+const STORAGE_KEY = 'documentConstructorData';
+
+const loadFromStorage = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch {
+    return {};
+  }
+};
+
 export default function DocumentConstructor() {
   const [isLoadingEsia] = useState(false);
   const [isLoadingBki] = useState(false);
-  const [personalData, setPersonalData] = useState<PersonalData | null>(null);
-  const [creditData, setCreditData] = useState<CreditData | null>(null);
-  const [incomeData, setIncomeData] = useState<IncomeData | null>(null);
-  const [propertyData, setPropertyData] = useState<PropertyData | null>(null);
+  const savedData = loadFromStorage();
+  const [personalData, setPersonalData] = useState<PersonalData | null>(savedData.personalData || null);
+  const [creditData, setCreditData] = useState<CreditData | null>(savedData.creditData || null);
+  const [incomeData, setIncomeData] = useState<IncomeData | null>(savedData.incomeData || null);
+  const [propertyData, setPropertyData] = useState<PropertyData | null>(savedData.propertyData || null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [showAdditionalFields, setShowAdditionalFields] = useState(false);
-  const [additionalFields, setAdditionalFields] = useState<AdditionalFields | null>(null);
-  const [benefitsData, setBenefitsData] = useState<BenefitsData | null>(null);
-  const [childrenData, setChildrenData] = useState<ChildrenData | null>(null);
+  const [additionalFields, setAdditionalFields] = useState<AdditionalFields | null>(savedData.additionalFields || null);
+  const [benefitsData, setBenefitsData] = useState<BenefitsData | null>(savedData.benefitsData || null);
+  const [childrenData, setChildrenData] = useState<ChildrenData | null>(savedData.childrenData || null);
+
+  useEffect(() => {
+    const dataToSave = {
+      personalData,
+      creditData,
+      incomeData,
+      propertyData,
+      additionalFields,
+      benefitsData,
+      childrenData,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+  }, [personalData, creditData, incomeData, propertyData, additionalFields, benefitsData, childrenData]);
 
   const handleEsiaAuth = async () => {
     alert('Интеграция с ЕСИА/Госуслуги в разработке. Требуется регистрация в ЕСИА и получение сертификатов.');
