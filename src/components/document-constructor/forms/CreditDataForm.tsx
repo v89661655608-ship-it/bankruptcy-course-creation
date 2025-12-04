@@ -54,7 +54,7 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Поиск организаций через DaData
+  // Поиск организаций через публичный API
   const searchCompany = async (query: string) => {
     if (query.length < 3) {
       setSuggestions([]);
@@ -64,31 +64,51 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
     setIsSearching(true);
 
     try {
-      const response = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Token 5f0b70f6c1f18a0b7e04b7485a7aa3c6ad30f4e0'
-        },
-        body: JSON.stringify({ query, count: 10 })
-      });
+      // Используем открытый API поиска организаций
+      const response = await fetch(`https://egrul.itsoft.ru/${encodeURIComponent(query)}.json`);
+      
+      if (!response.ok) {
+        throw new Error('Ошибка API');
+      }
 
       const data = await response.json();
-      const results: CompanySuggestion[] = data.suggestions?.map((item: any) => ({
-        inn: item.data?.inn || '',
-        name: item.data?.name?.short_with_opf || item.data?.name?.full || '',
-        fullName: item.data?.name?.full || '',
-        address: item.data?.address?.unrestricted_value || '',
-        ogrn: item.data?.ogrn || '',
-        kpp: item.data?.kpp || ''
-      })) || [];
+      
+      // Преобразуем результаты в нужный формат
+      const results: CompanySuggestion[] = [];
+      
+      if (data && typeof data === 'object') {
+        for (const inn in data) {
+          const org = data[inn];
+          if (results.length >= 10) break;
+          
+          results.push({
+            inn: org.ИНН || inn,
+            name: org.НаимСокрОтд || org.НаимПолнОтд || org.НаимСокр || '',
+            fullName: org.НаимПолнОтд || org.НаимСокр || '',
+            address: org.АдресПолн || '',
+            ogrn: org.ОГРН || '',
+            kpp: org.КПП || ''
+          });
+        }
+      }
 
       setSuggestions(results);
-      setShowSuggestions(true);
+      setShowSuggestions(results.length > 0);
     } catch (error) {
       console.error('Ошибка поиска организации:', error);
-      setSuggestions([]);
+      
+      // Показываем сообщение пользователю
+      if (query.length >= 3) {
+        setSuggestions([{
+          inn: '',
+          name: '⚠️ Не удалось найти организацию. Введите данные вручную.',
+          fullName: '',
+          address: '',
+          ogrn: '',
+          kpp: ''
+        }]);
+        setShowSuggestions(true);
+      }
     } finally {
       setIsSearching(false);
     }
@@ -116,6 +136,12 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
 
   // Выбор организации из подсказок
   const selectSuggestion = (suggestion: CompanySuggestion) => {
+    // Не выбираем сообщение об ошибке
+    if (!suggestion.inn) {
+      setShowSuggestions(false);
+      return;
+    }
+    
     setCreditForm({
       ...creditForm,
       creditorName: suggestion.name,
