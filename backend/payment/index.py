@@ -802,7 +802,7 @@ def send_course_credentials_email(user_email: str, user_name: str, password: str
     <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
         <p style="font-size: 16px; margin-bottom: 20px;">Здравствуйте, <strong>{user_name}</strong>!</p>
         
-        <p style="font-size: 16px; margin-bottom: 20px;">Спасибо за покупку! Ваш доступ к курсу <strong>"Банкротство физических лиц - самостоятельно"</strong> активирован на <strong>6 месяцев</strong>.</p>
+        <p style="font-size: 16px; margin-bottom: 20px;">Спасибо за покупку! Ваш доступ к курсу <strong>"Банкротство физических лиц - самостоятельно"</strong> активирован на <strong>3 месяца</strong>.</p>
         
         <div style="background: white; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #667eea;">
             <h2 style="margin-top: 0; color: #667eea; font-size: 20px;">📝 Ваши данные для входа:</h2>
@@ -820,7 +820,7 @@ def send_course_credentials_email(user_email: str, user_name: str, password: str
                 <li style="margin: 8px 0;">7 подробных видеомодулей</li>
                 <li style="margin: 8px 0;">Все шаблоны документов для подачи</li>
                 <li style="margin: 8px 0;">Пошаговые инструкции</li>
-                <li style="margin: 8px 0;">Доступ на 6 месяцев</li>
+                <li style="margin: 8px 0;">Доступ на 3 месяца</li>
             </ul>
         </div>
         
