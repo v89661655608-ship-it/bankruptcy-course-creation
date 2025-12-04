@@ -788,25 +788,67 @@ def generate_creditors_list_document(
     doc.add_paragraph()
     
     # Заголовок
-    title = doc.add_heading("СПИСОК\nкредиторов и должников гражданина", level=1)
+    title = doc.add_heading("Список кредиторов и должников гражданина", level=1)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     for run in title.runs:
         run.font.size = Pt(14)
         run.font.bold = True
     
-    # Информация о гражданине
-    p_citizen = doc.add_paragraph()
-    full_name = personal.get('fullName', '_________________________')
-    inn = personal.get('inn', '_________________________')
-    snils = personal.get('snils', '_________________________')
+    doc.add_paragraph()
+    
+    # Таблица с информацией о гражданине
+    info_table = doc.add_table(rows=14, cols=2)
+    info_table.style = 'Table Grid'
+    
+    # Заголовок таблицы
+    info_header = info_table.rows[0].cells
+    info_header[0].merge(info_header[1])
+    info_header[0].text = "Информация о гражданине"
+    info_header[0].paragraphs[0].runs[0].font.bold = True
+    info_header[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Извлекаем данные
+    full_name_parts = personal.get('fullName', '').split()
+    surname = full_name_parts[0] if len(full_name_parts) > 0 else 'обязательно'
+    name = full_name_parts[1] if len(full_name_parts) > 1 else 'обязательно'
+    patronymic = full_name_parts[2] if len(full_name_parts) > 2 else 'при наличии'
+    
+    birth_date = personal.get('birthDate', 'обязательно')
+    birth_place = personal.get('birthPlace', 'обязательно')
+    snils = personal.get('snils', 'обязательно')
+    inn = personal.get('inn', 'при наличии')
+    
+    passport = personal.get('passport', {})
+    passport_series = passport.get('series', 'обязательно')
+    passport_number = passport.get('number', 'обязательно')
     
     registration = personal.get('registration', {})
-    address = registration.get('address', '_________________________')
+    address_parts = registration.get('address', '').split(',')
     
-    p_citizen.add_run(f"Гражданин: {full_name}\n")
-    p_citizen.add_run(f"ИНН: {inn}\n")
-    p_citizen.add_run(f"СНИЛС: {snils}\n")
-    p_citizen.add_run(f"Адрес регистрации: {address}")
+    # Заполняем строки таблицы
+    rows_data = [
+        ('фамилия', surname),
+        ('имя', name),
+        ('отчество', patronymic),
+        ('в случае изменения фамилии, имени, отчества указать прежние фамилии, имена, отчества', 'обязательно'),
+        ('дата рождения', birth_date),
+        ('место рождения', birth_place),
+        ('СНИЛС', snils),
+        ('ИНН', inn),
+        ('документ, удостоверяющий личность', ''),
+        ('вид документа', 'паспорт гражданина РФ'),
+        ('серия (при наличии) и номер', f'{passport_series} {passport_number}'),
+        ('адрес регистрации по месту жительства в Российской Федерации*', ''),
+        ('субъект Российской Федерации', address_parts[0].strip() if len(address_parts) > 0 else 'обязательно'),
+    ]
+    
+    for idx, (label, value) in enumerate(rows_data, 1):
+        row = info_table.rows[idx].cells
+        row[0].text = label
+        row[1].text = value
+        row[0].paragraphs[0].runs[0].font.size = Pt(9)
+        if row[1].text:
+            row[1].paragraphs[0].runs[0].font.size = Pt(9)
     
     doc.add_paragraph()
     
@@ -827,43 +869,89 @@ def generate_creditors_list_document(
                 tcBorders.append(edge_el)
         tcPr.append(tcBorders)
     
-    # Раздел I: Сведения о кредиторах
+    # Раздел II: Сведения о кредиторах
     section_heading = doc.add_paragraph()
-    section_heading.add_run("I. Сведения о кредиторах гражданина").bold = True
+    run_heading = section_heading.add_run("II. Сведения о ")
+    run_heading.bold = True
+    run_creditors = section_heading.add_run("кредиторах")
+    run_creditors.bold = True
+    run_creditors.font.color.rgb = RGBColor(255, 0, 0)
+    run_heading2 = section_heading.add_run(" гражданина")
+    run_heading2.bold = True
     
     p_desc = doc.add_paragraph()
-    p_desc.add_run("по денежным обязательствам, НЕ связанным с осуществлением предпринимательской деятельности гражданина").italic = True
+    run1 = p_desc.add_run("(по денежным обязательствам и (или) обязанности по уплате обязательных платежей, ")
+    run2 = p_desc.add_run("которые возникли в результате осуществления гражданином предпринимательской деятельности")
+    run2.font.color.rgb = RGBColor(255, 0, 0)
+    run3 = p_desc.add_run(")")
     
     doc.add_paragraph()
-    p_money = doc.add_paragraph()
-    p_money.add_run("1. Денежные обязательства").bold = True
     
-    # Таблица кредиторов
-    table = doc.add_table(rows=1, cols=8)
+    # Таблица 1: Денежные обязательства
+    p_money = doc.add_paragraph()
+    p_money.add_run("1").bold = True
+    p_money_label = p_money.add_run("\t\tДенежные обязательства")
+    
+    # Таблица кредиторов с расширенными заголовками
+    table = doc.add_table(rows=2, cols=7)
     table.style = 'Table Grid'
     
-    # Заголовки таблицы
-    headers = table.rows[0].cells
-    headers[0].text = "№ п/п"
-    headers[1].text = "Содержание обязательства"
-    headers[2].text = "Кредитор"
-    headers[3].text = "Место нахождения (место жительства) кредитора"
-    headers[4].text = "Основание возникновения"
-    headers[5].text = "Сумма обязательства, всего"
-    headers[6].text = "в том числе задолженность"
-    headers[7].text = "Штрафы, пени и иные санкции"
+    # Первая строка заголовков (объединенные ячейки)
+    header_row1 = table.rows[0].cells
+    header_row1[0].text = "№ п/п"
+    header_row1[1].text = "Содержание обязательства⁴"
+    header_row1[2].text = "Кредитор⁵"
+    header_row1[3].text = "Место нахождения (место жительства) кредитора"
+    header_row1[4].text = "Основание возникновения⁶"
+    header_row1[5].text = "Сумма обязательства"
+    header_row1[6].text = "Штрафы, пени и иные санкции"
+    
+    # Вторая строка заголовков (подзаголовки для суммы)
+    header_row2 = table.rows[1].cells
+    header_row2[0].text = ""
+    header_row2[1].text = ""
+    header_row2[2].text = ""
+    header_row2[3].text = "⁰⁰"
+    header_row2[4].text = ""
+    header_row2[5].text = "всего⁷"
+    header_row2[6].text = ""
+    
+    # Объединяем ячейки для колонок без подзаголовков
+    for idx in [0, 1, 2, 4, 6]:
+        header_row1[idx].merge(header_row2[idx])
     
     # Форматирование заголовков
-    for cell in headers:
-        cell.paragraphs[0].runs[0].font.bold = True
+    for row in [header_row1, header_row2]:
+        for cell in row:
+            if cell.text:
+                cell.paragraphs[0].runs[0].font.bold = True
+                cell.paragraphs[0].runs[0].font.size = Pt(9)
+                cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Строка с пустыми значениями (1.1)
+    empty_row = table.add_row().cells
+    empty_row[0].text = "1.1"
+    empty_row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    empty_row[1].text = "0"
+    empty_row[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    empty_row[2].text = "0"
+    empty_row[2].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    empty_row[3].text = "0"
+    empty_row[3].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    empty_row[4].text = "00"
+    empty_row[4].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    empty_row[5].text = "0"
+    empty_row[5].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    empty_row[6].text = "0"
+    empty_row[6].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    
+    for cell in empty_row:
         cell.paragraphs[0].runs[0].font.size = Pt(9)
-        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
     
     # Заполнение данными о кредиторах
     creditors = credit.get('creditors', [])
     row_num = 1
     total_debt = 0
-    total_penalties = 0
     
     for creditor in creditors:
         creditor_name = creditor.get('name', '')
@@ -875,7 +963,7 @@ def generate_creditors_list_document(
             row = table.add_row().cells
             
             # № п/п
-            row[0].text = str(row_num)
+            row[0].text = f"1.{row_num}"
             row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
             
             # Содержание обязательства
@@ -898,53 +986,30 @@ def generate_creditors_list_document(
             row[5].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
             total_debt += debt
             
-            # Задолженность
-            row[6].text = format_number(debt)
-            row[6].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
-            
             # Штрафы
-            row[7].text = "0"
-            row[7].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            row[6].text = "0"
+            row[6].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
             
             # Форматирование ячеек
             for cell in row:
-                cell.paragraphs[0].runs[0].font.size = Pt(9)
+                if cell.paragraphs[0].runs:
+                    cell.paragraphs[0].runs[0].font.size = Pt(9)
             
             row_num += 1
-    
-    # Итоговая строка
-    total_row = table.add_row().cells
-    total_row[0].merge(total_row[4])
-    total_row[0].text = "ИТОГО:"
-    total_row[0].paragraphs[0].runs[0].font.bold = True
-    total_row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    
-    total_row[5].text = format_number(total_debt)
-    total_row[5].paragraphs[0].runs[0].font.bold = True
-    total_row[5].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    
-    total_row[6].text = format_number(total_debt)
-    total_row[6].paragraphs[0].runs[0].font.bold = True
-    total_row[6].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    
-    total_row[7].text = "0"
-    total_row[7].paragraphs[0].runs[0].font.bold = True
-    total_row[7].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
     
     doc.add_paragraph()
     
     # Раздел с обязательными платежами
     p_tax = doc.add_paragraph()
-    p_tax.add_run("2. Обязательные платежи").bold = True
+    p_tax.add_run("2\t\tОбязательные платежи").bold = True
     
-    table_tax = doc.add_table(rows=1, cols=4)
+    table_tax = doc.add_table(rows=2, cols=3)
     table_tax.style = 'Table Grid'
     
     headers_tax = table_tax.rows[0].cells
     headers_tax[0].text = "№ п/п"
     headers_tax[1].text = "Наименование налога, сбора или иного обязательного платежа"
-    headers_tax[2].text = "Недоимка"
-    headers_tax[3].text = "Штрафы, пени и иные санкции"
+    headers_tax[2].text = "Штрафы, пени и иные санкции"
     
     for cell in headers_tax:
         cell.paragraphs[0].runs[0].font.bold = True
@@ -952,25 +1017,50 @@ def generate_creditors_list_document(
         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
     
     # Пустая строка (нет налоговых задолженностей)
-    row_tax = table_tax.add_row().cells
-    row_tax[0].text = "-"
+    row_tax = table_tax.rows[1].cells
+    row_tax[0].text = "2.1 | 0"
     row_tax[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-    row_tax[1].text = "Отсутствуют"
+    row_tax[1].text = ""
     row_tax[2].text = "0"
     row_tax[2].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    row_tax[3].text = "0"
-    row_tax[3].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
     
     doc.add_paragraph()
     
-    # Раздел III: Сведения о должниках (пустой раздел)
-    section3_heading = doc.add_paragraph()
-    section3_heading.add_run("III. Сведения о должниках гражданина").bold = True
+    # Текст о предпринимательской деятельности
+    p_entrepreneur = doc.add_paragraph()
+    p_entrepreneur.add_run("Сведения о неисполненных обязательствах гражданина, которые возникли в результате осуществления гражданином предпринимательской деятельности (в том числе о передаче имущества в собственность, выполнении работ и оказании услуг и так далее):")
+    p_entrepreneur.paragraph_format.first_line_indent = Cm(1)
+    p_entrepreneur.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     
-    p_desc3 = doc.add_paragraph()
-    p_desc3.add_run("по денежным обязательствам, НЕ связанным с осуществлением предпринимательской деятельности гражданина").italic = True
+    # Линии для заполнения
+    for _ in range(3):
+        p_line = doc.add_paragraph("_" * 100)
+        p_line.paragraph_format.space_before = Pt(0)
+        p_line.paragraph_format.space_after = Pt(0)
     
-    doc.add_paragraph("Должников перед гражданином не имеется.")
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # Сноски внизу
+    p_footnotes = doc.add_paragraph()
+    p_footnotes.add_run("_" * 50)
+    p_footnotes.paragraph_format.space_before = Pt(12)
+    
+    footnotes_text = [
+        "* Указывается субъект обязательства (кредитор, заем, кредит).",
+        "⁴ Указывается сумма срочных обязательств, кредитора, должника от остатка (основание — при наличии) для физического лица или наименование юридического лица.",
+        "⁵ Указывается ИНН, адрес и регистрационный номер кредитора, если кредитор — физическое лицо или наименование юридического лица.",
+        "⁶ Указывается суждение обязательства (например, заем, кредит).",
+        "⁷ Указывается общая сумма основного обязательства, в том числе наложения платежи проценты. Для обязательства, выраженного в иностранной валюте, сумма указывается в рублях по курсу Банка России на дату составления списка кредиторов и должников гражданина (за исключением внутреннего картина), пени, проценты за просрочку платежа, учетные в сумме основной задолженности в виде финансовых санкций, начисленных на сумму основного обязательства). Для обязательства, выраженных в иностранной валюте, сумма указывается в рублях по курсу Банка России на дату составления списка кредиторов и должников гражданина.",
+        "⁰⁰ Указывается сумма суммы обязательства (кредитор, срок, кредит)."
+    ]
+    
+    for footnote in footnotes_text:
+        p_fn = doc.add_paragraph(footnote)
+        p_fn.paragraph_format.first_line_indent = Cm(0)
+        p_fn.runs[0].font.size = Pt(8)
+        p_fn.paragraph_format.space_before = Pt(2)
+        p_fn.paragraph_format.space_after = Pt(2)
     
     doc.add_paragraph()
     doc.add_paragraph()
