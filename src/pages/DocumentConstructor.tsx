@@ -5,7 +5,7 @@ import DataAuthSection from "@/components/document-constructor/DataAuthSection";
 import DataDisplayCards from "@/components/document-constructor/DataDisplayCards";
 import ProgressSidebar from "@/components/document-constructor/ProgressSidebar";
 import ManualInputForm from "@/components/document-constructor/ManualInputForm";
-import DocumentUpload from "@/components/document-constructor/DocumentUpload";
+
 import AdditionalFieldsForm from "@/components/document-constructor/AdditionalFieldsForm";
 import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields, BenefitsData, ChildrenData, TransactionsData } from "@/components/document-constructor/types";
 import funcUrls from "../../backend/func2url.json";
@@ -32,7 +32,6 @@ export default function DocumentConstructor() {
   const [propertyData, setPropertyData] = useState<PropertyData | null>(savedData.propertyData || null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
-  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [showAdditionalFields, setShowAdditionalFields] = useState(false);
   const [additionalFields, setAdditionalFields] = useState<AdditionalFields | null>(savedData.additionalFields || null);
   const [benefitsData, setBenefitsData] = useState<BenefitsData | null>(savedData.benefitsData || null);
@@ -127,95 +126,7 @@ export default function DocumentConstructor() {
     return new Blob([byteArray], { type: mimeType });
   };
 
-  const handleLoadTestData = () => {
-    setPersonalData({
-      fullName: "Иванов Иван Иванович",
-      inn: "123456789012",
-      snils: "123-456-789 00",
-      birthDate: "01.01.1980",
-      birthPlace: "г. Москва",
-      passport: {
-        series: "4509",
-        number: "123456",
-        issueDate: "01.01.2010",
-        issuedBy: "ОВД Района Хамовники г. Москвы",
-        code: "770-001"
-      },
-      registration: {
-        address: "г. Москва, ул. Ленина, д. 1, кв. 1",
-        date: "01.01.2000"
-      },
-      maritalStatus: {
-        status: "в разводе",
-        spouseName: "Иванова Мария Петровна",
-        marriageDate: "01.01.2005",
-        divorceDate: "01.01.2020"
-      },
-      children: [
-        {
-          name: "Иванов Петр Иванович",
-          birthDate: "01.01.2015",
-          isMinor: true
-        }
-      ]
-    });
 
-    setCreditData({
-      creditors: [
-        {
-          name: "ПАО Сбербанк",
-          inn: "7707083893",
-          credits: [
-            {
-              contractNumber: "12345/2020",
-              amount: 500000,
-              debt: 650000,
-              date: "01.01.2020"
-            }
-          ]
-        },
-        {
-          name: "ВТБ (ПАО)",
-          inn: "7702070139",
-          credits: [
-            {
-              contractNumber: "67890/2019",
-              amount: 300000,
-              debt: 400000,
-              date: "01.06.2019"
-            }
-          ]
-        }
-      ],
-      totalDebt: 1050000,
-      executiveDocuments: [
-        {
-          number: "12345678/2023",
-          date: "01.01.2023",
-          amount: 650000,
-          creditor: "ПАО Сбербанк"
-        }
-      ]
-    });
-
-    setIncomeData({
-      monthlyIncome: 35000,
-      source: "заработная плата",
-      lastYear: 420000
-    });
-
-    setPropertyData({
-      realEstate: [
-        {
-          type: "квартира",
-          address: "г. Москва, ул. Ленина, д. 1, кв. 1",
-          cadastralNumber: "77:01:0001001:1234",
-          value: 8000000
-        }
-      ],
-      vehicles: []
-    });
-  };
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
@@ -239,15 +150,7 @@ export default function DocumentConstructor() {
             creditData={creditData}
             onEsiaAuth={handleEsiaAuth}
             onBkiAuth={handleBkiAuth}
-            onLoadTestData={handleLoadTestData}
-            onShowManualInput={() => {
-              setShowManualInput(true);
-              setShowDocumentUpload(false);
-            }}
-            onShowDocumentUpload={() => {
-              setShowDocumentUpload(true);
-              setShowManualInput(false);
-            }}
+            onShowManualInput={() => setShowManualInput(true)}
           />
 
           {showManualInput && (
@@ -266,16 +169,6 @@ export default function DocumentConstructor() {
               transactionsData={transactionsData || undefined}
             />
           )}
-
-          {showDocumentUpload && (
-            <DocumentUpload
-              onPersonalDataExtracted={setPersonalData}
-              onCreditDataExtracted={setCreditData}
-              onIncomeDataExtracted={setIncomeData}
-              onPropertyDataExtracted={setPropertyData}
-            />
-          )}
-
 
 
           <DataDisplayCards
