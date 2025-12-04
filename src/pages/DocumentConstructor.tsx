@@ -60,7 +60,7 @@ export default function DocumentConstructor() {
     alert('Интеграция с БКИ в разработке. Требуется подключение к API Бюро кредитных историй.');
   };
 
-  const handleGenerateDocument = async (format: 'pdf' | 'docx') => {
+  const handleGenerateDocument = async (format: 'pdf' | 'docx' | 'creditors-list') => {
     if (!personalData || !creditData) {
       alert('Необходимо загрузить персональные данные и кредитную историю (минимальные требования)');
       return;
@@ -97,7 +97,10 @@ export default function DocumentConstructor() {
         const base64Data = result.document.data;
         const fileName = result.document.fileName;
         
-        const blob = base64ToBlob(base64Data, format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        const mimeType = format === 'pdf' 
+          ? 'application/pdf' 
+          : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        const blob = base64ToBlob(base64Data, mimeType);
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -107,7 +110,8 @@ export default function DocumentConstructor() {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
         
-        alert(`Заявление успешно сгенерировано в формате ${format.toUpperCase()} и загружается!`);
+        const docType = format === 'creditors-list' ? 'Приложение №1' : 'Заявление';
+        alert(`${docType} успешно сгенерировано и загружается!`);
       }
     } catch (error) {
       alert(`Ошибка: ${error}`);

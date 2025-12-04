@@ -10,7 +10,7 @@ interface ProgressSidebarProps {
   incomeData: IncomeData | null;
   propertyData: PropertyData | null;
   isGenerating: boolean;
-  onGenerateDocument: (format: 'pdf' | 'docx') => void;
+  onGenerateDocument: (format: 'pdf' | 'docx' | 'creditors-list') => void;
 }
 
 export default function ProgressSidebar({
@@ -122,6 +122,31 @@ export default function ProgressSidebar({
                 <>
                   <Icon name="FileDown" className="mr-2" size={18} />
                   Скачать PDF
+                </>
+              )}
+            </Button>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Приложения:</p>
+            
+            <Button
+              onClick={() => onGenerateDocument('creditors-list')}
+              disabled={!personalData || !creditData || isGenerating}
+              className="w-full"
+              variant="outline"
+            >
+              {isGenerating ? (
+                <>
+                  <Icon name="Loader2" className="mr-2 animate-spin" size={18} />
+                  Генерация...
+                </>
+              ) : (
+                <>
+                  <Icon name="FileSpreadsheet" className="mr-2" size={18} />
+                  Приложение №1
                 </>
               )}
             </Button>
