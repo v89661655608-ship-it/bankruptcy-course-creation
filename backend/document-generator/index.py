@@ -553,8 +553,16 @@ def generate_docx_document(
                 p_trans_format.space_before = Pt(0)
                 p_trans_format.space_after = Pt(0)
                 p_trans_format.line_spacing = 1.0
+            
+            p10 = doc.add_paragraph('Иные сделки с недвижимым имуществом, ценными бумагами, долями в уставном капитале, транспортными средствами и сделок на сумму свыше трехсот тысяч рублей в течение трех лет до даты подачи настоящего заявления Должником не совершались.')
+            p10_format = p10.paragraph_format
+            p10_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            p10_format.first_line_indent = Cm(1)
+            p10_format.space_before = Pt(0)
+            p10_format.space_after = Pt(0)
+            p10_format.line_spacing = 1.0
     else:
-        p10 = doc.add_paragraph('Иные сделки с недвижимым имуществом, ценными бумагами, долями в уставном капитале, транспортными средствами и сделок на сумму свыше трехсот тысяч рублей в течение трех лет до даты подачи настоящего заявления Должником не совершались.')
+        p10 = doc.add_paragraph('Сделки с недвижимым имуществом, ценными бумагами, долями в уставном капитале, транспортными средствами и сделок на сумму свыше трехсот тысяч рублей в течение трех лет до даты подачи настоящего заявления Должником не совершались.')
         p10_format = p10.paragraph_format
         p10_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         p10_format.first_line_indent = Cm(1)
