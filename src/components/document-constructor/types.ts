@@ -64,9 +64,11 @@ export interface PropertyData {
   }>;
   vehicles: Array<{
     type: string;
+    brand: string;
     model: string;
     year: number;
     registrationNumber: string;
+    vin: string;
   }>;
 }
 
@@ -100,4 +102,15 @@ export interface ChildrenData {
     monthlyAmount?: number;
     otherDetails?: string;
   };
+}
+
+export interface TransactionsData {
+  noTransactions: boolean;
+  transactions: Array<{
+    date: string;
+    type: string;
+    description: string;
+    amount: number;
+    counterparty: string;
+  }>;
 }

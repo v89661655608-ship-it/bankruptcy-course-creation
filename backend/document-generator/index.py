@@ -50,6 +50,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         additional_fields = body_data.get('additionalFields', {})
         benefits_data = body_data.get('benefitsData', {})
         children_data = body_data.get('childrenData', {})
+        transactions_data = body_data.get('transactionsData', {})
         doc_format = body_data.get('format', 'docx')
         
         if not personal_data or not credit_data:
@@ -62,7 +63,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if doc_format == 'pdf':
             pdf_base64 = generate_pdf_document(
-                personal_data, credit_data, income_data, property_data, additional_fields, benefits_data, children_data
+                personal_data, credit_data, income_data, property_data, additional_fields, benefits_data, children_data, transactions_data
             )
             result = {
                 'success': True,
@@ -75,7 +76,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         elif doc_format == 'docx':
             docx_base64 = generate_docx_document(
-                personal_data, credit_data, income_data, property_data, additional_fields, benefits_data, children_data
+                personal_data, credit_data, income_data, property_data, additional_fields, benefits_data, children_data, transactions_data
             )
             result = {
                 'success': True,
@@ -243,7 +244,8 @@ def generate_docx_document(
     property: Dict[str, Any],
     additional: Dict[str, Any] = None,
     benefits: Dict[str, Any] = None,
-    children: Dict[str, Any] = None
+    children: Dict[str, Any] = None,
+    transactions: Dict[str, Any] = None
 ) -> str:
     '''Генерирует DOCX документ по шаблону и возвращает base64'''
     
@@ -470,10 +472,12 @@ def generate_docx_document(
         vehicles = property.get('vehicles', [])
         if vehicles:
             vehicle = vehicles[0]
+            vehicle_brand = vehicle.get('brand', 'Место для ввода текста.')
             vehicle_model = vehicle.get('model', 'Место для ввода текста.')
             vehicle_year = vehicle.get('year', 'Место для ввода текста.')
             vehicle_reg = vehicle.get('registrationNumber', 'Место для ввода текста.')
-            p7 = doc.add_paragraph(f"Кроме того, в собственности Должника находится автомобиль марки {vehicle_model} {vehicle_year} г., государственный регистрационный номер: {vehicle_reg}.")
+            vehicle_vin = vehicle.get('vin', 'Место для ввода текста.')
+            p7 = doc.add_paragraph(f"Кроме того, в собственности Должника находится автомобиль марки {vehicle_brand} {vehicle_model} {vehicle_year} г., государственный регистрационный номер: {vehicle_reg}, идентификационный номер VIN: {vehicle_vin}.")
             p7_format = p7.paragraph_format
             p7_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
             p7_format.first_line_indent = Cm(1)
@@ -518,10 +522,31 @@ def generate_docx_document(
     
     doc.add_paragraph('Должник не привлекался к административной ответственности за мелкое хищение, умышленное уничтожение или повреждение имущества, неправомерные действия при банкротстве, фиктивное или преднамеренное банкротство.')
     doc.add_paragraph('Кроме того, в настоящий момент отсутствуют сведения об известных Должнику уголовных и административных делах в отношении него, а также о наличии неснятой или непогашенной судимости.')
-    p9 = doc.add_paragraph('Должником в течение трех лет до даты подачи заявления была произведена сделка: по договору купли-продажи № Место для ввода текста. 01.01.2021 года было реализовано автотранспортное средство Место для ввода текста. года выпуска. Денежные средства, полученные от совершения сделки, были уплачены в равных долях кредиторам.')
-    p9.runs[0].font.color.rgb = RGBColor(255, 0, 0)
-    p10 = doc.add_paragraph('Иные сделки с недвижимым имуществом, ценными бумагами, долями в уставном капитале, транспортными средствами и сделок на сумму свыше трехсот тысяч рублей в течение трех лет до даты подачи настоящего заявления Должником не совершались.')
-    p10.runs[0].font.color.rgb = RGBColor(255, 0, 0)
+    
+    if transactions and not transactions.get('noTransactions', True):
+        transactions_list = transactions.get('transactions', [])
+        if transactions_list:
+            for idx, trans in enumerate(transactions_list, 1):
+                trans_date = trans.get('date', '01.01.2021')
+                trans_type = trans.get('type', 'купля-продажа')
+                trans_desc = trans.get('description', 'сделка с имуществом')
+                trans_amount = format_number(trans.get('amount', 0))
+                trans_counterparty = trans.get('counterparty', 'Место для ввода текста.')
+                p_trans = doc.add_paragraph(f'Должником в течение трех лет до даты подачи заявления была произведена сделка: {trans_type} от {trans_date} г. - {trans_desc}. Сумма сделки составила {trans_amount} рублей. Контрагент: {trans_counterparty}.')
+                p_trans_format = p_trans.paragraph_format
+                p_trans_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                p_trans_format.first_line_indent = Cm(1)
+                p_trans_format.space_before = Pt(0)
+                p_trans_format.space_after = Pt(0)
+                p_trans_format.line_spacing = 1.0
+    else:
+        p10 = doc.add_paragraph('Иные сделки с недвижимым имуществом, ценными бумагами, долями в уставном капитале, транспортными средствами и сделок на сумму свыше трехсот тысяч рублей в течение трех лет до даты подачи настоящего заявления Должником не совершались.')
+        p10_format = p10.paragraph_format
+        p10_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p10_format.first_line_indent = Cm(1)
+        p10_format.space_before = Pt(0)
+        p10_format.space_after = Pt(0)
+        p10_format.line_spacing = 1.0
     doc.add_paragraph('В соответствии с общим смыслом п. 19 Постановления Пленума Верховного Суда РФ № 45 от 13.10.2015 г. «О некоторых вопросах, связанных с введением в действие процедур, применяемых в делах о несостоятельности (банкротстве) граждан» в качестве доказательства наличия у Должника денежных средств, достаточных для погашения расходов по делу о банкротстве, к настоящему заявлению приложен платежный документ об оплате в депозит Арбитражного суда денежных средств в размере 25 000 рублей.')
     doc.add_paragraph('Таким образом, имеются признаки банкротства гражданина-должника, указанные в п. 3 ст. 213.6 Закона о банкротстве и основания для возбуждения судом дела о банкротстве в соответствии со статьями 213.3 и 213.4 Закона о банкротстве.')
     doc.add_paragraph('На основании вышеизложенного, а также руководствуясь ст. ст. 6, 27, 38, 213.3, 213.4 Федерального закона «О несостоятельности (банкротстве)» от 26.10.2002 №127-ФЗ; ст. ст. 223, 224 АПК РФ,')
@@ -587,7 +612,8 @@ def generate_pdf_document(
     property: Dict[str, Any],
     additional: Dict[str, Any] = None,
     benefits: Dict[str, Any] = None,
-    children: Dict[str, Any] = None
+    children: Dict[str, Any] = None,
+    transactions: Dict[str, Any] = None
 ) -> str:
     '''Генерирует PDF документ по шаблону и возвращает base64'''
     

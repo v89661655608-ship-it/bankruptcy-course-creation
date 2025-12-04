@@ -22,7 +22,17 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
     value: "",
   });
 
+  const [vehicleForm, setVehicleForm] = useState({
+    type: "",
+    brand: "",
+    model: "",
+    year: "",
+    registrationNumber: "",
+    vin: "",
+  });
+
   const [properties, setProperties] = useState<any[]>([]);
+  const [vehicles, setVehicles] = useState<any[]>([]);
 
   const validateCadastralNumber = (number: string): boolean => {
     return /^\d{2}:\d{2}:\d{6,7}:\d{1,5}$/.test(number);
@@ -70,11 +80,53 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
     });
   };
 
+  const handleAddVehicle = () => {
+    const newErrors: ValidationErrors = {};
+
+    if (!vehicleForm.brand || vehicleForm.brand.length < 2) {
+      newErrors.brand = 'Укажите марку автомобиля';
+    }
+
+    if (!vehicleForm.model || vehicleForm.model.length < 2) {
+      newErrors.model = 'Укажите модель автомобиля';
+    }
+
+    if (!vehicleForm.year || parseInt(vehicleForm.year) < 1900 || parseInt(vehicleForm.year) > new Date().getFullYear() + 1) {
+      newErrors.year = 'Укажите корректный год выпуска';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+
+    const newVehicle = {
+      type: vehicleForm.type || 'легковой автомобиль',
+      brand: vehicleForm.brand,
+      model: vehicleForm.model,
+      year: parseInt(vehicleForm.year),
+      registrationNumber: vehicleForm.registrationNumber,
+      vin: vehicleForm.vin,
+    };
+
+    setVehicles([...vehicles, newVehicle]);
+    setVehicleForm({
+      type: "",
+      brand: "",
+      model: "",
+      year: "",
+      registrationNumber: "",
+      vin: "",
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const data: PropertyData = {
       realEstate: properties,
-      vehicles: [],
+      vehicles: vehicles,
     };
     onSubmit(data);
     alert("Данные об имуществе сохранены");
@@ -163,6 +215,90 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
         </Button>
       </div>
 
+      <div className="border rounded-lg p-4 bg-muted/50">
+        <h3 className="font-medium mb-3">Добавить транспортное средство</h3>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="brand">Марка</Label>
+            <Input
+              id="brand"
+              value={vehicleForm.brand}
+              onChange={(e) =>
+                setVehicleForm({ ...vehicleForm, brand: e.target.value })
+              }
+              placeholder="Toyota, BMW, Лада"
+              className={errors.brand ? 'border-red-500' : ''}
+            />
+            {errors.brand && (
+              <p className="text-sm text-red-500 mt-1">{errors.brand}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="model">Модель</Label>
+            <Input
+              id="model"
+              value={vehicleForm.model}
+              onChange={(e) =>
+                setVehicleForm({ ...vehicleForm, model: e.target.value })
+              }
+              placeholder="Camry, X5, Vesta"
+              className={errors.model ? 'border-red-500' : ''}
+            />
+            {errors.model && (
+              <p className="text-sm text-red-500 mt-1">{errors.model}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="year">Год выпуска</Label>
+            <Input
+              id="year"
+              type="number"
+              value={vehicleForm.year}
+              onChange={(e) =>
+                setVehicleForm({ ...vehicleForm, year: e.target.value })
+              }
+              placeholder="2020"
+              className={errors.year ? 'border-red-500' : ''}
+            />
+            {errors.year && (
+              <p className="text-sm text-red-500 mt-1">{errors.year}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="registrationNumber">Гос. номер</Label>
+            <Input
+              id="registrationNumber"
+              value={vehicleForm.registrationNumber}
+              onChange={(e) =>
+                setVehicleForm({ ...vehicleForm, registrationNumber: e.target.value })
+              }
+              placeholder="А123БВ777"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="vin">VIN номер</Label>
+            <Input
+              id="vin"
+              value={vehicleForm.vin}
+              onChange={(e) =>
+                setVehicleForm({ ...vehicleForm, vin: e.target.value })
+              }
+              placeholder="WBAXXXXX00000000"
+              maxLength={17}
+            />
+          </div>
+        </div>
+        <Button
+          type="button"
+          onClick={handleAddVehicle}
+          variant="outline"
+          className="w-full mt-3"
+        >
+          <Icon name="Car" className="mr-2" size={18} />
+          Добавить транспортное средство
+        </Button>
+      </div>
+
       {properties.length > 0 && (
         <div className="space-y-2">
           <h3 className="font-medium">Добавленное имущество:</h3>
@@ -173,6 +309,23 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
               <p className="text-sm">
                 Стоимость: {property.value.toLocaleString()} ₽
               </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {vehicles.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="font-medium">Добавленные транспортные средства:</h3>
+          {vehicles.map((vehicle, idx) => (
+            <div key={idx} className="border rounded p-3 bg-background">
+              <p className="font-medium">{vehicle.brand} {vehicle.model} ({vehicle.year})</p>
+              <p className="text-sm text-muted-foreground">
+                Гос. номер: {vehicle.registrationNumber || 'не указан'}
+              </p>
+              {vehicle.vin && (
+                <p className="text-sm">VIN: {vehicle.vin}</p>
+              )}
             </div>
           ))}
         </div>

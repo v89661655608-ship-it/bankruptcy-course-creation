@@ -7,7 +7,7 @@ import ProgressSidebar from "@/components/document-constructor/ProgressSidebar";
 import ManualInputForm from "@/components/document-constructor/ManualInputForm";
 import DocumentUpload from "@/components/document-constructor/DocumentUpload";
 import AdditionalFieldsForm from "@/components/document-constructor/AdditionalFieldsForm";
-import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields, BenefitsData, ChildrenData } from "@/components/document-constructor/types";
+import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields, BenefitsData, ChildrenData, TransactionsData } from "@/components/document-constructor/types";
 import funcUrls from "../../backend/func2url.json";
 
 const STORAGE_KEY = 'documentConstructorData';
@@ -37,6 +37,7 @@ export default function DocumentConstructor() {
   const [additionalFields, setAdditionalFields] = useState<AdditionalFields | null>(savedData.additionalFields || null);
   const [benefitsData, setBenefitsData] = useState<BenefitsData | null>(savedData.benefitsData || null);
   const [childrenData, setChildrenData] = useState<ChildrenData | null>(savedData.childrenData || null);
+  const [transactionsData, setTransactionsData] = useState<TransactionsData | null>(savedData.transactionsData || null);
 
   useEffect(() => {
     const dataToSave = {
@@ -47,9 +48,10 @@ export default function DocumentConstructor() {
       additionalFields,
       benefitsData,
       childrenData,
+      transactionsData,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-  }, [personalData, creditData, incomeData, propertyData, additionalFields, benefitsData, childrenData]);
+  }, [personalData, creditData, incomeData, propertyData, additionalFields, benefitsData, childrenData, transactionsData]);
 
   const handleEsiaAuth = async () => {
     alert('Интеграция с ЕСИА/Госуслуги в разработке. Требуется регистрация в ЕСИА и получение сертификатов.');
@@ -81,6 +83,7 @@ export default function DocumentConstructor() {
           additionalFields,
           benefitsData,
           childrenData,
+          transactionsData,
           format
         })
       });
@@ -256,9 +259,11 @@ export default function DocumentConstructor() {
               onAdditionalFieldsSubmit={setAdditionalFields}
               onBenefitsSubmit={setBenefitsData}
               onChildrenSubmit={setChildrenData}
+              onTransactionsSubmit={setTransactionsData}
               additionalFieldsData={additionalFields || undefined}
               benefitsData={benefitsData || undefined}
               childrenData={childrenData || undefined}
+              transactionsData={transactionsData || undefined}
             />
           )}
 
