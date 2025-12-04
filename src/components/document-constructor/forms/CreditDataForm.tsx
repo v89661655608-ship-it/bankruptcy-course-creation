@@ -24,23 +24,55 @@ interface CreditDataFormProps {
 
 export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
   const [errors, setErrors] = useState<ValidationErrors>({});
-  const [creditForm, setCreditForm] = useState({
-    creditorName: "",
-    creditorInn: "",
-    creditorLegalAddress: "",
-    contractNumber: "",
-    creditAmount: "",
-    debtAmount: "",
-    contractDate: "",
+  
+  // Загружаем сохраненные данные из localStorage
+  const [creditForm, setCreditForm] = useState(() => {
+    const saved = localStorage.getItem('creditDataForm');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Ошибка загрузки сохраненных данных:', e);
+      }
+    }
+    return {
+      creditorName: "",
+      creditorInn: "",
+      creditorLegalAddress: "",
+      contractNumber: "",
+      creditAmount: "",
+      debtAmount: "",
+      contractDate: "",
+    };
   });
 
-  const [creditors, setCreditors] = useState<any[]>([]);
+  const [creditors, setCreditors] = useState<any[]>(() => {
+    const saved = localStorage.getItem('creditorsData');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Ошибка загрузки сохраненных кредиторов:', e);
+      }
+    }
+    return [];
+  });
   const [suggestions, setSuggestions] = useState<CompanySuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Автосохранение данных формы в localStorage
+  useEffect(() => {
+    localStorage.setItem('creditDataForm', JSON.stringify(creditForm));
+  }, [creditForm]);
+
+  // Автосохранение списка кредиторов
+  useEffect(() => {
+    localStorage.setItem('creditorsData', JSON.stringify(creditors));
+  }, [creditors]);
 
   // Закрытие подсказок при клике вне
   useEffect(() => {

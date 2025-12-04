@@ -20,23 +20,35 @@ interface PersonalDataFormProps {
 
 export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
   const [errors, setErrors] = useState<ValidationErrors>({});
-  const [personalForm, setPersonalForm] = useState({
-    fullName: "",
-    inn: "",
-    snils: "",
-    birthDate: "",
-    birthPlace: "",
-    passportSeries: "",
-    passportNumber: "",
-    passportIssueDate: "",
-    passportIssuedBy: "",
-    passportCode: "",
-    registrationAddress: "",
-    registrationDate: "",
-    maritalStatus: "",
-    spouseName: "",
-    marriageDate: "",
-    divorceDate: "",
+  
+  // Загружаем сохраненные данные из localStorage при инициализации
+  const [personalForm, setPersonalForm] = useState(() => {
+    const saved = localStorage.getItem('personalDataForm');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Ошибка загрузки сохраненных данных:', e);
+      }
+    }
+    return {
+      fullName: "",
+      inn: "",
+      snils: "",
+      birthDate: "",
+      birthPlace: "",
+      passportSeries: "",
+      passportNumber: "",
+      passportIssueDate: "",
+      passportIssuedBy: "",
+      passportCode: "",
+      registrationAddress: "",
+      registrationDate: "",
+      maritalStatus: "",
+      spouseName: "",
+      marriageDate: "",
+      divorceDate: "",
+    };
   });
 
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
@@ -44,6 +56,11 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
   const addressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const addressSuggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Автосохранение данных формы в localStorage
+  useEffect(() => {
+    localStorage.setItem('personalDataForm', JSON.stringify(personalForm));
+  }, [personalForm]);
 
   // Закрытие подсказок адресов при клике вне
   useEffect(() => {
