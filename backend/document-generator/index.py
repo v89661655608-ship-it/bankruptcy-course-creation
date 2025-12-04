@@ -370,7 +370,6 @@ def generate_docx_document(
         p_no_income_format.line_spacing = 1.0
         
         p = doc.add_paragraph("Должник не имеет дохода и является безработным, о чем свидетельствует справка из Центра занятости населения.")
-        p.runs[0].font.color.rgb = RGBColor(255, 0, 0)
         p_format = p.paragraph_format
         p_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         p_format.first_line_indent = Cm(1)
@@ -387,7 +386,6 @@ def generate_docx_document(
         p1_format.line_spacing = 1.0
         
         p2 = doc.add_paragraph("Такая ситуация возникла в связи с тем, что Должник не рассчитал свои силы и возможности, кредиты приобретались при рождении детей и тратились на семейные нужды, впоследствии Должником была потеряна работа.")
-        p2.runs[0].font.color.rgb = RGBColor(255, 0, 0)
         p2_format = p2.paragraph_format
         p2_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         p2_format.first_line_indent = Cm(1)
@@ -466,7 +464,6 @@ def generate_docx_document(
             p6_format.line_spacing = 1.0
     else:
         p6 = doc.add_paragraph("В собственности Должника находится Место для ввода текста., общей площадью Место для ввода текста. с земельным участком площадью Место для ввода текста. кв. м. по адресу: Место для ввода текста. являющийся единственным пригодным для постоянного проживания помещением для него и членов его семьи.")
-        p6.runs[0].font.color.rgb = RGBColor(255, 0, 0)
         p6_format = p6.paragraph_format
         p6_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         p6_format.first_line_indent = Cm(1)
