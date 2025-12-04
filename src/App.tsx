@@ -19,6 +19,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
+import AdminResendToken from "./pages/AdminResendToken";
 import ChatAccess from "./pages/ChatAccess";
 import DocumentConstructor from "./pages/DocumentConstructor";
 import NotFound from "./pages/NotFound";
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin-resend-token" element={<AdminResendToken />} />
             <Route path="/chat-access" element={<ChatAccess />} />
             <Route path="/document-constructor" element={<DocumentConstructor />} />
             <Route path="/oferta" element={<Oferta />} />

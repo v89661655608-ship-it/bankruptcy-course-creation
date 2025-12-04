@@ -1,4 +1,5 @@
 {
+  "resend-chat-token": "https://functions.poehali.dev/7fa1eab7-2076-49e2-902c-12381143af6d",
   "company-search": "https://functions.poehali.dev/e70430d4-8e99-429d-bbad-1362dfe63771",
   "parse-ocr-text": "https://functions.poehali.dev/984a2d58-d4a6-4439-a4f6-f33cba9d0eef",
   "ocr-document": "https://functions.poehali.dev/24646829-b62a-42f7-96df-64d5c0aa06b4",
