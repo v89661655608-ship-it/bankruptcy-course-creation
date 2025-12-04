@@ -56,6 +56,9 @@ export default function Support() {
                   <p className="text-sm text-muted-foreground">
                     Задайте вопрос нашим специалистам
                   </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    По регламенту ответ придёт в течение суток, но мы сделаем всё возможное, чтобы ответить быстрее.
+                  </p>
                 </div>
               </div>
               <Icon name="MessageCircle" size={24} className="text-purple-600" />
