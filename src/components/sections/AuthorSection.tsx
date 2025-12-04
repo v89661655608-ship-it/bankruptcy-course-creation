@@ -27,7 +27,7 @@ export default function AuthorSection() {
               </div>
               <div className="flex gap-3">
                 <Icon name="CheckCircle2" className="text-accent flex-shrink-0 mt-1" size={24} />
-                <p className="text-muted-foreground">Автор популярного блога о банкротстве физических лиц</p>
+                <p className="text-muted-foreground">Автор популярного блога о банкротстве физических и юридических лиц</p>
               </div>
               <div className="flex gap-3">
                 <Icon name="CheckCircle2" className="text-accent flex-shrink-0 mt-1" size={24} />
