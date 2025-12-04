@@ -257,7 +257,13 @@ def generate_docx_document(
     passport = personal.get('passport', {})
     registration = personal.get('registration', {})
     creditors = credit.get('creditors', [])
-    total_debt = credit.get('totalDebt', 0)
+    
+    # Пересчитываем total_debt из реальных данных кредитов
+    total_debt = 0
+    for creditor in creditors:
+        credits_list = creditor.get('credits', [])
+        for credit_item in credits_list:
+            total_debt += credit_item.get('debt', 0)
     
     registration_address = registration.get('address', '')
     auto_court = determine_court_by_address(registration_address)
@@ -296,18 +302,11 @@ def generate_docx_document(
     add_header_paragraph("")
     
     add_header_paragraph("Кредиторы:")
-    for idx, creditor in enumerate(creditors[:4], 1):
+    for idx, creditor in enumerate(creditors, 1):
         add_header_paragraph(f"{idx}. {creditor.get('name', 'Место для ввода текста.')}")
         add_header_paragraph(f"ИНН {creditor.get('inn', 'Место для ввода текста.')}")
         add_header_paragraph(f"Юридический адрес: Место для ввода текста.")
         add_header_paragraph("")
-    
-    if len(creditors) < 4:
-        for i in range(len(creditors) + 1, 5):
-            add_header_paragraph(f"{i}. Место для ввода текста.")
-            add_header_paragraph(f"ИНН Место для ввода текста.")
-            add_header_paragraph(f"Юридический адрес: Место для ввода текста.")
-            add_header_paragraph("")
     
     doc.add_paragraph()
     
@@ -653,7 +652,13 @@ def generate_pdf_document(
     passport = personal.get('passport', {})
     registration = personal.get('registration', {})
     creditors = credit.get('creditors', [])
-    total_debt = credit.get('totalDebt', 0)
+    
+    # Пересчитываем total_debt из реальных данных кредитов
+    total_debt = 0
+    for creditor in creditors:
+        credits_list = creditor.get('credits', [])
+        for credit_item in credits_list:
+            total_debt += credit_item.get('debt', 0)
     
     registration_address = registration.get('address', '')
     auto_court = determine_court_by_address(registration_address)
