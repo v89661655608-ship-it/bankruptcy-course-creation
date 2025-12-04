@@ -89,6 +89,20 @@ export default function PricingSection() {
                 Купить курс
               </Button>
 
+              <p className="text-[10px] text-muted-foreground text-center mt-3">
+                Нажимая кнопку, вы соглашаетесь с{' '}
+                <a href="/oferta" target="_blank" className="underline hover:text-primary">
+                  офертой
+                </a>,{' '}
+                <a href="/privacy" target="_blank" className="underline hover:text-primary">
+                  политикой конфиденциальности
+                </a>{' '}
+                и{' '}
+                <a href="/personal-data-consent" target="_blank" className="underline hover:text-primary">
+                  обработкой перс. данных
+                </a>
+              </p>
+
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-xs text-green-700 font-semibold flex items-center gap-2">
                   <Icon name="Shield" size={16} />
@@ -156,6 +170,20 @@ export default function PricingSection() {
                 Купить комбо со скидкой
               </Button>
 
+              <p className="text-[10px] text-muted-foreground text-center mt-3">
+                Нажимая кнопку, вы соглашаетесь с{' '}
+                <a href="/oferta" target="_blank" className="underline hover:text-primary">
+                  офертой
+                </a>,{' '}
+                <a href="/privacy" target="_blank" className="underline hover:text-primary">
+                  политикой конфиденциальности
+                </a>{' '}
+                и{' '}
+                <a href="/personal-data-consent" target="_blank" className="underline hover:text-primary">
+                  обработкой перс. данных
+                </a>
+              </p>
+
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-xs text-green-700 font-semibold flex items-center gap-2">
                   <Icon name="Shield" size={16} />
@@ -219,6 +247,20 @@ export default function PricingSection() {
               >
                 Купить доступ к чату
               </Button>
+
+              <p className="text-[10px] text-muted-foreground text-center mt-3">
+                Нажимая кнопку, вы соглашаетесь с{' '}
+                <a href="/oferta" target="_blank" className="underline hover:text-primary">
+                  офертой
+                </a>,{' '}
+                <a href="/privacy" target="_blank" className="underline hover:text-primary">
+                  политикой конфиденциальности
+                </a>{' '}
+                и{' '}
+                <a href="/personal-data-consent" target="_blank" className="underline hover:text-primary">
+                  обработкой перс. данных
+                </a>
+              </p>
 
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-xs text-green-700 font-semibold flex items-center gap-2">

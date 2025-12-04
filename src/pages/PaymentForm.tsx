@@ -191,9 +191,24 @@ const PaymentForm = () => {
                 )}
               </Button>
 
-              <p className="text-xs text-muted-foreground text-center">
-                После нажатия вы будете перенаправлены на защищенную страницу оплаты ЮKassa
-              </p>
+              <div className="space-y-2 text-center">
+                <p className="text-xs text-muted-foreground">
+                  Нажимая кнопку «Оплатить», вы соглашаетесь с{' '}
+                  <a href="/oferta" target="_blank" className="text-primary underline hover:text-primary/80">
+                    офертой
+                  </a>,{' '}
+                  <a href="/privacy" target="_blank" className="text-primary underline hover:text-primary/80">
+                    политикой конфиденциальности
+                  </a>{' '}
+                  и{' '}
+                  <a href="/personal-data-consent" target="_blank" className="text-primary underline hover:text-primary/80">
+                    обработкой персональных данных
+                  </a>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  После нажатия вы будете перенаправлены на защищенную страницу оплаты ЮKassa
+                </p>
+              </div>
             </form>
           </CardContent>
         </Card>
