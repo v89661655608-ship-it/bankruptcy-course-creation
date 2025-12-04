@@ -143,7 +143,6 @@ export default function ProgressSidebar({
         <CardContent className="text-sm space-y-2 text-muted-foreground">
           <p>• Все данные передаются через защищенное соединение</p>
           <p>• Документы формируются в соответствии с действующим законодательством</p>
-          <p>• Для подачи в суд требуется электронная подпись</p>
           <p>• Рекомендуем консультацию юриста перед подачей</p>
         </CardContent>
       </Card>
