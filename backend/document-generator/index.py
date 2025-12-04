@@ -47,6 +47,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         credit_data = body_data.get('creditData')
         income_data = body_data.get('incomeData')
         property_data = body_data.get('propertyData')
+        additional_fields = body_data.get('additionalFields', {})
         doc_format = body_data.get('format', 'docx')
         
         if not personal_data or not credit_data:
@@ -59,7 +60,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if doc_format == 'pdf':
             pdf_base64 = generate_pdf_document(
-                personal_data, credit_data, income_data, property_data
+                personal_data, credit_data, income_data, property_data, additional_fields
             )
             result = {
                 'success': True,
@@ -72,7 +73,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         elif doc_format == 'docx':
             docx_base64 = generate_docx_document(
-                personal_data, credit_data, income_data, property_data
+                personal_data, credit_data, income_data, property_data, additional_fields
             )
             result = {
                 'success': True,
@@ -123,19 +124,28 @@ def generate_docx_document(
     personal: Dict[str, Any],
     credit: Dict[str, Any],
     income: Dict[str, Any],
-    property: Dict[str, Any]
+    property: Dict[str, Any],
+    additional: Dict[str, Any] = None
 ) -> str:
     '''Генерирует DOCX документ по шаблону и возвращает base64'''
     
     doc = Document()
+    
+    if additional is None:
+        additional = {}
     
     passport = personal.get('passport', {})
     registration = personal.get('registration', {})
     creditors = credit.get('creditors', [])
     total_debt = credit.get('totalDebt', 0)
     
-    doc.add_paragraph("В Арбитражный суд Место для ввода текста.")
-    doc.add_paragraph("Адрес: Место для ввода текста.")
+    court_name = additional.get('courtName', 'Арбитражный суд Место для ввода текста.')
+    court_address = additional.get('courtAddress', 'Место для ввода текста.')
+    phone = additional.get('phone', 'Место для ввода текста.')
+    email = additional.get('email', 'Место для ввода текста.')
+    
+    doc.add_paragraph(f"В {court_name}")
+    doc.add_paragraph(f"Адрес: {court_address}")
     doc.add_paragraph()
     
     doc.add_paragraph(f"Заявитель (Должник):")
@@ -147,8 +157,8 @@ def generate_docx_document(
     doc.add_paragraph(f"выдан: {passport.get('issuedBy', 'Место для ввода текста.')}")
     doc.add_paragraph(f"дата выдачи: {passport.get('issueDate', 'Место для ввода текста.')}")
     doc.add_paragraph(f"код подразделения: {passport.get('code', 'Место для ввода текста.')}")
-    doc.add_paragraph(f"тел. 8 Место для ввода текста.")
-    doc.add_paragraph(f"e-mail: Место для ввода текста.")
+    doc.add_paragraph(f"тел. 8 {phone}")
+    doc.add_paragraph(f"e-mail: {email}")
     doc.add_paragraph()
     doc.add_paragraph()
     
@@ -291,7 +301,8 @@ def generate_pdf_document(
     personal: Dict[str, Any],
     credit: Dict[str, Any],
     income: Dict[str, Any],
-    property: Dict[str, Any]
+    property: Dict[str, Any],
+    additional: Dict[str, Any] = None
 ) -> str:
     '''Генерирует PDF документ по шаблону и возвращает base64'''
     
@@ -303,14 +314,22 @@ def generate_pdf_document(
     
     c.setFont("Helvetica", 10)
     
+    if additional is None:
+        additional = {}
+    
     passport = personal.get('passport', {})
     registration = personal.get('registration', {})
     creditors = credit.get('creditors', [])
     total_debt = credit.get('totalDebt', 0)
     
-    c.drawString(2*cm, y, "В Арбитражный суд Место для ввода текста.")
+    court_name = additional.get('courtName', 'Арбитражный суд Место для ввода текста.')
+    court_address = additional.get('courtAddress', 'Место для ввода текста.')
+    phone = additional.get('phone', 'Место для ввода текста.')
+    email = additional.get('email', 'Место для ввода текста.')
+    
+    c.drawString(2*cm, y, f"В {court_name}")
     y -= 0.5*cm
-    c.drawString(2*cm, y, "Адрес: Место для ввода текста.")
+    c.drawString(2*cm, y, f"Адрес: {court_address}")
     y -= 1*cm
     
     c.drawString(2*cm, y, f"Заявитель (Должник):")

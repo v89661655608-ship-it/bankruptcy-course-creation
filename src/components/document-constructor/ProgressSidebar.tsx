@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
 import { Separator } from "@/components/ui/separator";
-import { PersonalData, CreditData, IncomeData, PropertyData } from "./types";
+import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields } from "./types";
 
 interface ProgressSidebarProps {
   personalData: PersonalData | null;
@@ -10,7 +10,9 @@ interface ProgressSidebarProps {
   incomeData: IncomeData | null;
   propertyData: PropertyData | null;
   isGenerating: boolean;
+  additionalFields: AdditionalFields | null;
   onGenerateDocument: (format: 'pdf' | 'docx') => void;
+  onEditAdditionalFields: () => void;
 }
 
 export default function ProgressSidebar({
@@ -19,7 +21,9 @@ export default function ProgressSidebar({
   incomeData,
   propertyData,
   isGenerating,
-  onGenerateDocument
+  additionalFields,
+  onGenerateDocument,
+  onEditAdditionalFields
 }: ProgressSidebarProps) {
   const requiredData = [personalData, creditData].filter(Boolean).length;
   const optionalData = [incomeData, propertyData].filter(Boolean).length;
@@ -86,6 +90,15 @@ export default function ProgressSidebar({
           <Separator />
 
           <div className="space-y-2">
+            <Button
+              onClick={onEditAdditionalFields}
+              variant="outline"
+              className="w-full mb-2"
+            >
+              <Icon name="Settings" className="mr-2" size={18} />
+              {additionalFields ? 'Изменить дополнительные данные' : 'Заполнить дополнительные данные'}
+            </Button>
+            
             <p className="text-sm font-medium">Скачать заявление:</p>
             
             <Button

@@ -6,7 +6,8 @@ import DataDisplayCards from "@/components/document-constructor/DataDisplayCards
 import ProgressSidebar from "@/components/document-constructor/ProgressSidebar";
 import ManualInputForm from "@/components/document-constructor/ManualInputForm";
 import DocumentUpload from "@/components/document-constructor/DocumentUpload";
-import { PersonalData, CreditData, IncomeData, PropertyData } from "@/components/document-constructor/types";
+import AdditionalFieldsForm from "@/components/document-constructor/AdditionalFieldsForm";
+import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields } from "@/components/document-constructor/types";
 import funcUrls from "../../backend/func2url.json";
 
 export default function DocumentConstructor() {
@@ -19,6 +20,8 @@ export default function DocumentConstructor() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
+  const [showAdditionalFields, setShowAdditionalFields] = useState(false);
+  const [additionalFields, setAdditionalFields] = useState<AdditionalFields | null>(null);
 
   const handleEsiaAuth = async () => {
     alert('Интеграция с ЕСИА/Госуслуги в разработке. Требуется регистрация в ЕСИА и получение сертификатов.');
@@ -47,6 +50,7 @@ export default function DocumentConstructor() {
           creditData,
           incomeData,
           propertyData,
+          additionalFields,
           format
         })
       });
@@ -231,6 +235,17 @@ export default function DocumentConstructor() {
             />
           )}
 
+          {showAdditionalFields && (
+            <AdditionalFieldsForm
+              initialData={additionalFields || undefined}
+              onSave={(data) => {
+                setAdditionalFields(data);
+                setShowAdditionalFields(false);
+              }}
+              onCancel={() => setShowAdditionalFields(false)}
+            />
+          )}
+
           <DataDisplayCards
             personalData={personalData}
             creditData={creditData}
@@ -245,7 +260,13 @@ export default function DocumentConstructor() {
           incomeData={incomeData}
           propertyData={propertyData}
           isGenerating={isGenerating}
+          additionalFields={additionalFields}
           onGenerateDocument={handleGenerateDocument}
+          onEditAdditionalFields={() => {
+            setShowAdditionalFields(true);
+            setShowManualInput(false);
+            setShowDocumentUpload(false);
+          }}
         />
       </div>
     </div>

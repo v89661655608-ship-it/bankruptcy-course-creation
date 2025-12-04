@@ -68,3 +68,10 @@ export interface PropertyData {
     registrationNumber: string;
   }>;
 }
+
+export interface AdditionalFields {
+  courtName: string;
+  courtAddress: string;
+  phone: string;
+  email: string;
+}
