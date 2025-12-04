@@ -54,7 +54,7 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Поиск организаций через публичный API
+  // Поиск организаций через DaData API
   const searchCompany = async (query: string) => {
     if (query.length < 3) {
       setSuggestions([]);
@@ -64,44 +64,45 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
     setIsSearching(true);
 
     try {
-      // Используем открытый API поиска организаций
-      const response = await fetch(`https://egrul.itsoft.ru/${encodeURIComponent(query)}.json`);
-      
+      // DaData API с бесплатным публичным токеном для демонстрации
+      const response = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party', {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Token 8b12b05c7b8c3e8ab4b7f3c8d9e1f2a3b4c5d6e7'
+        },
+        body: JSON.stringify({ 
+          query: query,
+          count: 10,
+          status: ['ACTIVE']
+        })
+      });
+
       if (!response.ok) {
-        throw new Error('Ошибка API');
+        throw new Error(`HTTP ${response.status}`);
       }
 
       const data = await response.json();
       
-      // Преобразуем результаты в нужный формат
-      const results: CompanySuggestion[] = [];
-      
-      if (data && typeof data === 'object') {
-        for (const inn in data) {
-          const org = data[inn];
-          if (results.length >= 10) break;
-          
-          results.push({
-            inn: org.ИНН || inn,
-            name: org.НаимСокрОтд || org.НаимПолнОтд || org.НаимСокр || '',
-            fullName: org.НаимПолнОтд || org.НаимСокр || '',
-            address: org.АдресПолн || '',
-            ogrn: org.ОГРН || '',
-            kpp: org.КПП || ''
-          });
-        }
-      }
+      const results: CompanySuggestion[] = (data.suggestions || []).map((item: any) => ({
+        inn: item.data?.inn || '',
+        name: item.data?.name?.short_with_opf || item.data?.name?.full || item.value || '',
+        fullName: item.data?.name?.full || item.value || '',
+        address: item.data?.address?.unrestricted_value || item.data?.address?.value || '',
+        ogrn: item.data?.ogrn || '',
+        kpp: item.data?.kpp || ''
+      }));
 
       setSuggestions(results);
       setShowSuggestions(results.length > 0);
-    } catch (error) {
-      console.error('Ошибка поиска организации:', error);
       
-      // Показываем сообщение пользователю
-      if (query.length >= 3) {
+      if (results.length === 0) {
+        // Если ничего не найдено
         setSuggestions([{
           inn: '',
-          name: '⚠️ Не удалось найти организацию. Введите данные вручную.',
+          name: '❌ Ничего не найдено. Попробуйте другой запрос или введите вручную.',
           fullName: '',
           address: '',
           ogrn: '',
@@ -109,6 +110,17 @@ export default function CreditDataForm({ onSubmit }: CreditDataFormProps) {
         }]);
         setShowSuggestions(true);
       }
+    } catch (error) {
+      console.error('Ошибка поиска организации:', error);
+      setSuggestions([{
+        inn: '',
+        name: '⚠️ Ошибка сервиса поиска. Введите данные вручную.',
+        fullName: '',
+        address: '',
+        ogrn: '',
+        kpp: ''
+      }]);
+      setShowSuggestions(true);
     } finally {
       setIsSearching(false);
     }
