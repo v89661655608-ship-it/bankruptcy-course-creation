@@ -10,7 +10,7 @@ interface ProgressSidebarProps {
   incomeData: IncomeData | null;
   propertyData: PropertyData | null;
   isGenerating: boolean;
-  onGenerateDocument: () => void;
+  onGenerateDocument: (format: 'pdf' | 'docx') => void;
 }
 
 export default function ProgressSidebar({
@@ -85,23 +85,47 @@ export default function ProgressSidebar({
 
           <Separator />
 
-          <Button
-            onClick={onGenerateDocument}
-            disabled={!personalData || !creditData || isGenerating}
-            className="w-full"
-          >
-            {isGenerating ? (
-              <>
-                <Icon name="Loader2" className="mr-2 animate-spin" size={18} />
-                Генерация...
-              </>
-            ) : (
-              <>
-                <Icon name="FileText" className="mr-2" size={18} />
-                Сгенерировать заявление
-              </>
-            )}
-          </Button>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Скачать заявление:</p>
+            
+            <Button
+              onClick={() => onGenerateDocument('docx')}
+              disabled={!personalData || !creditData || isGenerating}
+              className="w-full"
+              variant="default"
+            >
+              {isGenerating ? (
+                <>
+                  <Icon name="Loader2" className="mr-2 animate-spin" size={18} />
+                  Генерация...
+                </>
+              ) : (
+                <>
+                  <Icon name="FileText" className="mr-2" size={18} />
+                  Скачать Word (DOCX)
+                </>
+              )}
+            </Button>
+
+            <Button
+              onClick={() => onGenerateDocument('pdf')}
+              disabled={!personalData || !creditData || isGenerating}
+              className="w-full"
+              variant="outline"
+            >
+              {isGenerating ? (
+                <>
+                  <Icon name="Loader2" className="mr-2 animate-spin" size={18} />
+                  Генерация...
+                </>
+              ) : (
+                <>
+                  <Icon name="FileDown" className="mr-2" size={18} />
+                  Скачать PDF
+                </>
+              )}
+            </Button>
+          </div>
 
           <p className="text-xs text-muted-foreground">
             Для генерации заявления необходимы только персональные данные и кредитная история. Остальные документы можно добавить позже.

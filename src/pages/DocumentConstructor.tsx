@@ -7,6 +7,7 @@ import ProgressSidebar from "@/components/document-constructor/ProgressSidebar";
 import ManualInputForm from "@/components/document-constructor/ManualInputForm";
 import DocumentUpload from "@/components/document-constructor/DocumentUpload";
 import { PersonalData, CreditData, IncomeData, PropertyData } from "@/components/document-constructor/types";
+import funcUrls from "../../backend/func2url.json";
 
 export default function DocumentConstructor() {
   const [isLoadingEsia] = useState(false);
@@ -27,7 +28,7 @@ export default function DocumentConstructor() {
     alert('Интеграция с БКИ в разработке. Требуется подключение к API Бюро кредитных историй.');
   };
 
-  const handleGenerateDocument = async () => {
+  const handleGenerateDocument = async (format: 'pdf' | 'docx') => {
     if (!personalData || !creditData) {
       alert('Необходимо загрузить персональные данные и кредитную историю (минимальные требования)');
       return;
@@ -36,20 +37,57 @@ export default function DocumentConstructor() {
     setIsGenerating(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const response = await fetch(funcUrls["document-generator"], {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          personalData,
+          creditData,
+          incomeData,
+          propertyData,
+          format
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка генерации документа');
+      }
+
+      const result = await response.json();
       
-      const optionalDocs = [];
-      if (incomeData) optionalDocs.push('справка о доходах');
-      if (propertyData) optionalDocs.push('сведения об имуществе');
-      
-      const message = optionalDocs.length > 0 
-        ? `Заявление о банкротстве успешно сформировано с учетом:\n- Персональные данные\n- Кредитная история\n- ${optionalDocs.join('\n- ')}\n\nДокумент готов к скачиванию.`
-        : 'Заявление о банкротстве успешно сформировано на основе обязательных данных (персональные данные и кредитная история).\n\nДокумент готов к скачиванию.';
-      
-      alert(message);
+      if (result.success && result.document) {
+        const base64Data = result.document.data;
+        const fileName = result.document.fileName;
+        
+        const blob = base64ToBlob(base64Data, format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        alert(`Заявление успешно сгенерировано в формате ${format.toUpperCase()} и загружается!`);
+      }
+    } catch (error) {
+      alert(`Ошибка: ${error}`);
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const base64ToBlob = (base64: string, mimeType: string): Blob => {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
   };
 
   const handleLoadTestData = () => {

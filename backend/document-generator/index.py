@@ -1,6 +1,19 @@
 import json
+import base64
+import io
 from typing import Dict, Any
 from datetime import datetime
+from docx import Document
+from docx.shared import Pt, Inches
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+try:
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.lib.units import cm
+except ImportError:
+    pass
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
@@ -16,8 +29,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Max-Age': '86400'
             },
             'body': '',
@@ -34,6 +47,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         credit_data = body_data.get('creditData')
         income_data = body_data.get('incomeData')
         property_data = body_data.get('propertyData')
+        doc_format = body_data.get('format', 'docx')
         
         if not personal_data or not credit_data:
             return {
@@ -43,22 +57,45 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'isBase64Encoded': False
             }
         
-        document_text = generate_bankruptcy_application(
-            personal_data, 
-            credit_data, 
-            income_data, 
-            property_data
-        )
-        
-        result = {
-            'success': True,
-            'document': {
-                'text': document_text,
-                'createdAt': datetime.now().isoformat(),
-                'format': 'text',
-                'fileName': f"заявление_банкротство_{personal_data.get('inn', 'unknown')}.txt"
+        if doc_format == 'pdf':
+            pdf_base64 = generate_pdf_document(
+                personal_data, credit_data, income_data, property_data
+            )
+            result = {
+                'success': True,
+                'document': {
+                    'data': pdf_base64,
+                    'createdAt': datetime.now().isoformat(),
+                    'format': 'pdf',
+                    'fileName': f"заявление_банкротство_{personal_data.get('inn', 'doc')}.pdf"
+                }
             }
-        }
+        elif doc_format == 'docx':
+            docx_base64 = generate_docx_document(
+                personal_data, credit_data, income_data, property_data
+            )
+            result = {
+                'success': True,
+                'document': {
+                    'data': docx_base64,
+                    'createdAt': datetime.now().isoformat(),
+                    'format': 'docx',
+                    'fileName': f"заявление_банкротство_{personal_data.get('inn', 'doc')}.docx"
+                }
+            }
+        else:
+            document_text = generate_bankruptcy_application(
+                personal_data, credit_data, income_data, property_data
+            )
+            result = {
+                'success': True,
+                'document': {
+                    'text': document_text,
+                    'createdAt': datetime.now().isoformat(),
+                    'format': 'text',
+                    'fileName': f"заявление_банкротство_{personal_data.get('inn', 'doc')}.txt"
+                }
+            }
         
         return {
             'statusCode': 200,
@@ -192,3 +229,184 @@ def generate_bankruptcy_application(
     doc.append(f"Подпись: _____________ / {personal.get('fullName', '')} /")
     
     return "\n".join(doc)
+
+
+def generate_docx_document(
+    personal: Dict[str, Any],
+    credit: Dict[str, Any],
+    income: Dict[str, Any],
+    property: Dict[str, Any]
+) -> str:
+    '''Генерирует DOCX документ и возвращает base64'''
+    
+    doc = Document()
+    
+    # Заголовок
+    heading = doc.add_paragraph("В Арбитражный суд города Москвы")
+    heading.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    
+    doc.add_paragraph()
+    
+    title = doc.add_heading("ЗАЯВЛЕНИЕ", level=1)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    subtitle = doc.add_paragraph("о признании гражданина несостоятельным (банкротом)")
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    doc.add_paragraph()
+    
+    # Данные заявителя
+    doc.add_paragraph(f"Заявитель: {personal.get('fullName', 'Не указано')}")
+    doc.add_paragraph(f"ИНН: {personal.get('inn', 'Не указано')}")
+    doc.add_paragraph(f"СНИЛС: {personal.get('snils', 'Не указано')}")
+    doc.add_paragraph(f"Дата рождения: {personal.get('birthDate', 'Не указано')}")
+    
+    passport = personal.get('passport', {})
+    doc.add_paragraph(f"Паспорт: {passport.get('series', '')} {passport.get('number', '')}, выдан {passport.get('issueDate', '')}")
+    
+    registration = personal.get('registration', {})
+    doc.add_paragraph(f"Адрес регистрации: {registration.get('address', 'Не указано')}")
+    
+    doc.add_paragraph()
+    
+    # Задолженность
+    doc.add_heading("1. СВЕДЕНИЯ О ЗАДОЛЖЕННОСТИ", level=2)
+    doc.add_paragraph(f"Общая сумма задолженности: {credit.get('totalDebt', 0):,.2f} руб.")
+    
+    creditors = credit.get('creditors', [])
+    if creditors:
+        doc.add_paragraph("Кредиторы:", style='List Bullet')
+        for idx, creditor in enumerate(creditors, 1):
+            doc.add_paragraph(f"{idx}. {creditor.get('name', 'Не указано')}")
+            doc.add_paragraph(f"ИНН: {creditor.get('inn', 'Не указано')}")
+            
+            for credit_item in creditor.get('credits', []):
+                doc.add_paragraph(f"Договор: {credit_item.get('contractNumber', 'Не указано')}")
+                doc.add_paragraph(f"Сумма кредита: {credit_item.get('amount', 0):,.2f} руб.")
+                doc.add_paragraph(f"Задолженность: {credit_item.get('debt', 0):,.2f} руб.")
+    
+    # Доходы
+    doc.add_heading("2. СВЕДЕНИЯ О ДОХОДАХ", level=2)
+    if income:
+        doc.add_paragraph(f"Ежемесячный доход: {income.get('monthlyIncome', 0):,.2f} руб.")
+        doc.add_paragraph(f"Источник дохода: {income.get('source', 'Не указано')}")
+    else:
+        doc.add_paragraph("Постоянный источник дохода отсутствует")
+    
+    # Имущество
+    doc.add_heading("3. СВЕДЕНИЯ ОБ ИМУЩЕСТВЕ", level=2)
+    if property and property.get('realEstate'):
+        real_estate = property.get('realEstate', [])
+        for idx, item in enumerate(real_estate, 1):
+            doc.add_paragraph(f"{idx}. {item.get('type', '').capitalize()}")
+            doc.add_paragraph(f"Адрес: {item.get('address', 'Не указано')}")
+            doc.add_paragraph(f"Кадастровый номер: {item.get('cadastralNumber', 'Не указано')}")
+    else:
+        doc.add_paragraph("Имущество отсутствует")
+    
+    # Обоснование
+    doc.add_heading("4. ОБОСНОВАНИЕ", level=2)
+    doc.add_paragraph(f"Я, {personal.get('fullName', '')}, не в состоянии погасить задолженность перед кредиторами в размере {credit.get('totalDebt', 0):,.2f} руб.")
+    doc.add_paragraph("Признаки банкротства налицо: общий размер обязательств превышает 500 000 руб., просрочка более 3 месяцев.")
+    
+    doc.add_paragraph()
+    doc.add_paragraph("На основании вышеизложенного и руководствуясь статьями 213.3-213.5 Федерального закона от 26.10.2002 № 127-ФЗ \"О несостоятельности (банкротстве)\",")
+    
+    doc.add_paragraph()
+    doc.add_heading("ПРОШУ:", level=2)
+    doc.add_paragraph(f"1. Признать меня, {personal.get('fullName', '')}, несостоятельным (банкротом).")
+    doc.add_paragraph("2. Ввести в отношении меня процедуру реструктуризации долгов гражданина.")
+    doc.add_paragraph("3. Утвердить финансового управляющего.")
+    
+    doc.add_paragraph()
+    doc.add_paragraph(f"Дата: {datetime.now().strftime('%d.%m.%Y')}")
+    doc.add_paragraph(f"Подпись: _____________ / {personal.get('fullName', '')} /")
+    
+    # Конвертация в base64
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return base64.b64encode(buffer.read()).decode('utf-8')
+
+
+def generate_pdf_document(
+    personal: Dict[str, Any],
+    credit: Dict[str, Any],
+    income: Dict[str, Any],
+    property: Dict[str, Any]
+) -> str:
+    '''Генерирует PDF документ и возвращает base64'''
+    
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    
+    y = height - 2*cm
+    
+    # Заголовок
+    c.setFont("Helvetica", 10)
+    c.drawRightString(width - 2*cm, y, "В Арбитражный суд города Москвы")
+    y -= 2*cm
+    
+    c.setFont("Helvetica-Bold", 14)
+    c.drawCentredString(width/2, y, "ЗАЯВЛЕНИЕ")
+    y -= 0.5*cm
+    c.setFont("Helvetica", 12)
+    c.drawCentredString(width/2, y, "о признании гражданина несостоятельным (банкротом)")
+    y -= 1.5*cm
+    
+    # Данные заявителя
+    c.setFont("Helvetica", 10)
+    c.drawString(2*cm, y, f"Заявитель: {personal.get('fullName', 'Не указано')}")
+    y -= 0.5*cm
+    c.drawString(2*cm, y, f"ИНН: {personal.get('inn', 'Не указано')}")
+    y -= 0.5*cm
+    c.drawString(2*cm, y, f"СНИЛС: {personal.get('snils', 'Не указано')}")
+    y -= 0.5*cm
+    
+    passport = personal.get('passport', {})
+    c.drawString(2*cm, y, f"Паспорт: {passport.get('series', '')} {passport.get('number', '')}")
+    y -= 0.5*cm
+    
+    registration = personal.get('registration', {})
+    c.drawString(2*cm, y, f"Адрес: {registration.get('address', 'Не указано')}")
+    y -= 1*cm
+    
+    # Задолженность
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(2*cm, y, "1. СВЕДЕНИЯ О ЗАДОЛЖЕННОСТИ")
+    y -= 0.7*cm
+    
+    c.setFont("Helvetica", 10)
+    c.drawString(2*cm, y, f"Общая сумма задолженности: {credit.get('totalDebt', 0):,.2f} руб.")
+    y -= 1*cm
+    
+    # Обоснование
+    if y < 5*cm:
+        c.showPage()
+        y = height - 2*cm
+    
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(2*cm, y, "2. ОБОСНОВАНИЕ")
+    y -= 0.7*cm
+    
+    c.setFont("Helvetica", 10)
+    text = f"Я, {personal.get('fullName', '')}, не в состоянии погасить задолженность"
+    c.drawString(2*cm, y, text)
+    y -= 0.5*cm
+    c.drawString(2*cm, y, f"в размере {credit.get('totalDebt', 0):,.2f} руб.")
+    y -= 1.5*cm
+    
+    c.drawString(2*cm, y, "ПРОШУ:")
+    y -= 0.7*cm
+    c.drawString(2*cm, y, f"1. Признать меня, {personal.get('fullName', '')}, несостоятельным (банкротом).")
+    y -= 0.5*cm
+    c.drawString(2*cm, y, "2. Ввести процедуру реструктуризации долгов.")
+    y -= 2*cm
+    
+    c.drawString(2*cm, y, f"Дата: {datetime.now().strftime('%d.%m.%Y')}")
+    y -= 0.7*cm
+    c.drawString(2*cm, y, f"Подпись: _____________ / {personal.get('fullName', '')} /")
+    
+    c.save()
+    buffer.seek(0)
+    return base64.b64encode(buffer.read()).decode('utf-8')

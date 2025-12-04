@@ -11,7 +11,7 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Generate bankruptcy application",
+      "name": "Generate bankruptcy application DOCX",
       "method": "POST",
       "body": {
         "personalData": {
@@ -30,14 +30,50 @@
               "inn": "7707083893"
             }
           ]
-        }
+        },
+        "format": "docx"
       },
       "expectedStatus": 200,
       "expectedBody": {
         "success": true,
         "document": {
-          "text": "string",
-          "fileName": "string"
+          "data": "string",
+          "fileName": "string",
+          "format": "docx"
+        }
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Generate bankruptcy application PDF",
+      "method": "POST",
+      "body": {
+        "personalData": {
+          "fullName": "Петров Петр Петрович",
+          "inn": "987654321098",
+          "passport": {
+            "series": "5500",
+            "number": "654321"
+          }
+        },
+        "creditData": {
+          "totalDebt": 750000,
+          "creditors": [
+            {
+              "name": "ВТБ",
+              "inn": "7702070139"
+            }
+          ]
+        },
+        "format": "pdf"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "document": {
+          "data": "string",
+          "fileName": "string",
+          "format": "pdf"
         }
       },
       "bodyMatcher": "partial"
