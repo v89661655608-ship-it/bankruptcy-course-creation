@@ -491,7 +491,7 @@ def generate_docx_document(
             p7_format.space_after = Pt(0)
             p7_format.line_spacing = 1.0
     
-    p8 = doc.add_paragraph("Какое-либо другое имущество, на которое может быть обращено взыскание в соответствии с действующим законодательством, у Должника отсутствует.")
+    p8 = doc.add_paragraph("Какое-либо имущество, на которое может быть обращено взыскание в соответствии с действующим законодательством, у Должника отсутствует.")
     p8_format = p8.paragraph_format
     p8_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p8_format.first_line_indent = Cm(1)
