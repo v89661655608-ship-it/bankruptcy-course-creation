@@ -808,7 +808,8 @@ def generate_creditors_list_document(
     info_header[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
     
     # Извлекаем данные
-    full_name_parts = personal.get('fullName', '').split()
+    full_name = personal.get('fullName', 'Ф.И.О.')
+    full_name_parts = full_name.split()
     surname = full_name_parts[0] if len(full_name_parts) > 0 else 'обязательно'
     name = full_name_parts[1] if len(full_name_parts) > 1 else 'обязательно'
     patronymic = full_name_parts[2] if len(full_name_parts) > 2 else 'при наличии'
