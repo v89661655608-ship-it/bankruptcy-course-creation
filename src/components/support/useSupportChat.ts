@@ -176,11 +176,29 @@ export function useSupportChat() {
       let imageUrl = null;
       if (selectedImage) {
         imageUrl = await uploadImage(selectedImage);
+        if (!imageUrl) {
+          toast({
+            title: 'Ошибка',
+            description: 'Не удалось загрузить изображение',
+            variant: 'destructive'
+          });
+          setIsSending(false);
+          return;
+        }
       }
       
       let fileData = null;
       if (selectedFile) {
         fileData = await uploadFile(selectedFile);
+        if (!fileData) {
+          toast({
+            title: 'Ошибка',
+            description: 'Не удалось загрузить файл',
+            variant: 'destructive'
+          });
+          setIsSending(false);
+          return;
+        }
       }
       
       const response = await fetch(
