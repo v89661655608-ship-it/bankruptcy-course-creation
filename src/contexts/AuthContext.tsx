@@ -6,6 +6,8 @@ interface User {
   email: string;
   full_name: string;
   is_admin: boolean;
+  chat_expires_at?: string | null;
+  expires_at?: string | null;
 }
 
 interface AuthContextType {

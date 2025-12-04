@@ -59,6 +59,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return handle_webhook(event, headers_out)
         elif action == 'status':
             return check_payment_status(event, headers_out)
+        elif action == 'check_course_access':
+            return check_course_access(event, headers_out)
         
         return {
             'statusCode': 400,
@@ -311,6 +313,28 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
                     "UPDATE user_purchases SET payment_status = %s WHERE payment_id = %s AND user_id = %s",
                     ('completed', payment_id, int(user_id))
                 )
+            
+            # Обновляем chat_expires_at для пользователя при покупке chat/combo
+            if current_product_type in ['chat', 'combo']:
+                cur.execute(
+                    "SELECT chat_expires_at FROM users WHERE id = %s",
+                    (int(user_id),)
+                )
+                user_data = cur.fetchone()
+                current_chat_expires = user_data['chat_expires_at'] if user_data else None
+                
+                if current_chat_expires and current_chat_expires > datetime.now():
+                    # Продлеваем существующую подписку на чат
+                    new_chat_expires = current_chat_expires + timedelta(days=30)
+                else:
+                    # Новая подписка на чат
+                    new_chat_expires = datetime.now() + timedelta(days=30)
+                
+                cur.execute(
+                    "UPDATE users SET chat_expires_at = %s, purchased_product = %s WHERE id = %s",
+                    (new_chat_expires, current_product_type, int(user_id))
+                )
+                print(f"[WEBHOOK] Set chat_expires_at = {new_chat_expires} for user {user_id}")
             
             conn.commit()
             
@@ -865,6 +889,56 @@ def send_course_credentials_email(user_email: str, user_name: str, password: str
         print(f"[EMAIL] Error sending course credentials to {user_email}: {e}")
         import traceback
         print(f"[EMAIL] Traceback: {traceback.format_exc()}")
+
+def check_course_access(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
+    '''Проверяет, есть ли у email активная подписка на курс'''
+    body_data = json.loads(event.get('body', '{}'))
+    email = body_data.get('email', '').strip().lower()
+    
+    if not email:
+        return {
+            'statusCode': 400,
+            'headers': headers,
+            'body': json.dumps({'error': 'Email is required'})
+        }
+    
+    conn = get_db_connection()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # Проверяем наличие активной подписки на курс (course или combo)
+            cur.execute(
+                """SELECT u.id, u.email, u.expires_at, u.purchased_product 
+                FROM users u 
+                WHERE LOWER(u.email) = %s 
+                AND u.expires_at > CURRENT_TIMESTAMP 
+                AND u.purchased_product IN ('course', 'combo')
+                LIMIT 1""",
+                (email,)
+            )
+            user = cur.fetchone()
+            
+            if user:
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'has_active_course': True,
+                        'email': user['email'],
+                        'expires_at': user['expires_at'].isoformat() if user['expires_at'] else None,
+                        'product_type': user['purchased_product']
+                    })
+                }
+            else:
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'has_active_course': False,
+                        'message': 'No active course subscription found for this email'
+                    })
+                }
+    finally:
+        conn.close()
 
 def send_admin_notification(user_email: str, user_name: str, amount: float, payment_id: str):
     admin_notify_url = 'https://functions.poehali.dev/d7308d73-82be-4249-9c4d-bd4ea5a81921'

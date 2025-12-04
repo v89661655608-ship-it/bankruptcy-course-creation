@@ -147,7 +147,7 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                "SELECT id, email, password_hash, full_name, is_admin FROM users WHERE email = %s",
+                "SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at FROM users WHERE email = %s",
                 (email,)
             )
             user = cur.fetchone()
@@ -177,7 +177,9 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
                         'id': user['id'],
                         'email': user['email'],
                         'full_name': user['full_name'],
-                        'is_admin': user['is_admin']
+                        'is_admin': user['is_admin'],
+                        'chat_expires_at': user['chat_expires_at'].isoformat() if user.get('chat_expires_at') else None,
+                        'expires_at': user['expires_at'].isoformat() if user.get('expires_at') else None
                     }
                 })
             }
@@ -206,6 +208,13 @@ def validate_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
                 )
                 access_check = cur.fetchone()
                 has_course_access = access_check['has_access'] > 0 or payload.get('is_admin', False)
+                
+                # Получаем chat_expires_at и expires_at из users
+                cur.execute(
+                    "SELECT chat_expires_at, expires_at FROM users WHERE id = %s",
+                    (user_id,)
+                )
+                user_data = cur.fetchone()
         finally:
             conn.close()
         
@@ -219,7 +228,9 @@ def validate_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
                     'email': payload['email'],
                     'full_name': payload['full_name'],
                     'is_admin': payload['is_admin'],
-                    'has_course_access': has_course_access
+                    'has_course_access': has_course_access,
+                    'chat_expires_at': user_data['chat_expires_at'].isoformat() if user_data and user_data.get('chat_expires_at') else None,
+                    'expires_at': user_data['expires_at'].isoformat() if user_data and user_data.get('expires_at') else None
                 }
             })
         }

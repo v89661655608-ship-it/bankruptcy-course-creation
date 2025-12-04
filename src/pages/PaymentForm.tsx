@@ -16,6 +16,9 @@ const PaymentForm = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [hasActiveCourse, setHasActiveCourse] = useState(false);
 
   const products = {
     course: {
@@ -62,6 +65,44 @@ const PaymentForm = () => {
 
   const currentProduct = products[productType as keyof typeof products] || products.course;
 
+  const checkEmailForChat = async (emailToCheck: string) => {
+    setIsCheckingEmail(true);
+    try {
+      const response = await fetch(`https://functions.poehali.dev/b3f3dab4-093d-45bf-98cb-86512e00886b?action=check_course_access`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailToCheck })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.has_active_course) {
+        setEmailVerified(true);
+        setHasActiveCourse(true);
+        toast({
+          title: '✅ Email подтвержден',
+          description: 'У вас активная подписка на курс. Можете продолжить покупку чата.',
+        });
+      } else {
+        setEmailVerified(false);
+        setHasActiveCourse(false);
+        toast({
+          title: '❌ Нет доступа к курсу',
+          description: 'Этот email не имеет активной подписки на курс. Сначала купите курс или используйте email с активной подпиской.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка проверки',
+        description: 'Не удалось проверить email',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -69,6 +110,16 @@ const PaymentForm = () => {
       toast({
         title: 'Ошибка',
         description: 'Заполните все поля',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Для отдельной покупки чата проверяем наличие курса
+    if (productType === 'chat' && !emailVerified) {
+      toast({
+        title: 'Требуется проверка email',
+        description: 'Сначала проверьте, что у вас есть активный курс',
         variant: 'destructive'
       });
       return;
@@ -160,24 +211,60 @@ const PaymentForm = () => {
               </div>
 
               <div>
-                <Label htmlFor="email">Email для получения доступа</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="example@mail.ru"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-                <p className="text-sm text-muted-foreground mt-1">
-                  На этот email придёт письмо с данными для входа
-                </p>
+                <Label htmlFor="email">
+                  {productType === 'chat' ? 'Email с активным курсом' : 'Email для получения доступа'}
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="example@mail.ru"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setEmailVerified(false);
+                    }}
+                    required
+                  />
+                  {productType === 'chat' && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => checkEmailForChat(email)}
+                      disabled={!email || isCheckingEmail}
+                    >
+                      {isCheckingEmail ? (
+                        <Icon name="Loader2" className="animate-spin" size={20} />
+                      ) : emailVerified ? (
+                        <Icon name="CheckCircle" className="text-green-600" size={20} />
+                      ) : (
+                        'Проверить'
+                      )}
+                    </Button>
+                  )}
+                </div>
+                {productType === 'chat' ? (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {emailVerified && hasActiveCourse ? (
+                      <span className="text-green-600 flex items-center gap-1">
+                        <Icon name="Check" size={14} />
+                        Email подтвержден. У вас есть активный курс.
+                      </span>
+                    ) : (
+                      'Укажите email, на который куплен курс, и нажмите "Проверить"'
+                    )}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    На этот email придёт письмо с данными для входа
+                  </p>
+                )}
               </div>
 
               <Button
                 type="submit"
                 className="w-full bg-accent hover:bg-accent/90 text-primary"
-                disabled={isProcessing}
+                disabled={isProcessing || (productType === 'chat' && !emailVerified)}
               >
                 {isProcessing ? (
                   <>

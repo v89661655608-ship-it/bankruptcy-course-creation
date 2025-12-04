@@ -7,12 +7,15 @@ interface DashboardHeaderProps {
     full_name?: string;
     email?: string;
     is_admin?: boolean;
+    chat_expires_at?: string | null;
   } | null;
   onLogout: () => void;
 }
 
 export default function DashboardHeader({ user, onLogout }: DashboardHeaderProps) {
   const navigate = useNavigate();
+  
+  const hasChatAccess = user?.chat_expires_at && new Date(user.chat_expires_at) > new Date();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-lg shadow-sm">
@@ -30,12 +33,18 @@ export default function DashboardHeader({ user, onLogout }: DashboardHeaderProps
           
           <div className="flex items-center gap-2">
             <Button 
-              variant="outline" 
+              variant={hasChatAccess ? "outline" : "ghost"} 
               size="sm" 
-              onClick={() => navigate('/support')}
+              onClick={() => hasChatAccess && navigate('/support')}
+              disabled={!hasChatAccess}
+              className={!hasChatAccess ? "opacity-50 cursor-not-allowed" : ""}
+              title={!hasChatAccess ? "Доступ к чату не активен. Купите подписку." : ""}
             >
               <Icon name="MessageCircle" size={16} className="mr-2" />
               Поддержка юристов
+              {!hasChatAccess && (
+                <Icon name="Lock" size={14} className="ml-1 text-muted-foreground" />
+              )}
             </Button>
             <Button 
               variant="outline" 

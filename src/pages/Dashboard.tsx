@@ -9,6 +9,7 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import ProgressCard from '@/components/dashboard/ProgressCard';
 import WelcomeVideo from '@/components/dashboard/WelcomeVideo';
 import CourseModule from '@/components/dashboard/CourseModule';
+import ChatUpsellBanner from '@/components/dashboard/ChatUpsellBanner';
 
 interface Material {
   id: number;
@@ -299,6 +300,8 @@ export const Dashboard = () => {
           completedLessons={completedLessons} 
           totalLessons={totalLessons} 
         />
+
+        <ChatUpsellBanner user={user} />
 
         <WelcomeVideo files={files} />
 
