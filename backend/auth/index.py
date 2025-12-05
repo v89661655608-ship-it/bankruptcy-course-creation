@@ -17,14 +17,26 @@ def get_db_connection():
     conn = psycopg2.connect(os.environ['DATABASE_URL'])
     # Log current user and search_path for debugging
     with conn.cursor() as cur:
-        cur.execute("SELECT current_user, current_database(), current_schema()")
-        user_info = cur.fetchone()
-        print(f"[DB] Connected as user: {user_info[0]}, database: {user_info[1]}, schema: {user_info[2]}")
+        cur.execute("SELECT current_user")
+        user = cur.fetchone()[0]
+        print(f"[DB] Connected as user: {user}")
         
-        # Try to query pg_namespace to see available schemas
-        cur.execute("SELECT schema_name FROM information_schema.schemata")
+        cur.execute("SELECT current_database()")
+        db = cur.fetchone()[0]
+        print(f"[DB] Database: {db}")
+        
+        cur.execute("SHOW search_path")
+        search_path = cur.fetchone()[0]
+        print(f"[DB] Search path: {search_path}")
+        
+        cur.execute("SELECT schema_name FROM information_schema.schemata ORDER BY schema_name")
         schemas = cur.fetchall()
         print(f"[DB] Available schemas: {[s[0] for s in schemas]}")
+        
+        # Check if our target schema exists and is accessible
+        cur.execute("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name = 't_p19166386_bankruptcy_course_cr'")
+        schema_exists = cur.fetchone()[0]
+        print(f"[DB] Target schema exists: {schema_exists > 0}")
     return conn
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
