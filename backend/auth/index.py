@@ -219,9 +219,14 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
             # Escape single quotes by doubling them for SQL safety
             safe_email = email.replace("'", "''")
             
-            # CRITICAL: goauth-proxy limitation - use simple table name WITHOUT schema prefix in WHERE clause
-            # The search_path is already set to t_p19166386_bankruptcy_course_cr by default
-            query = f"SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users WHERE email = '{safe_email}'"
+            # CRITICAL: goauth-proxy bug - WHERE clause doesn't work with Simple Query Protocol
+            # Workaround: Use CTE (Common Table Expression) to bypass the limitation
+            query = f"""
+            WITH all_users AS (
+                SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users
+            )
+            SELECT * FROM all_users WHERE email = '{safe_email}'
+            """
             print(f"[LOGIN] Full SQL query: {query}")
             
             try:
