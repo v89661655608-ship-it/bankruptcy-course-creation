@@ -216,9 +216,9 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
         with conn.cursor() as cur:
             print(f"[LOGIN] Executing SELECT query for email: {email}")
             
-            # CRITICAL: goauth-proxy bug - WHERE clause with literals doesn't work at all
-            # Workaround: Fetch ALL users and filter in Python (acceptable for small user tables)
-            query = "SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users"
+            # CRITICAL: goauth-proxy bug - specific column names don't work, only SELECT *
+            # Workaround: Use SELECT * and map columns manually
+            query = "SELECT * FROM users"
             print(f"[LOGIN] Full SQL query: {query}")
             
             try:
@@ -234,12 +234,21 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
                 raise
             
             # Filter in Python instead of SQL WHERE clause
-            columns = ['id', 'email', 'password_hash', 'full_name', 'is_admin', 'chat_expires_at', 'expires_at', 'password_changed_by_user']
+            # Column order from SELECT *: id, email, password_hash, full_name, is_admin, created_at, 
+            # updated_at, email_notifications_enabled, chat_expires_at, purchased_product, password_changed_by_user
             user = None
             for row in rows:
-                user_dict = dict(zip(columns, row))
-                if user_dict['email'].lower() == email.lower():
-                    user = user_dict
+                if row[1].lower() == email.lower():  # row[1] is email
+                    user = {
+                        'id': row[0],
+                        'email': row[1],
+                        'password_hash': row[2],
+                        'full_name': row[3],
+                        'is_admin': row[4],
+                        'chat_expires_at': row[8],
+                        'expires_at': None,  # Column removed from table
+                        'password_changed_by_user': row[10] if len(row) > 10 else False
+                    }
                     break
             
             print(f"[LOGIN] User found: {user is not None}")
