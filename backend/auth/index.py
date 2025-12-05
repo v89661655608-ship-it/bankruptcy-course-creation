@@ -197,9 +197,11 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             print(f"[LOGIN] Executing SELECT query for email: {email}")
+            # Use string formatting instead of parameterized query (Simple Query Protocol requirement)
+            # Escape single quotes by doubling them for SQL safety
+            safe_email = email.replace("'", "''")
             cur.execute(
-                "SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users WHERE email = %s",
-                (email,)
+                f"SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users WHERE email = '{safe_email}'"
             )
             user = cur.fetchone()
             
