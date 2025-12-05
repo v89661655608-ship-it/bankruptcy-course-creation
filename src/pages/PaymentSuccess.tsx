@@ -12,6 +12,7 @@ const PaymentSuccess = () => {
   const [verified, setVerified] = useState(false);
 
   const paymentId = searchParams.get('payment_id');
+  const productType = searchParams.get('product');
 
   useEffect(() => {
     if (paymentId) {
@@ -25,6 +26,15 @@ const PaymentSuccess = () => {
     try {
       const result = await payment.checkStatus(id);
       setVerified(result.paid === true);
+      
+      // Если оплата консультации успешна, перенаправляем в WhatsApp
+      if (result.paid === true && productType === 'consultation') {
+        const message = encodeURIComponent('Здравствуйте! На сайте произведена оплата личной консультации, запишите меня на ближайшее время');
+        const whatsappUrl = `https://wa.me/79661655608?text=${message}`;
+        setTimeout(() => {
+          window.location.href = whatsappUrl;
+        }, 2000); // 2 секунды задержки, чтобы пользователь увидел сообщение об успехе
+      }
     } catch (error) {
       console.error('Error verifying payment:', error);
     } finally {
@@ -69,34 +79,72 @@ const PaymentSuccess = () => {
         <CardContent className="space-y-4 text-center">
           {verified ? (
             <>
-              <p className="text-muted-foreground">
-                Поздравляем! Ваша оплата успешно обработана. Доступ к курсу "Банкротство физических лиц" открыт.
-              </p>
-              <div className="bg-accent/10 p-4 rounded-lg">
-                <p className="text-sm font-medium mb-2">Что дальше?</p>
-                <ul className="text-sm text-left space-y-1 text-muted-foreground">
-                  <li className="flex gap-2">
-                    <Icon name="Check" size={16} className="text-accent flex-shrink-0 mt-0.5" />
-                    <span>Перейдите в личный кабинет</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <Icon name="Check" size={16} className="text-accent flex-shrink-0 mt-0.5" />
-                    <span>Начните обучение с первого модуля</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <Icon name="Check" size={16} className="text-accent flex-shrink-0 mt-0.5" />
-                    <span>Скачайте все материалы курса</span>
-                  </li>
-                </ul>
-              </div>
-              <Button
-                onClick={() => navigate('/dashboard')}
-                className="w-full bg-accent hover:bg-accent/90 text-primary"
-                size="lg"
-              >
-                <Icon name="BookOpen" size={20} className="mr-2" />
-                Перейти к обучению
-              </Button>
+              {productType === 'consultation' ? (
+                <>
+                  <p className="text-muted-foreground">
+                    Оплата успешно обработана! Сейчас вы будете перенаправлены в WhatsApp для записи на консультацию.
+                  </p>
+                  <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                    <p className="text-sm font-medium mb-2 text-amber-900">Что дальше?</p>
+                    <ul className="text-sm text-left space-y-1 text-amber-800">
+                      <li className="flex gap-2">
+                        <Icon name="Check" size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span>Откроется WhatsApp с готовым сообщением</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <Icon name="Check" size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span>Отправьте сообщение для записи</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <Icon name="Check" size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span>Валентина свяжется с вами для назначения времени</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      const message = encodeURIComponent('Здравствуйте! На сайте произведена оплата личной консультации, запишите меня на ближайшее время');
+                      window.location.href = `https://wa.me/79661655608?text=${message}`;
+                    }}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    size="lg"
+                  >
+                    <Icon name="MessageCircle" size={20} className="mr-2" />
+                    Открыть WhatsApp
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-muted-foreground">
+                    Поздравляем! Ваша оплата успешно обработана. Доступ к курсу "Банкротство физических лиц" открыт.
+                  </p>
+                  <div className="bg-accent/10 p-4 rounded-lg">
+                    <p className="text-sm font-medium mb-2">Что дальше?</p>
+                    <ul className="text-sm text-left space-y-1 text-muted-foreground">
+                      <li className="flex gap-2">
+                        <Icon name="Check" size={16} className="text-accent flex-shrink-0 mt-0.5" />
+                        <span>Перейдите в личный кабинет</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <Icon name="Check" size={16} className="text-accent flex-shrink-0 mt-0.5" />
+                        <span>Начните обучение с первого модуля</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <Icon name="Check" size={16} className="text-accent flex-shrink-0 mt-0.5" />
+                        <span>Скачайте все материалы курса</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <Button
+                    onClick={() => navigate('/dashboard')}
+                    className="w-full bg-accent hover:bg-accent/90 text-primary"
+                    size="lg"
+                  >
+                    <Icon name="BookOpen" size={20} className="mr-2" />
+                    Перейти к обучению
+                  </Button>
+                </>
+              )}
             </>
           ) : (
             <>

@@ -320,16 +320,13 @@ export default function PricingSection() {
               <Button 
                 size="lg" 
                 className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-6 h-auto"
-                onClick={() => window.open('https://t.me/bankrotkurs', '_blank')}
+                onClick={() => navigate('/payment-form?product=consultation')}
               >
-                <span className="leading-tight">Записаться на<br />консультацию</span>
+                <span className="leading-tight">Оплатить<br />консультацию</span>
               </Button>
 
               <p className="text-[10px] text-muted-foreground text-center mt-3">
-                Для записи напишите в Telegram{' '}
-                <a href="https://t.me/bankrotkurs" target="_blank" className="underline hover:text-primary">
-                  @bankrotkurs
-                </a>
+                После оплаты вы будете перенаправлены в WhatsApp для записи
               </p>
 
               <div className="mt-4 p-3 bg-amber-100 border border-amber-300 rounded-lg">
