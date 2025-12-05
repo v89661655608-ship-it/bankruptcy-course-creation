@@ -181,10 +181,10 @@ export default function PricingSection() {
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-xs text-green-700 font-semibold flex items-center gap-2">
                   <Icon name="Shield" size={16} />
-                  💰 Гарантия возврата в течение 3 дней*
+                  💰 Гарантия возврата в течение 24 часов*
                 </p>
                 <p className="text-[10px] text-green-600 mt-1">
-                  *При просмотре менее 10% материалов курса
+                  *При отсутствии общения с юристом
                 </p>
               </div>
 
@@ -280,7 +280,7 @@ export default function PricingSection() {
               <div className="text-center mb-8">
                 <Badge className="mb-4 bg-amber-500 text-white">Премиум</Badge>
                 <div className="text-5xl font-bold mb-2 text-amber-600">9 999 ₽</div>
-                <p className="text-muted-foreground">60 минут онлайн</p>
+                <p className="text-muted-foreground">До 60 минут онлайн</p>
               </div>
 
               <Separator className="mb-8" />
@@ -330,7 +330,7 @@ export default function PricingSection() {
               <div className="mt-4 p-3 bg-amber-100 border border-amber-300 rounded-lg">
                 <p className="text-xs text-amber-800 font-semibold flex items-center gap-2">
                   <Icon name="Star" size={16} />
-                  ⚡ 15+ лет практики арбитражного управляющего
+                  ⚡ 10+ лет практики арбитражного управляющего
                 </p>
               </div>
 
