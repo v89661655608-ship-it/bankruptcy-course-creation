@@ -10,6 +10,7 @@ import ProgressCard from '@/components/dashboard/ProgressCard';
 import WelcomeVideo from '@/components/dashboard/WelcomeVideo';
 import CourseModule from '@/components/dashboard/CourseModule';
 import ChatUpsellBanner from '@/components/dashboard/ChatUpsellBanner';
+import ChangePasswordModal from '@/components/dashboard/ChangePasswordModal';
 
 interface Material {
   id: number;
@@ -62,6 +63,7 @@ export const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [files, setFiles] = useState<any[]>([]);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
   const progressIntervals = useRef<{ [key: number]: NodeJS.Timeout }>({});
 
@@ -73,6 +75,14 @@ export const Dashboard = () => {
     
     loadCourseContent();
     loadCourseFiles();
+    
+    // Показываем модалку смены пароля если пользователь не менял пароль
+    if (user && !(user as any).password_changed_by_user) {
+      // Задержка 2 секунды после загрузки
+      setTimeout(() => {
+        setShowPasswordModal(true);
+      }, 2000);
+    }
   }, [token, navigate]);
 
   const loadCourseContent = async () => {
@@ -320,6 +330,12 @@ export const Dashboard = () => {
           ))}
         </div>
       </div>
+
+      <ChangePasswordModal
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        token={token!}
+      />
     </div>
   );
 };

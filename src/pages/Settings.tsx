@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 
@@ -15,6 +16,10 @@ export default function Settings() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -76,6 +81,66 @@ export default function Settings() {
     }
   };
 
+  const changePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: 'Ошибка',
+        description: 'Новый пароль и подтверждение не совпадают',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: 'Ошибка',
+        description: 'Пароль должен содержать минимум 6 символов',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      const response = await fetch('https://functions.poehali.dev/c499486b-a97c-4ff5-8905-0ccd7fddcf9d', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token!
+        },
+        body: JSON.stringify({
+          action: 'change_password',
+          old_password: oldPassword,
+          new_password: newPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: 'Пароль изменен',
+          description: 'Ваш пароль успешно обновлен'
+        });
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        throw new Error(data.error || 'Failed to change password');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Ошибка',
+        description: error.message === 'Current password is incorrect' 
+          ? 'Текущий пароль неверный' 
+          : 'Не удалось изменить пароль',
+        variant: 'destructive'
+      });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50">
@@ -121,6 +186,63 @@ export default function Settings() {
                   <Label className="text-sm text-muted-foreground">Email</Label>
                   <p className="text-base font-medium">{user?.email}</p>
                 </div>
+              </div>
+            </div>
+
+            <div className="border-t pt-6 space-y-4">
+              <h3 className="text-lg font-semibold">Безопасность</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="old-password">Текущий пароль</Label>
+                  <Input
+                    id="old-password"
+                    type="password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    placeholder="Введите текущий пароль"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="new-password">Новый пароль</Label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Минимум 6 символов"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="confirm-password">Повторите новый пароль</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Повторите новый пароль"
+                  />
+                </div>
+
+                <Button
+                  onClick={changePassword}
+                  disabled={changingPassword || !oldPassword || !newPassword || !confirmPassword}
+                  className="w-full"
+                >
+                  {changingPassword ? (
+                    <>
+                      <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+                      Изменение...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="Lock" size={16} className="mr-2" />
+                      Изменить пароль
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
 

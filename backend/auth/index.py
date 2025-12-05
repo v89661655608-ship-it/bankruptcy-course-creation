@@ -45,6 +45,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return register_user(body_data, headers)
             elif action == 'login':
                 return login_user(body_data, headers)
+            elif action == 'change_password':
+                return change_password(body_data, event, headers)
             else:
                 return {
                     'statusCode': 400,
@@ -147,7 +149,7 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                "SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at FROM users WHERE email = %s",
+                "SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users WHERE email = %s",
                 (email,)
             )
             user = cur.fetchone()
@@ -179,7 +181,8 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
                         'full_name': user['full_name'],
                         'is_admin': user['is_admin'],
                         'chat_expires_at': user['chat_expires_at'].isoformat() if user.get('chat_expires_at') else None,
-                        'expires_at': user['expires_at'].isoformat() if user.get('expires_at') else None
+                        'expires_at': user['expires_at'].isoformat() if user.get('expires_at') else None,
+                        'password_changed_by_user': user.get('password_changed_by_user', False)
                     }
                 })
             }
@@ -259,6 +262,76 @@ def generate_token(user: Dict[str, Any]) -> str:
     }
     
     return jwt.encode(payload, jwt_secret, algorithm='HS256')
+
+def change_password(data: Dict[str, Any], event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
+    auth_token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+    
+    if not auth_token:
+        return {
+            'statusCode': 401,
+            'headers': headers,
+            'body': json.dumps({'error': 'Authentication required'})
+        }
+    
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
+    
+    if not new_password or len(new_password) < 6:
+        return {
+            'statusCode': 400,
+            'headers': headers,
+            'body': json.dumps({'error': 'New password must be at least 6 characters'})
+        }
+    
+    try:
+        jwt_secret = os.environ.get('JWT_SECRET')
+        payload = jwt.decode(auth_token, jwt_secret, algorithms=['HS256'])
+        user_id = payload['id']
+    except:
+        return {
+            'statusCode': 401,
+            'headers': headers,
+            'body': json.dumps({'error': 'Invalid token'})
+        }
+    
+    conn = get_db_connection()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                "SELECT password_hash FROM users WHERE id = %s",
+                (user_id,)
+            )
+            user = cur.fetchone()
+            
+            if not user:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'User not found'})
+                }
+            
+            if old_password and not bcrypt.checkpw(old_password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+                return {
+                    'statusCode': 401,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Current password is incorrect'})
+                }
+            
+            new_password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            
+            cur.execute(
+                "UPDATE users SET password_hash = %s, password_changed_by_user = TRUE WHERE id = %s",
+                (new_password_hash, user_id)
+            )
+            conn.commit()
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'success': True, 'message': 'Password updated successfully'})
+            }
+    finally:
+        conn.close()
 
 def verify_chat_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
     if not token:
