@@ -23,7 +23,7 @@ const PaymentForm = () => {
   const products = {
     course: {
       title: 'Курс "Банкротство физических лиц"',
-      price: 2999,
+      price: 3900,
       features: [
         '7 видеомодулей',
         'Все шаблоны документов',
@@ -43,7 +43,7 @@ const PaymentForm = () => {
     },
     combo: {
       title: 'Курс + Чат с юристами',
-      price: 4999,
+      price: 5999,
       features: [
         'Полный курс на 3 месяца',
         'Чат с юристами на 1 месяц',

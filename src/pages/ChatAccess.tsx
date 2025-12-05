@@ -49,7 +49,7 @@ const ChatAccess = () => {
     client_phone: '',
     telegram_username: '',
     days: 7,
-    payment_amount: 2999,
+    payment_amount: 3999,
     notes: ''
   });
 
@@ -126,7 +126,7 @@ const ChatAccess = () => {
           client_phone: '',
           telegram_username: '',
           days: 7,
-          payment_amount: 2999,
+          payment_amount: 3999,
           notes: ''
         });
         loadClients();

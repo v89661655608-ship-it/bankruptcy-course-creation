@@ -22,7 +22,7 @@ export default function Payment() {
   const serviceConfig = {
     course: {
       title: 'Курс "Банкротство физических лиц - самостоятельно"',
-      price: 2999,
+      price: 3900,
       features: [
         '7 видеомодулей',
         'Все шаблоны документов',
