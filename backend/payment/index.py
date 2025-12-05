@@ -369,84 +369,6 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
             payment_id=payment_id
         )
         
-        chat_token_data = None
-        if current_product_type in ['chat', 'combo']:
-            print(f"[WEBHOOK] Creating chat token via API")
-            chat_token_data = create_chat_token_via_api(
-                user_id=int(user_id),
-                user_email=user['email'],
-                product_type=current_product_type
-            )
-            
-            if chat_token_data and chat_token_data.get('token'):
-                token = chat_token_data['token']
-                chat_url = chat_token_data.get('chat_url', 'https://chat-bankrot.ru')
-                expires_at = chat_token_data.get('expires_at')
-                expires_date = expires_at.strftime('%d.%m.%Y') if isinstance(expires_at, datetime) else expires_at
-                
-                print(f"[WEBHOOK] ✅ Token assigned from pool: {token[:20]}...")
-                
-                # КРИТИЧНО: Отправляем email с токеном доступа к чату
-                try:
-                    smtp_host = os.environ.get('SMTP_HOST', 'smtp.yandex.ru')
-                    smtp_port = int(os.environ.get('SMTP_PORT', 465))
-                    smtp_email = os.environ.get('SMTP_USER', 'bankrotkurs@yandex.ru')
-                    smtp_password = os.environ.get('SMTP_PASSWORD')
-                    
-                    if smtp_password:
-                        msg = MIMEMultipart()
-                        msg['From'] = smtp_email
-                        msg['To'] = user['email']
-                        msg['Subject'] = 'Доступ к закрытому чату "Банкротство физических лиц"'
-                        
-                        email_body = f"""Здравствуйте, {user['full_name']}!
-
-Спасибо за покупку комбо-пакета!
-
-Ваш доступ к закрытому чату активирован до {expires_date}.
-
-📱 Ссылка для входа в чат:
-{chat_url}?token={token}
-
-Просто нажмите на ссылку выше - вы автоматически войдете в чат!
-
-🔑 Ваш персональный токен доступа:
-{token}
-
-Важно:
-- Сохраните эту ссылку и токен - они понадобятся для входа
-- Токен действителен до {expires_date}
-- Не передавайте токен другим людям
-
-Альтернативный способ входа:
-1. Перейдите на {chat_url}
-2. Нажмите "Войти с токеном"
-3. Вставьте ваш токен доступа
-4. Готово! Вы в чате
-
-По всем вопросам пишите на bankrotkurs@yandex.ru
-
-С уважением,
-Команда курса "Банкротство физических лиц"
-Валентина Голосова"""
-                        
-                        msg.attach(MIMEText(email_body, 'plain', 'utf-8'))
-                        
-                        with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
-                            server.login(smtp_email, smtp_password)
-                            server.send_message(msg)
-                        
-                        print(f"[WEBHOOK] ✅ Email с токеном чата отправлен на {user['email']}")
-                    else:
-                        print(f"[WEBHOOK] ⚠️ SMTP_PASSWORD не настроен, email не отправлен")
-                except Exception as email_error:
-                    print(f"[WEBHOOK] ❌ Ошибка отправки email с токеном: {email_error}")
-                    import traceback
-                    print(f"[WEBHOOK] Traceback: {traceback.format_exc()}")
-            else:
-                print(f"[WEBHOOK] ⚠️ No token available in pool! Response: {chat_token_data}")
-                print(f"[WEBHOOK] ERROR: User will NOT receive chat access token!")
-        
         if current_product_type in ['course', 'combo']:
             print(f"[WEBHOOK] Sending course credentials to {user['email']}")
             conn_main = get_db_connection()
@@ -466,8 +388,7 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
                         user_email=user['email'],
                         user_name=user['full_name'],
                         password=temp_password,
-                        product_type=current_product_type,
-                        chat_token_data=chat_token_data
+                        product_type=current_product_type
                     )
                     print(f"[WEBHOOK] Email sent successfully!")
             finally:
@@ -778,7 +699,7 @@ def send_chat_token_email(user_email: str, user_name: str, chat_token: str, prod
         import traceback
         print(f"[EMAIL] Traceback: {traceback.format_exc()}")
 
-def send_course_credentials_email(user_email: str, user_name: str, password: str, product_type: str = 'course', chat_token_data: dict = None):
+def send_course_credentials_email(user_email: str, user_name: str, password: str, product_type: str = 'course'):
     smtp_host = os.environ.get('SMTP_HOST')
     smtp_port = int(os.environ.get('SMTP_PORT', 465))
     smtp_user = os.environ.get('SMTP_USER')
@@ -790,37 +711,26 @@ def send_course_credentials_email(user_email: str, user_name: str, password: str
     subject = 'Доступ к курсу "Банкротство физических лиц"'
     
     chat_bonus_block = ''
-    if product_type == 'combo' and chat_token_data:
-        expires_date = chat_token_data['expires_at'].strftime('%d.%m.%Y')
-        chat_bonus_block = f'''
+    if product_type == 'combo':
+        chat_bonus_block = '''
         <div style="background: linear-gradient(135deg, #e8f4fd 0%, #e0f2f1 100%); padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #00897b;">
-            <h2 style="margin-top: 0; color: #00897b; font-size: 20px;">💬 БОНУС: ДОСТУП К ЗАКРЫТОМУ ЧАТУ С ЮРИСТАМИ</h2>
+            <h2 style="margin-top: 0; color: #00897b; font-size: 20px;">💬 БОНУС: ДОСТУП К ЧАТУ С ПОДДЕРЖКОЙ</h2>
             
             <p style="margin: 15px 0;">
-                <strong>Ваш токен доступа:</strong><br>
-                <span style="background: #fff3cd; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-weight: bold; font-size: 14px; display: inline-block; word-break: break-all;">{chat_token_data['token']}</span>
-            </p>
-            
-            <p style="margin: 15px 0;">
-                <strong>Ссылка на чат:</strong> <a href="https://chat-bankrot.ru" style="color: #00897b; text-decoration: none; font-weight: bold;">chat-bankrot.ru</a>
-            </p>
-            
-            <p style="margin: 15px 0;">
-                <strong>Действителен до:</strong> {expires_date}
+                Вам активирован доступ к чату с поддержкой на <strong>30 дней</strong>!
             </p>
             
             <div style="background: white; padding: 20px; border-radius: 6px; margin-top: 20px;">
-                <h3 style="margin-top: 0; font-size: 16px; color: #333;">Как войти в чат:</h3>
+                <h3 style="margin-top: 0; font-size: 16px; color: #333;">Как получить доступ к чату:</h3>
                 <ol style="margin: 10px 0; padding-left: 20px;">
-                    <li style="margin: 8px 0;">Перейдите на <a href="https://chat-bankrot.ru" style="color: #00897b;">chat-bankrot.ru</a></li>
-                    <li style="margin: 8px 0;">Нажмите "Войти с токеном"</li>
-                    <li style="margin: 8px 0;">Вставьте ваш токен в поле для входа</li>
-                    <li style="margin: 8px 0;">Задавайте вопросы юристам в чате!</li>
+                    <li style="margin: 8px 0;">Войдите в личный кабинет на сайте</li>
+                    <li style="margin: 8px 0;">Перейдите в раздел "Поддержка"</li>
+                    <li style="margin: 8px 0;">Задавайте вопросы нашим специалистам!</li>
                 </ol>
             </div>
             
             <p style="font-size: 13px; color: #666; margin-top: 15px;">
-                ⚠️ Сохраните токен — он понадобится для входа в чат
+                ✅ Доступ активен в течение месяца с момента оплаты
             </p>
         </div>
         '''
