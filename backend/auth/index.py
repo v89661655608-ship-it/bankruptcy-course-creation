@@ -11,7 +11,6 @@ import bcrypt
 from datetime import datetime, timedelta
 from typing import Dict, Any
 import psycopg2
-from psycopg2.extras import RealDictCursor
 
 def get_db_connection():
     db_url = os.environ['DATABASE_URL']
@@ -144,15 +143,30 @@ def register_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
     
     conn = get_db_connection()
     try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        with conn.cursor() as cur:
+            # Use string formatting for Simple Query Protocol
+            safe_email = email.replace("'", "''")
+            safe_password_hash = password_hash.replace("'", "''")
+            safe_full_name = full_name.replace("'", "''")
+            safe_telegram = telegram_username.replace("'", "''") if telegram_username else ''
+            
+            telegram_value = f"'{safe_telegram}'" if telegram_username else 'NULL'
+            
             cur.execute(
-                "INSERT INTO users (email, password_hash, full_name, telegram_username) VALUES (%s, %s, %s, %s) RETURNING id, email, full_name, is_admin, created_at",
-                (email, password_hash, full_name, telegram_username if telegram_username else None)
+                f"INSERT INTO users (email, password_hash, full_name, telegram_username) VALUES ('{safe_email}', '{safe_password_hash}', '{safe_full_name}', {telegram_value}) RETURNING id, email, full_name, is_admin, created_at"
             )
-            user = cur.fetchone()
+            row = cur.fetchone()
             conn.commit()
             
-            token = generate_token(dict(user))
+            user = {
+                'id': row[0],
+                'email': row[1],
+                'full_name': row[2],
+                'is_admin': row[3],
+                'created_at': row[4]
+            }
+            
+            token = generate_token(user)
             
             return {
                 'statusCode': 201,
@@ -195,7 +209,7 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
     
     conn = get_db_connection()
     try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        with conn.cursor() as cur:
             print(f"[LOGIN] Executing SELECT query for email: {email}")
             # Use string formatting instead of parameterized query (Simple Query Protocol requirement)
             # Escape single quotes by doubling them for SQL safety
@@ -203,7 +217,12 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
             cur.execute(
                 f"SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users WHERE email = '{safe_email}'"
             )
-            user = cur.fetchone()
+            row = cur.fetchone()
+            if not row:
+                user = None
+            else:
+                columns = ['id', 'email', 'password_hash', 'full_name', 'is_admin', 'chat_expires_at', 'expires_at', 'password_changed_by_user']
+                user = dict(zip(columns, row))
             
             print(f"[LOGIN] User found: {user is not None}")
             
@@ -263,20 +282,21 @@ def validate_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
         
         conn = get_db_connection()
         try:
-            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            with conn.cursor() as cur:
+                # Use string formatting for Simple Query Protocol
+                safe_user_id = str(int(user_id))  # Ensure it's a safe integer
                 cur.execute(
-                    "SELECT COUNT(*) as has_access FROM user_purchases WHERE user_id = %s AND payment_status = 'completed' AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)",
-                    (user_id,)
+                    f"SELECT COUNT(*) as has_access FROM user_purchases WHERE user_id = {safe_user_id} AND payment_status = 'completed' AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)"
                 )
-                access_check = cur.fetchone()
-                has_course_access = access_check['has_access'] > 0 or payload.get('is_admin', False)
+                access_count = cur.fetchone()[0]
+                has_course_access = access_count > 0 or payload.get('is_admin', False)
                 
                 # Получаем chat_expires_at и expires_at из users
                 cur.execute(
-                    "SELECT chat_expires_at, expires_at FROM users WHERE id = %s",
-                    (user_id,)
+                    f"SELECT chat_expires_at, expires_at FROM users WHERE id = {safe_user_id}"
                 )
-                user_data = cur.fetchone()
+                user_row = cur.fetchone()
+                user_data = {'chat_expires_at': user_row[0], 'expires_at': user_row[1]} if user_row else None
         finally:
             conn.close()
         
@@ -361,14 +381,14 @@ def change_password(data: Dict[str, Any], event: Dict[str, Any], headers: Dict[s
     
     conn = get_db_connection()
     try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        with conn.cursor() as cur:
+            safe_user_id = str(int(user_id))
             cur.execute(
-                "SELECT password_hash FROM users WHERE id = %s",
-                (user_id,)
+                f"SELECT password_hash FROM users WHERE id = {safe_user_id}"
             )
-            user = cur.fetchone()
+            row = cur.fetchone()
             
-            if not user:
+            if not row:
                 return {
                     'statusCode': 404,
                     'headers': headers,
@@ -376,7 +396,9 @@ def change_password(data: Dict[str, Any], event: Dict[str, Any], headers: Dict[s
                     'isBase64Encoded': False
                 }
             
-            if old_password and not bcrypt.checkpw(old_password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+            user_password_hash = row[0]
+            
+            if old_password and not bcrypt.checkpw(old_password.encode('utf-8'), user_password_hash.encode('utf-8')):
                 return {
                     'statusCode': 401,
                     'headers': headers,
@@ -385,10 +407,10 @@ def change_password(data: Dict[str, Any], event: Dict[str, Any], headers: Dict[s
                 }
             
             new_password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            safe_new_password_hash = new_password_hash.replace("'", "''")
             
             cur.execute(
-                "UPDATE users SET password_hash = %s, password_changed_by_user = TRUE WHERE id = %s",
-                (new_password_hash, user_id)
+                f"UPDATE users SET password_hash = '{safe_new_password_hash}', password_changed_by_user = TRUE WHERE id = {safe_user_id}"
             )
             conn.commit()
             
@@ -412,24 +434,35 @@ def verify_chat_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
     
     conn = get_db_connection()
     try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        with conn.cursor() as cur:
+            safe_token = token.replace("'", "''")
             cur.execute(
-                """SELECT ct.id, ct.user_id, ct.email, ct.product_type, ct.expires_at, ct.is_active, ct.created_at,
+                f"""SELECT ct.id, ct.user_id, ct.email, ct.product_type, ct.expires_at, ct.is_active, ct.created_at,
                           u.full_name
                    FROM chat_tokens ct
                    JOIN users u ON ct.user_id = u.id
-                   WHERE ct.token = %s""",
-                (token,)
+                   WHERE ct.token = '{safe_token}'"""
             )
-            token_data = cur.fetchone()
+            row = cur.fetchone()
             
-            if not token_data:
+            if not row:
                 return {
                     'statusCode': 404,
                     'headers': headers,
                     'body': json.dumps({'error': 'Token not found', 'valid': False}),
                     'isBase64Encoded': False
                 }
+            
+            token_data = {
+                'id': row[0],
+                'user_id': row[1],
+                'email': row[2],
+                'product_type': row[3],
+                'expires_at': row[4],
+                'is_active': row[5],
+                'created_at': row[6],
+                'full_name': row[7]
+            }
             
             if not token_data['is_active']:
                 return {
@@ -440,9 +473,9 @@ def verify_chat_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
                 }
             
             if token_data['expires_at'] < datetime.now():
+                safe_id = str(int(token_data['id']))
                 cur.execute(
-                    "UPDATE chat_tokens SET is_active = false WHERE id = %s",
-                    (token_data['id'],)
+                    f"UPDATE chat_tokens SET is_active = false WHERE id = {safe_id}"
                 )
                 conn.commit()
                 return {
@@ -452,9 +485,9 @@ def verify_chat_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
                     'isBase64Encoded': False
                 }
             
+            safe_id = str(int(token_data['id']))
             cur.execute(
-                "UPDATE chat_tokens SET last_used_at = CURRENT_TIMESTAMP WHERE id = %s",
-                (token_data['id'],)
+                f"UPDATE chat_tokens SET last_used_at = CURRENT_TIMESTAMP WHERE id = {safe_id}"
             )
             conn.commit()
             
