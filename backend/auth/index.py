@@ -10,7 +10,8 @@ import jwt
 import bcrypt
 from datetime import datetime, timedelta
 from typing import Dict, Any
-import psycopg
+import psycopg2
+import psycopg2.extensions
 
 def get_db_connection():
     db_url = os.environ['DATABASE_URL']
@@ -25,8 +26,9 @@ def get_db_connection():
                 masked_url = f"{user_pass[0]}://{user}:***@{parts[1]}"
     print(f"[DB] Connecting with URL: {masked_url}")
     
-    # psycopg3 uses context manager and autocommit for simple queries
-    conn = psycopg.connect(db_url, autocommit=False)
+    conn = psycopg2.connect(db_url)
+    # Set connection to use simple queries only
+    conn.set_session(autocommit=False)
     
     # Log current user and search_path for debugging
     with conn.cursor() as cur:
@@ -184,7 +186,7 @@ def register_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
                 }, default=str),
                 'isBase64Encoded': False
             }
-    except psycopg.errors.UniqueViolation:
+    except psycopg2.IntegrityError:
         conn.rollback()
         return {
             'statusCode': 409,
