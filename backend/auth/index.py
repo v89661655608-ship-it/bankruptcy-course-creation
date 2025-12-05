@@ -28,7 +28,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
                 'Access-Control-Max-Age': '86400'
             },
-            'body': ''
+            'body': '',
+            'isBase64Encoded': False
         }
     
     headers = {
@@ -51,7 +52,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return {
                     'statusCode': 400,
                     'headers': headers,
-                    'body': json.dumps({'error': 'Invalid action'})
+                    'body': json.dumps({'error': 'Invalid action'}),
+                    'isBase64Encoded': False
                 }
         
         elif method == 'GET':
@@ -66,7 +68,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return {
                     'statusCode': 401,
                     'headers': headers,
-                    'body': json.dumps({'error': 'No token provided'})
+                    'body': json.dumps({'error': 'No token provided'}),
+                    'isBase64Encoded': False
                 }
             
             return validate_token(auth_token, headers)
@@ -74,7 +77,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         return {
             'statusCode': 405,
             'headers': headers,
-            'body': json.dumps({'error': 'Method not allowed'})
+            'body': json.dumps({'error': 'Method not allowed'}),
+            'isBase64Encoded': False
         }
     
     except Exception as e:
@@ -84,7 +88,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         return {
             'statusCode': 500,
             'headers': headers,
-            'body': json.dumps({'error': str(e)})
+            'body': json.dumps({'error': str(e)}),
+            'isBase64Encoded': False
         }
 
 def register_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
@@ -97,7 +102,8 @@ def register_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
         return {
             'statusCode': 400,
             'headers': headers,
-            'body': json.dumps({'error': 'Email, password and full_name are required'})
+            'body': json.dumps({'error': 'Email, password and full_name are required'}),
+            'isBase64Encoded': False
         }
     
     password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -125,14 +131,16 @@ def register_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
                         'full_name': user['full_name'],
                         'is_admin': user['is_admin']
                     }
-                }, default=str)
+                }, default=str),
+                'isBase64Encoded': False
             }
     except psycopg2.IntegrityError:
         conn.rollback()
         return {
             'statusCode': 409,
             'headers': headers,
-            'body': json.dumps({'error': 'User with this email already exists'})
+            'body': json.dumps({'error': 'User with this email already exists'}),
+            'isBase64Encoded': False
         }
     finally:
         conn.close()
@@ -147,7 +155,8 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
         return {
             'statusCode': 400,
             'headers': headers,
-            'body': json.dumps({'error': 'Email and password are required'})
+            'body': json.dumps({'error': 'Email and password are required'}),
+            'isBase64Encoded': False
         }
     
     conn = get_db_connection()
@@ -167,7 +176,8 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
                 return {
                     'statusCode': 401,
                     'headers': headers,
-                    'body': json.dumps({'error': 'Invalid credentials'})
+                    'body': json.dumps({'error': 'Invalid credentials'}),
+                    'isBase64Encoded': False
                 }
             
             print(f"[LOGIN] Checking password for user {user['id']}")
@@ -175,7 +185,8 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
                 return {
                     'statusCode': 401,
                     'headers': headers,
-                    'body': json.dumps({'error': 'Invalid credentials'})
+                    'body': json.dumps({'error': 'Invalid credentials'}),
+                    'isBase64Encoded': False
                 }
             
             token = generate_token(dict(user))
@@ -194,7 +205,8 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
                         'expires_at': user['expires_at'].isoformat() if user.get('expires_at') else None,
                         'password_changed_by_user': user.get('password_changed_by_user', False)
                     }
-                })
+                }),
+                'isBase64Encoded': False
             }
     finally:
         conn.close()
@@ -206,7 +218,8 @@ def validate_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
             return {
                 'statusCode': 500,
                 'headers': headers,
-                'body': json.dumps({'error': 'JWT_SECRET not configured'})
+                'body': json.dumps({'error': 'JWT_SECRET not configured'}),
+                'isBase64Encoded': False
             }
         
         payload = jwt.decode(token, jwt_secret, algorithms=['HS256'])
@@ -245,19 +258,22 @@ def validate_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
                     'chat_expires_at': user_data['chat_expires_at'].isoformat() if user_data and user_data.get('chat_expires_at') else None,
                     'expires_at': user_data['expires_at'].isoformat() if user_data and user_data.get('expires_at') else None
                 }
-            })
+            }),
+            'isBase64Encoded': False
         }
     except jwt.ExpiredSignatureError:
         return {
             'statusCode': 401,
             'headers': headers,
-            'body': json.dumps({'error': 'Token expired'})
+            'body': json.dumps({'error': 'Token expired'}),
+            'isBase64Encoded': False
         }
     except jwt.InvalidTokenError:
         return {
             'statusCode': 401,
             'headers': headers,
-            'body': json.dumps({'error': 'Invalid token'})
+            'body': json.dumps({'error': 'Invalid token'}),
+            'isBase64Encoded': False
         }
 
 def generate_token(user: Dict[str, Any]) -> str:
@@ -280,7 +296,8 @@ def change_password(data: Dict[str, Any], event: Dict[str, Any], headers: Dict[s
         return {
             'statusCode': 401,
             'headers': headers,
-            'body': json.dumps({'error': 'Authentication required'})
+            'body': json.dumps({'error': 'Authentication required'}),
+            'isBase64Encoded': False
         }
     
     old_password = data.get('old_password')
@@ -290,7 +307,8 @@ def change_password(data: Dict[str, Any], event: Dict[str, Any], headers: Dict[s
         return {
             'statusCode': 400,
             'headers': headers,
-            'body': json.dumps({'error': 'New password must be at least 6 characters'})
+            'body': json.dumps({'error': 'New password must be at least 6 characters'}),
+            'isBase64Encoded': False
         }
     
     try:
@@ -301,7 +319,8 @@ def change_password(data: Dict[str, Any], event: Dict[str, Any], headers: Dict[s
         return {
             'statusCode': 401,
             'headers': headers,
-            'body': json.dumps({'error': 'Invalid token'})
+            'body': json.dumps({'error': 'Invalid token'}),
+            'isBase64Encoded': False
         }
     
     conn = get_db_connection()
@@ -317,14 +336,16 @@ def change_password(data: Dict[str, Any], event: Dict[str, Any], headers: Dict[s
                 return {
                     'statusCode': 404,
                     'headers': headers,
-                    'body': json.dumps({'error': 'User not found'})
+                    'body': json.dumps({'error': 'User not found'}),
+                    'isBase64Encoded': False
                 }
             
             if old_password and not bcrypt.checkpw(old_password.encode('utf-8'), user['password_hash'].encode('utf-8')):
                 return {
                     'statusCode': 401,
                     'headers': headers,
-                    'body': json.dumps({'error': 'Current password is incorrect'})
+                    'body': json.dumps({'error': 'Current password is incorrect'}),
+                    'isBase64Encoded': False
                 }
             
             new_password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -338,7 +359,8 @@ def change_password(data: Dict[str, Any], event: Dict[str, Any], headers: Dict[s
             return {
                 'statusCode': 200,
                 'headers': headers,
-                'body': json.dumps({'success': True, 'message': 'Password updated successfully'})
+                'body': json.dumps({'success': True, 'message': 'Password updated successfully'}),
+                'isBase64Encoded': False
             }
     finally:
         conn.close()
@@ -348,7 +370,8 @@ def verify_chat_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
         return {
             'statusCode': 400,
             'headers': headers,
-            'body': json.dumps({'error': 'Token is required', 'valid': False})
+            'body': json.dumps({'error': 'Token is required', 'valid': False}),
+            'isBase64Encoded': False
         }
     
     conn = get_db_connection()
@@ -368,14 +391,16 @@ def verify_chat_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
                 return {
                     'statusCode': 404,
                     'headers': headers,
-                    'body': json.dumps({'error': 'Token not found', 'valid': False})
+                    'body': json.dumps({'error': 'Token not found', 'valid': False}),
+                    'isBase64Encoded': False
                 }
             
             if not token_data['is_active']:
                 return {
                     'statusCode': 403,
                     'headers': headers,
-                    'body': json.dumps({'error': 'Token is deactivated', 'valid': False})
+                    'body': json.dumps({'error': 'Token is deactivated', 'valid': False}),
+                    'isBase64Encoded': False
                 }
             
             if token_data['expires_at'] < datetime.now():
@@ -387,7 +412,8 @@ def verify_chat_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
                 return {
                     'statusCode': 403,
                     'headers': headers,
-                    'body': json.dumps({'error': 'Token expired', 'valid': False})
+                    'body': json.dumps({'error': 'Token expired', 'valid': False}),
+                    'isBase64Encoded': False
                 }
             
             cur.execute(
@@ -407,13 +433,15 @@ def verify_chat_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
                     'product_type': token_data['product_type'],
                     'expires_at': token_data['expires_at'].isoformat(),
                     'created_at': token_data['created_at'].isoformat()
-                })
+                }),
+                'isBase64Encoded': False
             }
     except Exception as e:
         return {
             'statusCode': 500,
             'headers': headers,
-            'body': json.dumps({'error': str(e), 'valid': False})
+            'body': json.dumps({'error': str(e), 'valid': False}),
+            'isBase64Encoded': False
         }
     finally:
         conn.close()
