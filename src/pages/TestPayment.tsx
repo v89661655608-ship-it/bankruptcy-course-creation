@@ -1,14 +1,27 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
 export default function TestPayment() {
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const { toast } = useToast();
 
   const createPayment = async (amount: number, productType: string) => {
+    if (!email || !name) {
+      toast({
+        title: '❌ Заполните все поля',
+        description: 'Введите email и имя для продолжения',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -18,8 +31,8 @@ export default function TestPayment() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          email: 'melni-v@yandex.ru',
-          name: 'Тестовый пользователь',
+          email: email,
+          name: name,
           amount: amount,
           product_type: productType,
           return_url: window.location.origin
@@ -57,54 +70,88 @@ export default function TestPayment() {
           <CardHeader>
             <CardTitle className="text-3xl text-center">🧪 Тестовые оплаты</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Button 
-              onClick={() => createPayment(1, 'combo')}
-              disabled={loading}
-              size="lg"
-              className="w-full text-lg"
-            >
-              {loading ? (
-                <Icon name="Loader2" className="animate-spin mr-2" size={20} />
-              ) : (
-                <span className="mr-2">💳</span>
-              )}
-              Оплатить 1₽ (Комбо - тест)
-            </Button>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name">Ваше имя</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Иван Иванов"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
 
-            <Button 
-              onClick={() => createPayment(2, 'course')}
-              disabled={loading}
-              size="lg"
-              className="w-full text-lg"
-              variant="secondary"
-            >
-              {loading ? (
-                <Icon name="Loader2" className="animate-spin mr-2" size={20} />
-              ) : (
-                <span className="mr-2">📚</span>
-              )}
-              Оплатить 2₽ (Курс)
-            </Button>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="example@mail.ru"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            </div>
 
-            <Button 
-              onClick={() => createPayment(3, 'chat')}
-              disabled={loading}
-              size="lg"
-              className="w-full text-lg"
-              variant="outline"
-            >
-              {loading ? (
-                <Icon name="Loader2" className="animate-spin mr-2" size={20} />
-              ) : (
-                <span className="mr-2">💬</span>
-              )}
-              Оплатить 3₽ (Чат)
-            </Button>
+            <div className="border-t pt-4 space-y-3">
+              <Button 
+                onClick={() => createPayment(1, 'combo')}
+                disabled={loading}
+                size="lg"
+                className="w-full text-lg"
+              >
+                {loading ? (
+                  <Icon name="Loader2" className="animate-spin mr-2" size={20} />
+                ) : (
+                  <span className="mr-2">💳</span>
+                )}
+                Оплатить 1₽ (Комбо - тест)
+              </Button>
 
-            <div className="mt-6 p-4 bg-muted rounded-lg text-sm text-muted-foreground">
-              <p><strong>Email:</strong> melni-v@yandex.ru</p>
-              <p className="mt-2">При нажатии создастся платёж в ЮKassa и откроется страница оплаты</p>
+              <Button 
+                onClick={() => createPayment(2, 'course')}
+                disabled={loading}
+                size="lg"
+                className="w-full text-lg"
+                variant="secondary"
+              >
+                {loading ? (
+                  <Icon name="Loader2" className="animate-spin mr-2" size={20} />
+                ) : (
+                  <span className="mr-2">📚</span>
+                )}
+                Оплатить 2₽ (Курс)
+              </Button>
+
+              <Button 
+                onClick={() => createPayment(3, 'chat')}
+                disabled={loading}
+                size="lg"
+                className="w-full text-lg"
+                variant="outline"
+              >
+                {loading ? (
+                  <Icon name="Loader2" className="animate-spin mr-2" size={20} />
+                ) : (
+                  <span className="mr-2">💬</span>
+                )}
+                Оплатить 3₽ (Чат)
+              </Button>
+            </div>
+
+            <div className="p-4 bg-muted rounded-lg text-sm text-muted-foreground">
+              <p className="font-medium mb-2">ℹ️ Как проверить:</p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Введите email и имя</li>
+                <li>Выберите тип оплаты</li>
+                <li>Завершите оплату в ЮKassa</li>
+                <li>Проверьте письмо на указанный email</li>
+                <li>Войдите в личный кабинет</li>
+              </ol>
             </div>
           </CardContent>
         </Card>
