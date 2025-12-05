@@ -14,7 +14,19 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 def get_db_connection():
-    conn = psycopg2.connect(os.environ['DATABASE_URL'])
+    db_url = os.environ['DATABASE_URL']
+    # Mask password for logging
+    masked_url = db_url
+    if '@' in db_url and ':' in db_url:
+        parts = db_url.split('@')
+        if len(parts) == 2 and ':' in parts[0]:
+            user_pass = parts[0].split('://')
+            if len(user_pass) == 2:
+                user = user_pass[1].split(':')[0]
+                masked_url = f"{user_pass[0]}://{user}:***@{parts[1]}"
+    print(f"[DB] Connecting with URL: {masked_url}")
+    
+    conn = psycopg2.connect(db_url)
     # Log current user and search_path for debugging
     with conn.cursor() as cur:
         cur.execute("SELECT current_user")
@@ -29,14 +41,13 @@ def get_db_connection():
         search_path = cur.fetchone()[0]
         print(f"[DB] Search path: {search_path}")
         
-        cur.execute("SELECT schema_name FROM information_schema.schemata ORDER BY schema_name")
-        schemas = cur.fetchall()
-        print(f"[DB] Available schemas: {[s[0] for s in schemas]}")
-        
-        # Check if our target schema exists and is accessible
-        cur.execute("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name = 't_p19166386_bankruptcy_course_cr'")
-        schema_exists = cur.fetchone()[0]
-        print(f"[DB] Target schema exists: {schema_exists > 0}")
+        # Try simple query to users table
+        try:
+            cur.execute("SELECT COUNT(*) FROM users")
+            count = cur.fetchone()[0]
+            print(f"[DB] Users table accessible: True (count={count})")
+        except Exception as e:
+            print(f"[DB] Users table accessible: False (error={str(e)})")
     return conn
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
