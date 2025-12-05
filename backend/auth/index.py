@@ -157,7 +157,7 @@ def register_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
             telegram_value = f"'{safe_telegram}'" if telegram_username else 'NULL'
             
             cur.execute(
-                f"INSERT INTO users (email, password_hash, full_name, telegram_username) VALUES ('{safe_email}', '{safe_password_hash}', '{safe_full_name}', {telegram_value}) RETURNING id, email, full_name, is_admin, created_at"
+                f"INSERT INTO t_p19166386_bankruptcy_course_cr.users (email, password_hash, full_name, telegram_username) VALUES ('{safe_email}', '{safe_password_hash}', '{safe_full_name}', {telegram_value}) RETURNING id, email, full_name, is_admin, created_at"
             )
             row = cur.fetchone()
             conn.commit()
@@ -219,12 +219,8 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
             # Escape single quotes by doubling them for SQL safety
             safe_email = email.replace("'", "''")
             
-            # Set schema first, then use simple table name
-            print(f"[LOGIN] Setting schema to t_p19166386_bankruptcy_course_cr")
-            cur.execute("SET search_path TO t_p19166386_bankruptcy_course_cr, public")
-            
-            # Now use simple table name without schema prefix
-            query = f"SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users WHERE email = '{safe_email}'"
+            # Use FULL schema name in query (SET search_path is blocked as ALTER command)
+            query = f"SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM t_p19166386_bankruptcy_course_cr.users WHERE email = '{safe_email}'"
             print(f"[LOGIN] Full SQL query: {query}")
             
             try:
@@ -306,14 +302,14 @@ def validate_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
                 # Use string formatting for Simple Query Protocol
                 safe_user_id = str(int(user_id))  # Ensure it's a safe integer
                 cur.execute(
-                    f"SELECT COUNT(*) as has_access FROM user_purchases WHERE user_id = {safe_user_id} AND payment_status = 'completed' AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)"
+                    f"SELECT COUNT(*) as has_access FROM t_p19166386_bankruptcy_course_cr.user_purchases WHERE user_id = {safe_user_id} AND payment_status = 'completed' AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)"
                 )
                 access_count = cur.fetchone()[0]
                 has_course_access = access_count > 0 or payload.get('is_admin', False)
                 
                 # Получаем chat_expires_at и expires_at из users
                 cur.execute(
-                    f"SELECT chat_expires_at, expires_at FROM users WHERE id = {safe_user_id}"
+                    f"SELECT chat_expires_at, expires_at FROM t_p19166386_bankruptcy_course_cr.users WHERE id = {safe_user_id}"
                 )
                 user_row = cur.fetchone()
                 user_data = {'chat_expires_at': user_row[0], 'expires_at': user_row[1]} if user_row else None
@@ -404,7 +400,7 @@ def change_password(data: Dict[str, Any], event: Dict[str, Any], headers: Dict[s
         with conn.cursor() as cur:
             safe_user_id = str(int(user_id))
             cur.execute(
-                f"SELECT password_hash FROM users WHERE id = {safe_user_id}"
+                f"SELECT password_hash FROM t_p19166386_bankruptcy_course_cr.users WHERE id = {safe_user_id}"
             )
             row = cur.fetchone()
             
@@ -430,7 +426,7 @@ def change_password(data: Dict[str, Any], event: Dict[str, Any], headers: Dict[s
             safe_new_password_hash = new_password_hash.replace("'", "''")
             
             cur.execute(
-                f"UPDATE users SET password_hash = '{safe_new_password_hash}', password_changed_by_user = TRUE WHERE id = {safe_user_id}"
+                f"UPDATE t_p19166386_bankruptcy_course_cr.users SET password_hash = '{safe_new_password_hash}', password_changed_by_user = TRUE WHERE id = {safe_user_id}"
             )
             conn.commit()
             
@@ -459,8 +455,8 @@ def verify_chat_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
             cur.execute(
                 f"""SELECT ct.id, ct.user_id, ct.email, ct.product_type, ct.expires_at, ct.is_active, ct.created_at,
                           u.full_name
-                   FROM chat_tokens ct
-                   JOIN users u ON ct.user_id = u.id
+                   FROM t_p19166386_bankruptcy_course_cr.chat_tokens ct
+                   JOIN t_p19166386_bankruptcy_course_cr.users u ON ct.user_id = u.id
                    WHERE ct.token = '{safe_token}'"""
             )
             row = cur.fetchone()
@@ -495,7 +491,7 @@ def verify_chat_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
             if token_data['expires_at'] < datetime.now():
                 safe_id = str(int(token_data['id']))
                 cur.execute(
-                    f"UPDATE chat_tokens SET is_active = false WHERE id = {safe_id}"
+                    f"UPDATE t_p19166386_bankruptcy_course_cr.chat_tokens SET is_active = false WHERE id = {safe_id}"
                 )
                 conn.commit()
                 return {
@@ -507,7 +503,7 @@ def verify_chat_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
             
             safe_id = str(int(token_data['id']))
             cur.execute(
-                f"UPDATE chat_tokens SET last_used_at = CURRENT_TIMESTAMP WHERE id = {safe_id}"
+                f"UPDATE t_p19166386_bankruptcy_course_cr.chat_tokens SET last_used_at = CURRENT_TIMESTAMP WHERE id = {safe_id}"
             )
             conn.commit()
             
