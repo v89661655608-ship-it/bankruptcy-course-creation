@@ -81,13 +81,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
 
 def create_payment(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
-    body_data = json.loads(event.get('body', '{}'))
-    user_id = body_data.get('user_id')
-    amount = body_data.get('amount', 4999)
-    email = body_data.get('email', '')
-    full_name = body_data.get('name', 'Клиент')
-    return_url = body_data.get('return_url', '')
-    product_type = body_data.get('product_type', 'course')
+    method = event.get('httpMethod', 'GET')
+    
+    # Support both GET (query params) and POST (body)
+    if method == 'GET':
+        params = event.get('queryStringParameters') or {}
+        user_id = params.get('user_id')
+        amount = float(params.get('amount', 4999))
+        email = params.get('email', '')
+        full_name = params.get('name', 'Клиент')
+        return_url = params.get('return_url', '')
+        product_type = params.get('product_type', 'course')
+    else:
+        body_str = event.get('body', '{}')
+        body_data = json.loads(body_str) if body_str else {}
+        user_id = body_data.get('user_id')
+        amount = body_data.get('amount', 4999)
+        email = body_data.get('email', '')
+        full_name = body_data.get('name', 'Клиент')
+        return_url = body_data.get('return_url', '')
+        product_type = body_data.get('product_type', 'course')
     
     if not email:
         return {
