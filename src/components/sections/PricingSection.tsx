@@ -275,7 +275,12 @@ export default function PricingSection() {
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-amber-400 hover:border-amber-500 transition-all hover:shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50">
+          <Card className="border-2 border-amber-400 hover:border-amber-500 transition-all hover:shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50 relative">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+              <div className="bg-amber-500 text-white rounded-full p-2 shadow-lg">
+                <Icon name="Crown" size={24} />
+              </div>
+            </div>
             <CardContent className="pt-12 pb-12">
               <div className="text-center mb-8">
                 <Badge className="mb-4 bg-amber-500 text-white">Премиум</Badge>
