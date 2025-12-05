@@ -83,10 +83,10 @@ export default function PricingSection() {
 
               <Button 
                 size="lg" 
-                className="w-full bg-accent hover:bg-accent/90 text-primary font-bold py-6"
+                className="w-full bg-accent hover:bg-accent/90 text-primary font-bold py-6 h-auto"
                 onClick={() => navigate('/payment-form?product=course')}
               >
-                Купить курс
+                <span className="leading-tight">Купить доступ<br />к курсу</span>
               </Button>
 
               <p className="text-[10px] text-muted-foreground text-center mt-3">
