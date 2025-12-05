@@ -223,9 +223,17 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
             query = f"SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM t_p19166386_bankruptcy_course_cr.users WHERE email = '{safe_email}'"
             print(f"[LOGIN] Full SQL query: {query}")
             
-            cur.execute(query)
-            row = cur.fetchone()
-            print(f"[LOGIN] Query executed successfully, row fetched: {row is not None}")
+            try:
+                cur.execute(query)
+                row = cur.fetchone()
+                print(f"[LOGIN] Query executed successfully, row fetched: {row is not None}")
+            except Exception as e:
+                print(f"[LOGIN] EXECUTE FAILED: {str(e)}")
+                print(f"[LOGIN] Error type: {type(e).__name__}")
+                print(f"[LOGIN] Error module: {type(e).__module__}")
+                import traceback
+                print(f"[LOGIN] Full traceback: {traceback.format_exc()}")
+                raise
             if not row:
                 user = None
             else:
