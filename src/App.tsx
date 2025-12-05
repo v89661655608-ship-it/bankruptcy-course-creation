@@ -25,6 +25,7 @@ import Support from "./pages/Support";
 import AdminSupport from "./pages/AdminSupport";
 import DocumentConstructor from "./pages/DocumentConstructor";
 import Settings from "./pages/Settings";
+import TestPayment from "./pages/TestPayment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/payment" element={<Payment />} />
             <Route path="/payment-form" element={<PaymentForm />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/test-payment" element={<TestPayment />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
