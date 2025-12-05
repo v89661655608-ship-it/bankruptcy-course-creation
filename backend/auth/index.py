@@ -214,10 +214,26 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
             # Use string formatting instead of parameterized query (Simple Query Protocol requirement)
             # Escape single quotes by doubling them for SQL safety
             safe_email = email.replace("'", "''")
-            cur.execute(
-                f"SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users WHERE email = '{safe_email}'"
-            )
-            row = cur.fetchone()
+            query = f"SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users WHERE email = '{safe_email}'"
+            print(f"[LOGIN] Full SQL query: {query}")
+            
+            # Try to execute the query
+            try:
+                cur.execute(query)
+                row = cur.fetchone()
+                print(f"[LOGIN] Query executed successfully, row fetched: {row is not None}")
+            except Exception as e:
+                print(f"[LOGIN] Query failed with error: {str(e)}")
+                print(f"[LOGIN] Error type: {type(e).__name__}")
+                # Try a simpler query to see if it's the WHERE clause
+                try:
+                    print(f"[LOGIN] Trying SELECT * FROM users LIMIT 1")
+                    cur.execute("SELECT * FROM users LIMIT 1")
+                    test_row = cur.fetchone()
+                    print(f"[LOGIN] Simple query worked! Got row: {test_row is not None}")
+                except Exception as e2:
+                    print(f"[LOGIN] Even simple query failed: {str(e2)}")
+                raise
             if not row:
                 user = None
             else:
