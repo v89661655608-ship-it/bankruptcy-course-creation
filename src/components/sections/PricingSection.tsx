@@ -154,14 +154,18 @@ export default function PricingSection() {
                   <Icon name="Check" className="text-purple-600 flex-shrink-0 mt-1" size={20} />
                   <span className="text-sm">Полная конфиденциальность</span>
                 </div>
+                <div className="flex gap-3">
+                  <Icon name="Check" className="text-purple-600 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Безопасное банкротство с сопровождением на любом этапе</span>
+                </div>
               </div>
 
               <Button 
                 size="lg" 
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-6"
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 h-auto"
                 onClick={() => navigate('/payment-form?product=chat')}
               >
-                Купить доступ к чату
+                <span className="leading-tight">Купить доступ<br />к чату</span>
               </Button>
 
               <p className="text-[10px] text-muted-foreground text-center mt-3">
