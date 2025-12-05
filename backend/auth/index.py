@@ -78,6 +78,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     except Exception as e:
+        print(f"[ERROR] Exception in handler: {str(e)}")
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
         return {
             'statusCode': 500,
             'headers': headers,
@@ -138,6 +141,8 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
     email = data.get('email')
     password = data.get('password')
     
+    print(f"[LOGIN] Attempting login for email: {email}")
+    
     if not email or not password:
         return {
             'statusCode': 400,
@@ -148,19 +153,24 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
     conn = get_db_connection()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            print(f"[LOGIN] Executing SELECT query for email: {email}")
             cur.execute(
                 "SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM t_p19166386_bankruptcy_course_cr.users WHERE email = %s",
                 (email,)
             )
             user = cur.fetchone()
             
+            print(f"[LOGIN] User found: {user is not None}")
+            
             if not user:
+                print(f"[LOGIN] User not found for email: {email}")
                 return {
                     'statusCode': 401,
                     'headers': headers,
                     'body': json.dumps({'error': 'Invalid credentials'})
                 }
             
+            print(f"[LOGIN] Checking password for user {user['id']}")
             if not bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
                 return {
                     'statusCode': 401,
