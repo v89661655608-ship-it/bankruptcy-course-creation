@@ -141,7 +141,7 @@ export default function ChatSupportSection({ user }: ChatSupportSectionProps) {
                   <p className="font-bold text-purple-900">Доступен только для владельцев курса</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Докупите чат отдельно за 3 999 ₽/мес или купите выгодный комбо курс+чат за 4 999 ₽ (экономия 1 999 ₽)
+                  Докупите чат отдельно за 3 999 ₽/мес или купите выгодный комбо курс+чат за 5 999 ₽ (экономия 1 900 ₽)
                 </p>
               </div>
 
