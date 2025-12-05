@@ -14,9 +14,10 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 def get_db_connection():
-    conn = psycopg2.connect(os.environ['DATABASE_URL'])
-    with conn.cursor() as cur:
-        cur.execute("SET search_path TO t_p19166386_bankruptcy_course_cr, public")
+    conn = psycopg2.connect(
+        os.environ['DATABASE_URL'],
+        options='-c search_path=t_p19166386_bankruptcy_course_cr,public'
+    )
     return conn
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
