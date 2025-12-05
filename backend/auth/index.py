@@ -14,11 +14,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 def get_db_connection():
-    conn = psycopg2.connect(
-        os.environ['DATABASE_URL'],
-        options='-c search_path=t_p19166386_bankruptcy_course_cr,public'
-    )
-    return conn
+    return psycopg2.connect(os.environ['DATABASE_URL'])
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
@@ -116,7 +112,7 @@ def register_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, An
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                "INSERT INTO users (email, password_hash, full_name, telegram_username) VALUES (%s, %s, %s, %s) RETURNING id, email, full_name, is_admin, created_at",
+                "INSERT INTO t_p19166386_bankruptcy_course_cr.users (email, password_hash, full_name, telegram_username) VALUES (%s, %s, %s, %s) RETURNING id, email, full_name, is_admin, created_at",
                 (email, password_hash, full_name, telegram_username if telegram_username else None)
             )
             user = cur.fetchone()
@@ -168,7 +164,7 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             print(f"[LOGIN] Executing SELECT query for email: {email}")
             cur.execute(
-                "SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users WHERE email = %s",
+                "SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM t_p19166386_bankruptcy_course_cr.users WHERE email = %s",
                 (email,)
             )
             user = cur.fetchone()
@@ -233,7 +229,7 @@ def validate_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute(
-                    "SELECT COUNT(*) as has_access FROM user_purchases WHERE user_id = %s AND payment_status = 'completed' AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)",
+                    "SELECT COUNT(*) as has_access FROM t_p19166386_bankruptcy_course_cr.user_purchases WHERE user_id = %s AND payment_status = 'completed' AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)",
                     (user_id,)
                 )
                 access_check = cur.fetchone()
@@ -241,7 +237,7 @@ def validate_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
                 
                 # Получаем chat_expires_at и expires_at из users
                 cur.execute(
-                    "SELECT chat_expires_at, expires_at FROM users WHERE id = %s",
+                    "SELECT chat_expires_at, expires_at FROM t_p19166386_bankruptcy_course_cr.users WHERE id = %s",
                     (user_id,)
                 )
                 user_data = cur.fetchone()
@@ -331,7 +327,7 @@ def change_password(data: Dict[str, Any], event: Dict[str, Any], headers: Dict[s
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                "SELECT password_hash FROM users WHERE id = %s",
+                "SELECT password_hash FROM t_p19166386_bankruptcy_course_cr.users WHERE id = %s",
                 (user_id,)
             )
             user = cur.fetchone()
@@ -355,7 +351,7 @@ def change_password(data: Dict[str, Any], event: Dict[str, Any], headers: Dict[s
             new_password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             
             cur.execute(
-                "UPDATE users SET password_hash = %s, password_changed_by_user = TRUE WHERE id = %s",
+                "UPDATE t_p19166386_bankruptcy_course_cr.users SET password_hash = %s, password_changed_by_user = TRUE WHERE id = %s",
                 (new_password_hash, user_id)
             )
             conn.commit()
@@ -384,8 +380,8 @@ def verify_chat_token(token: str, headers: Dict[str, str]) -> Dict[str, Any]:
             cur.execute(
                 """SELECT ct.id, ct.user_id, ct.email, ct.product_type, ct.expires_at, ct.is_active, ct.created_at,
                           u.full_name
-                   FROM chat_tokens ct
-                   JOIN users u ON ct.user_id = u.id
+                   FROM t_p19166386_bankruptcy_course_cr.chat_tokens ct
+                   JOIN t_p19166386_bankruptcy_course_cr.users u ON ct.user_id = u.id
                    WHERE ct.token = %s""",
                 (token,)
             )
