@@ -270,7 +270,7 @@ export default function PricingSection() {
               </div>
 
               <p className="text-sm text-muted-foreground text-center mt-4">
-                🔥 Самый популярный пакет! Экономия 1 999 ₽
+                🔥 Самый популярный пакет! Экономия 1 900 ₽
               </p>
             </CardContent>
           </Card>
