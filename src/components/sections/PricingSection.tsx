@@ -201,9 +201,9 @@ export default function PricingSection() {
             <CardContent className="pt-12 pb-12">
               <div className="text-center mb-8">
                 <Badge className="mb-4 bg-green-100 text-green-700 border-green-300">Комбо-пакет</Badge>
-                <div className="flex items-center justify-center gap-3 mb-2">
-                  <span className="text-2xl text-muted-foreground line-through whitespace-nowrap">7 899 ₽</span>
-                  <span className="text-5xl font-bold text-green-600 whitespace-nowrap">5 999 ₽</span>
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <span className="text-xl text-muted-foreground line-through">7 899 ₽</span>
+                  <span className="text-4xl font-bold text-green-600">5 999 ₽</span>
                 </div>
                 <p className="text-muted-foreground">Курс + Месяц чата</p>
               </div>
@@ -239,10 +239,10 @@ export default function PricingSection() {
 
               <Button 
                 size="lg" 
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 h-auto"
                 onClick={() => navigate('/payment-form?product=combo')}
               >
-                Купить комбо со скидкой
+                <span className="leading-tight">Купить комбо<br />со скидкой</span>
               </Button>
 
               <p className="text-[10px] text-muted-foreground text-center mt-3">
@@ -314,10 +314,10 @@ export default function PricingSection() {
 
               <Button 
                 size="lg" 
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-6"
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-6 h-auto"
                 onClick={() => window.open('https://t.me/bankrotkurs', '_blank')}
               >
-                Записаться на консультацию
+                <span className="leading-tight">Записаться на<br />консультацию</span>
               </Button>
 
               <p className="text-[10px] text-muted-foreground text-center mt-3">
