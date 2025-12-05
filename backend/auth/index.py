@@ -215,24 +215,16 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
     try:
         with conn.cursor() as cur:
             print(f"[LOGIN] Executing SELECT query for email: {email}")
-            # Use string formatting instead of parameterized query (Simple Query Protocol requirement)
-            # Escape single quotes by doubling them for SQL safety
-            safe_email = email.replace("'", "''")
             
-            # CRITICAL: goauth-proxy bug - WHERE clause doesn't work with Simple Query Protocol
-            # Workaround: Use CTE (Common Table Expression) to bypass the limitation
-            query = f"""
-            WITH all_users AS (
-                SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users
-            )
-            SELECT * FROM all_users WHERE email = '{safe_email}'
-            """
+            # CRITICAL: goauth-proxy bug - WHERE clause with literals doesn't work at all
+            # Workaround: Fetch ALL users and filter in Python (acceptable for small user tables)
+            query = "SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users"
             print(f"[LOGIN] Full SQL query: {query}")
             
             try:
                 cur.execute(query)
-                row = cur.fetchone()
-                print(f"[LOGIN] Query executed successfully, row fetched: {row is not None}")
+                rows = cur.fetchall()
+                print(f"[LOGIN] Query executed successfully, fetched {len(rows)} users")
             except Exception as e:
                 print(f"[LOGIN] EXECUTE FAILED: {str(e)}")
                 print(f"[LOGIN] Error type: {type(e).__name__}")
@@ -240,11 +232,15 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
                 import traceback
                 print(f"[LOGIN] Full traceback: {traceback.format_exc()}")
                 raise
-            if not row:
-                user = None
-            else:
-                columns = ['id', 'email', 'password_hash', 'full_name', 'is_admin', 'chat_expires_at', 'expires_at', 'password_changed_by_user']
-                user = dict(zip(columns, row))
+            
+            # Filter in Python instead of SQL WHERE clause
+            columns = ['id', 'email', 'password_hash', 'full_name', 'is_admin', 'chat_expires_at', 'expires_at', 'password_changed_by_user']
+            user = None
+            for row in rows:
+                user_dict = dict(zip(columns, row))
+                if user_dict['email'].lower() == email.lower():
+                    user = user_dict
+                    break
             
             print(f"[LOGIN] User found: {user is not None}")
             
