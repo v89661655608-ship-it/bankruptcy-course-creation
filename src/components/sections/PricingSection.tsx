@@ -43,7 +43,7 @@ export default function PricingSection() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
           <Card className="border-2 hover:border-accent transition-all hover:shadow-2xl">
             <CardContent className="pt-12 pb-12">
               <div className="text-center mb-8">
@@ -274,6 +274,71 @@ export default function PricingSection() {
               </p>
             </CardContent>
           </Card>
+
+          <Card className="border-2 border-amber-400 hover:border-amber-500 transition-all hover:shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50">
+            <CardContent className="pt-12 pb-12">
+              <div className="text-center mb-8">
+                <Badge className="mb-4 bg-amber-500 text-white">Премиум</Badge>
+                <div className="text-5xl font-bold mb-2 text-amber-600">9 999 ₽</div>
+                <p className="text-muted-foreground">60 минут онлайн</p>
+              </div>
+
+              <Separator className="mb-8" />
+
+              <div className="space-y-3 mb-8">
+                <div className="flex gap-3">
+                  <Icon name="Check" className="text-amber-500 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm font-semibold">Личная консультация с Валентиной Голосовой</span>
+                </div>
+                <div className="flex gap-3">
+                  <Icon name="Check" className="text-amber-500 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Разбор сложных сделок и субсидиарки</span>
+                </div>
+                <div className="flex gap-3">
+                  <Icon name="Check" className="text-amber-500 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Экспертный анализ документов</span>
+                </div>
+                <div className="flex gap-3">
+                  <Icon name="Check" className="text-amber-500 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Персональная стратегия банкротства</span>
+                </div>
+                <div className="flex gap-3">
+                  <Icon name="Check" className="text-amber-500 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Защита от агрессивных кредиторов</span>
+                </div>
+                <div className="flex gap-3">
+                  <Icon name="Check" className="text-amber-500 flex-shrink-0 mt-1" size={20} />
+                  <span className="text-sm">Оценка рисков потери имущества</span>
+                </div>
+              </div>
+
+              <Button 
+                size="lg" 
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-6"
+                onClick={() => window.open('https://t.me/bankrotkurs', '_blank')}
+              >
+                Записаться на консультацию
+              </Button>
+
+              <p className="text-[10px] text-muted-foreground text-center mt-3">
+                Для записи напишите в Telegram{' '}
+                <a href="https://t.me/bankrotkurs" target="_blank" className="underline hover:text-primary">
+                  @bankrotkurs
+                </a>
+              </p>
+
+              <div className="mt-4 p-3 bg-amber-100 border border-amber-300 rounded-lg">
+                <p className="text-xs text-amber-800 font-semibold flex items-center gap-2">
+                  <Icon name="Star" size={16} />
+                  ⚡ 15+ лет практики арбитражного управляющего
+                </p>
+              </div>
+
+              <p className="text-sm text-muted-foreground text-center mt-4">
+                Для сложных случаев и спорных ситуаций
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="mt-16 bg-white/10 backdrop-blur-sm rounded-2xl p-8 max-w-4xl mx-auto">
@@ -304,6 +369,15 @@ export default function PricingSection() {
               </p>
               <p className="text-sm opacity-90 pl-7">
                 Да, доступ к чату с юристами можно купить отдельно за 3 999 ₽ на месяц.
+              </p>
+            </div>
+            <div className="bg-white/5 rounded-lg p-4">
+              <p className="font-semibold mb-2 flex items-center gap-2">
+                <Icon name="HelpCircle" size={18} className="text-accent" />
+                В каких случаях нужна личная консультация?
+              </p>
+              <p className="text-sm opacity-90 pl-7">
+                Если у вас сложная сделка, риск субсидиарной ответственности, претензии бывших партнёров, агрессивные кредиторы или нужен анализ документов — личная консультация поможет разработать стратегию защиты.
               </p>
             </div>
           </div>
