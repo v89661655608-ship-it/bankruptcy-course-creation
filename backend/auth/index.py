@@ -14,7 +14,18 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 def get_db_connection():
-    return psycopg2.connect(os.environ['DATABASE_URL'])
+    conn = psycopg2.connect(os.environ['DATABASE_URL'])
+    # Log current user and search_path for debugging
+    with conn.cursor() as cur:
+        cur.execute("SELECT current_user, current_database(), current_schema()")
+        user_info = cur.fetchone()
+        print(f"[DB] Connected as user: {user_info[0]}, database: {user_info[1]}, schema: {user_info[2]}")
+        
+        # Try to query pg_namespace to see available schemas
+        cur.execute("SELECT schema_name FROM information_schema.schemata")
+        schemas = cur.fetchall()
+        print(f"[DB] Available schemas: {[s[0] for s in schemas]}")
+    return conn
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
