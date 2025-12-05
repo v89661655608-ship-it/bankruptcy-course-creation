@@ -369,30 +369,30 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
             payment_id=payment_id
         )
         
-        if current_product_type in ['course', 'combo']:
-            print(f"[WEBHOOK] Sending course credentials to {user['email']}")
-            conn_main = get_db_connection()
-            try:
-                with conn_main.cursor(cursor_factory=RealDictCursor) as cur:
-                    temp_password = str(uuid.uuid4())[:8]
-                    temp_password_hash = bcrypt.hashpw(temp_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-                    
-                    cur.execute(
-                        "UPDATE users SET password_hash = %s WHERE id = %s",
-                        (temp_password_hash, int(user_id))
-                    )
-                    conn_main.commit()
-                    
-                    print(f"[WEBHOOK] Password updated, sending email with password: {temp_password}")
-                    send_course_credentials_email(
-                        user_email=user['email'],
-                        user_name=user['full_name'],
-                        password=temp_password,
-                        product_type=current_product_type
-                    )
-                    print(f"[WEBHOOK] Email sent successfully!")
-            finally:
-                conn_main.close()
+        # Отправляем письмо с доступом для всех типов продуктов
+        print(f"[WEBHOOK] Sending credentials to {user['email']} for product_type={current_product_type}")
+        conn_main = get_db_connection()
+        try:
+            with conn_main.cursor(cursor_factory=RealDictCursor) as cur:
+                temp_password = str(uuid.uuid4())[:8]
+                temp_password_hash = bcrypt.hashpw(temp_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                
+                cur.execute(
+                    "UPDATE users SET password_hash = %s WHERE id = %s",
+                    (temp_password_hash, int(user_id))
+                )
+                conn_main.commit()
+                
+                print(f"[WEBHOOK] Password updated, sending email with password: {temp_password}")
+                send_course_credentials_email(
+                    user_email=user['email'],
+                    user_name=user['full_name'],
+                    password=temp_password,
+                    product_type=current_product_type
+                )
+                print(f"[WEBHOOK] Email sent successfully!")
+        finally:
+            conn_main.close()
     
     return {
         'statusCode': 200,
@@ -708,10 +708,49 @@ def send_course_credentials_email(user_email: str, user_name: str, password: str
     if not all([smtp_host, smtp_user, smtp_password]):
         return
     
-    subject = 'Доступ к курсу "Банкротство физических лиц"'
-    
-    chat_bonus_block = ''
-    if product_type == 'combo':
+    # Настройка заголовка и основного контента в зависимости от типа продукта
+    if product_type == 'chat':
+        subject = 'Доступ к чату с поддержкой — bankrot-kurs.ru'
+        title = '💬 Добро пожаловать в чат!'
+        main_text = 'Спасибо за оплату! Ваш доступ к <strong>чату с поддержкой</strong> активирован на <strong>30 дней</strong>.'
+        course_block = ''
+        chat_bonus_block = '''
+        <div style="background: linear-gradient(135deg, #e8f4fd 0%, #e0f2f1 100%); padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #00897b;">
+            <h2 style="margin-top: 0; color: #00897b; font-size: 20px;">💬 ВАШ ДОСТУП К ЧАТУ</h2>
+            
+            <p style="margin: 15px 0;">
+                Доступ к чату активен на <strong>30 дней</strong>!
+            </p>
+            
+            <div style="background: white; padding: 20px; border-radius: 6px; margin-top: 20px;">
+                <h3 style="margin-top: 0; font-size: 16px; color: #333;">Как войти в чат:</h3>
+                <ol style="margin: 10px 0; padding-left: 20px;">
+                    <li style="margin: 8px 0;">Войдите в личный кабинет на сайте</li>
+                    <li style="margin: 8px 0;">Перейдите в раздел "Поддержка"</li>
+                    <li style="margin: 8px 0;">Задавайте вопросы нашим специалистам!</li>
+                </ol>
+            </div>
+            
+            <p style="font-size: 13px; color: #666; margin-top: 15px;">
+                ✅ Доступ активен в течение месяца с момента оплаты
+            </p>
+        </div>
+        '''
+    elif product_type == 'combo':
+        subject = 'Доступ к курсу и чату — bankrot-kurs.ru'
+        title = '🎉 Добро пожаловать на курс!'
+        main_text = 'Спасибо за покупку! Ваш доступ к курсу <strong>"Банкротство физических лиц - самостоятельно"</strong> активирован на <strong>3 месяца</strong>.'
+        course_block = '''
+        <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; margin: 25px 0;">
+            <h3 style="margin-top: 0; color: #0066cc; font-size: 18px;">📚 Что вас ждёт в курсе:</h3>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li style="margin: 8px 0;">7 подробных видеомодулей</li>
+                <li style="margin: 8px 0;">Все шаблоны документов для подачи</li>
+                <li style="margin: 8px 0;">Пошаговые инструкции</li>
+                <li style="margin: 8px 0;">Доступ на 3 месяца</li>
+            </ul>
+        </div>
+        '''
         chat_bonus_block = '''
         <div style="background: linear-gradient(135deg, #e8f4fd 0%, #e0f2f1 100%); padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #00897b;">
             <h2 style="margin-top: 0; color: #00897b; font-size: 20px;">💬 БОНУС: ДОСТУП К ЧАТУ С ПОДДЕРЖКОЙ</h2>
@@ -734,6 +773,22 @@ def send_course_credentials_email(user_email: str, user_name: str, password: str
             </p>
         </div>
         '''
+    else:  # course
+        subject = 'Доступ к курсу "Банкротство физических лиц"'
+        title = '🎉 Добро пожаловать на курс!'
+        main_text = 'Спасибо за покупку! Ваш доступ к курсу <strong>"Банкротство физических лиц - самостоятельно"</strong> активирован на <strong>3 месяца</strong>.'
+        course_block = '''
+        <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; margin: 25px 0;">
+            <h3 style="margin-top: 0; color: #0066cc; font-size: 18px;">📚 Что вас ждёт в курсе:</h3>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li style="margin: 8px 0;">7 подробных видеомодулей</li>
+                <li style="margin: 8px 0;">Все шаблоны документов для подачи</li>
+                <li style="margin: 8px 0;">Пошаговые инструкции</li>
+                <li style="margin: 8px 0;">Доступ на 3 месяца</li>
+            </ul>
+        </div>
+        '''
+        chat_bonus_block = ''
     
     html_body = f'''
 <!DOCTYPE html>
@@ -743,13 +798,13 @@ def send_course_credentials_email(user_email: str, user_name: str, password: str
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Добро пожаловать на курс!</h1>
+        <h1 style="color: white; margin: 0; font-size: 28px;">{title}</h1>
     </div>
     
     <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
         <p style="font-size: 16px; margin-bottom: 20px;">Здравствуйте, <strong>{user_name}</strong>!</p>
         
-        <p style="font-size: 16px; margin-bottom: 20px;">Спасибо за покупку! Ваш доступ к курсу <strong>"Банкротство физических лиц - самостоятельно"</strong> активирован на <strong>3 месяца</strong>.</p>
+        <p style="font-size: 16px; margin-bottom: 20px;">{main_text}</p>
         
         <div style="background: white; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #667eea;">
             <h2 style="margin-top: 0; color: #667eea; font-size: 20px;">📝 Ваши данные для входа:</h2>
@@ -761,15 +816,7 @@ def send_course_credentials_email(user_email: str, user_name: str, password: str
             <p style="margin: 15px 0;"><strong>Пароль:</strong> <span style="background: #fff3cd; padding: 5px 10px; border-radius: 4px; font-family: monospace; font-weight: bold;">{password}</span></p>
         </div>
         
-        <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; margin: 25px 0;">
-            <h3 style="margin-top: 0; color: #0066cc; font-size: 18px;">📚 Что вас ждёт в курсе:</h3>
-            <ul style="margin: 10px 0; padding-left: 20px;">
-                <li style="margin: 8px 0;">7 подробных видеомодулей</li>
-                <li style="margin: 8px 0;">Все шаблоны документов для подачи</li>
-                <li style="margin: 8px 0;">Пошаговые инструкции</li>
-                <li style="margin: 8px 0;">Доступ на 3 месяца</li>
-            </ul>
-        </div>
+        {course_block}
         
         {chat_bonus_block}
         
@@ -782,7 +829,7 @@ def send_course_credentials_email(user_email: str, user_name: str, password: str
         </p>
         
         <div style="text-align: center; margin-top: 30px;">
-            <a href="https://bankrot-kurs.ru/login" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Начать обучение</a>
+            <a href="https://bankrot-kurs.ru/login" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Войти в личный кабинет</a>
         </div>
         
         <p style="text-align: center; margin-top: 30px; font-size: 14px; color: #999;">
