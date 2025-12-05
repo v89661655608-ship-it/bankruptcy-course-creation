@@ -219,8 +219,12 @@ def login_user(data: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
             # Escape single quotes by doubling them for SQL safety
             safe_email = email.replace("'", "''")
             
-            # Use full table name with schema to avoid permission issues
-            query = f"SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM t_p19166386_bankruptcy_course_cr.users WHERE email = '{safe_email}'"
+            # Set schema first, then use simple table name
+            print(f"[LOGIN] Setting schema to t_p19166386_bankruptcy_course_cr")
+            cur.execute("SET search_path TO t_p19166386_bankruptcy_course_cr, public")
+            
+            # Now use simple table name without schema prefix
+            query = f"SELECT id, email, password_hash, full_name, is_admin, chat_expires_at, expires_at, password_changed_by_user FROM users WHERE email = '{safe_email}'"
             print(f"[LOGIN] Full SQL query: {query}")
             
             try:
