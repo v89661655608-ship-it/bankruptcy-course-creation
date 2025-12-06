@@ -900,8 +900,13 @@ def send_consultation_confirmation_email(user_email: str, user_name: str, amount
     smtp_user = os.environ.get('SMTP_USER')
     smtp_password = os.environ.get('SMTP_PASSWORD')
     
+    print(f"[EMAIL_CONSULTATION] Starting to send email to {user_email}, amount={amount}")
+    print(f"[EMAIL_CONSULTATION] SMTP config: host={smtp_host}, port={smtp_port}, user={smtp_user}, pass={'***' if smtp_password else 'NONE'}")
+    
     if not all([smtp_host, smtp_user, smtp_password]):
-        return
+        error_msg = f"SMTP credentials missing! host={smtp_host}, user={smtp_user}, password={'set' if smtp_password else 'NONE'}"
+        print(f"[EMAIL_CONSULTATION] ERROR: {error_msg}")
+        raise Exception(error_msg)
     
     whatsapp_url = 'https://wa.me/79661655608'
     subject = 'Оплата консультации подтверждена — bankrot-kurs.ru'
@@ -961,23 +966,20 @@ def send_consultation_confirmation_email(user_email: str, user_name: str, amount
 </html>
     '''
     
-    try:
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = smtp_user
-        msg['To'] = user_email
-        
-        msg.attach(MIMEText(html_body, 'html', 'utf-8'))
-        
-        print(f"[EMAIL] Sending consultation confirmation to {user_email}")
-        with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
-            server.login(smtp_user, smtp_password)
-            server.send_message(msg)
-        print(f"[EMAIL] Successfully sent consultation confirmation to {user_email}")
-    except Exception as e:
-        print(f"[EMAIL] Error sending consultation confirmation to {user_email}: {e}")
-        import traceback
-        print(f"[EMAIL] Traceback: {traceback.format_exc()}")
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = smtp_user
+    msg['To'] = user_email
+    
+    msg.attach(MIMEText(html_body, 'html', 'utf-8'))
+    
+    print(f"[EMAIL_CONSULTATION] Connecting to SMTP server {smtp_host}:{smtp_port}")
+    with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+        print(f"[EMAIL_CONSULTATION] Logging in as {smtp_user}")
+        server.login(smtp_user, smtp_password)
+        print(f"[EMAIL_CONSULTATION] Sending message to {user_email}")
+        server.send_message(msg)
+    print(f"[EMAIL_CONSULTATION] ✅ Successfully sent consultation confirmation to {user_email}")
 
 def check_course_access(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
     '''Проверяет, есть ли у email активная подписка на курс'''
