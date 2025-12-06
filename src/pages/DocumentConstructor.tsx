@@ -74,6 +74,12 @@ export default function DocumentConstructor() {
     setIsGenerating(true);
     
     try {
+      console.log('🏠 Отправка данных на генерацию:', {
+        propertyData,
+        realEstateCount: propertyData?.realEstate?.length || 0,
+        vehiclesCount: propertyData?.vehicles?.length || 0
+      });
+      
       const response = await fetch(funcUrls["document-generator"], {
         method: 'POST',
         headers: {
