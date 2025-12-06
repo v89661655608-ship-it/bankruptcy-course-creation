@@ -8,7 +8,7 @@ interface WelcomeVideoProps {
 }
 
 export default function WelcomeVideo({ files }: WelcomeVideoProps) {
-  const welcomeVideos = files.filter(f => f.isWelcomeVideo);
+  const welcomeVideos = files.filter(f => f.is_welcome_video);
   const [playbackRate, setPlaybackRate] = useState<{[key: number]: number}>({});
 
   if (welcomeVideos.length === 0) {
@@ -48,7 +48,7 @@ export default function WelcomeVideo({ files }: WelcomeVideoProps) {
                   controls 
                   className="w-full h-full"
                 >
-                  <source src={file.fileUrl} type={file.fileType} />
+                  <source src={file.file_url} type={file.file_type} />
                   Ваш браузер не поддерживает видео.
                 </video>
               </div>
