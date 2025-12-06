@@ -14,6 +14,7 @@ const DEFAULT_REASON = "Такая ситуация возникла в связ
 
 export default function DebtReasonForm({ onSubmit }: DebtReasonFormProps) {
   const [reason, setReason] = useState<string>("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('debtReasonData');
@@ -32,11 +33,24 @@ export default function DebtReasonForm({ onSubmit }: DebtReasonFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({ reason });
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
   };
 
   return (
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-4">
+        {showSuccess && (
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-start gap-2">
+              <Icon name="CheckCircle" size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-green-900">
+                <p className="font-medium">Изменения сохранены!</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <div className="flex items-start gap-2">
             <Icon name="Info" size={20} className="text-amber-600 mt-0.5 flex-shrink-0" />
