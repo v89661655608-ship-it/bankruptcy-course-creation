@@ -180,46 +180,32 @@ def delete_user(conn, user_id: int) -> Dict[str, Any]:
         print(f'[DEBUG] Starting cascade delete for user: {user_id}')
         
         # Удаляем связанные данные в правильном порядке (от дочерних к родительским)
+        # Используем try-except для каждой таблицы, чтобы продолжить даже при ошибках
         
-        # 1. Токены сброса пароля
-        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.password_reset_tokens WHERE user_id = {user_id}")
-        print(f'[DEBUG] Deleted password_reset_tokens')
+        tables_to_delete = [
+            ('password_reset_tokens', f"DELETE FROM t_p19166386_bankruptcy_course_cr.password_reset_tokens WHERE user_id = {user_id}"),
+            ('support_message_reactions', f"""
+                DELETE FROM t_p19166386_bankruptcy_course_cr.support_message_reactions 
+                WHERE message_id IN (
+                    SELECT id FROM t_p19166386_bankruptcy_course_cr.support_messages 
+                    WHERE user_id = {user_id}
+                )
+            """),
+            ('support_messages', f"DELETE FROM t_p19166386_bankruptcy_course_cr.support_messages WHERE user_id = {user_id}"),
+            ('chat_tokens', f"DELETE FROM t_p19166386_bankruptcy_course_cr.chat_tokens WHERE user_id = {user_id}"),
+            ('chat_access', f"DELETE FROM t_p19166386_bankruptcy_course_cr.chat_access WHERE user_id = {user_id}"),
+            ('user_progress', f"DELETE FROM t_p19166386_bankruptcy_course_cr.user_progress WHERE user_id = {user_id}"),
+            ('user_purchases', f"DELETE FROM t_p19166386_bankruptcy_course_cr.user_purchases WHERE user_id = {user_id}"),
+        ]
         
-        # 2. Реакции на сообщения поддержки (сначала реакции, потом сами сообщения)
-        cur.execute(f"""
-            DELETE FROM t_p19166386_bankruptcy_course_cr.support_message_reactions 
-            WHERE message_id IN (
-                SELECT id FROM t_p19166386_bankruptcy_course_cr.support_messages 
-                WHERE user_id = {user_id}
-            )
-        """)
-        print(f'[DEBUG] Deleted support_message_reactions')
+        for table_name, query in tables_to_delete:
+            try:
+                cur.execute(query)
+                print(f'[DEBUG] Deleted from {table_name}')
+            except Exception as table_error:
+                print(f'[WARNING] Could not delete from {table_name}: {str(table_error)}')
         
-        # 3. Сообщения поддержки
-        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.support_messages WHERE user_id = {user_id}")
-        print(f'[DEBUG] Deleted support_messages')
-        
-        # 4. Токены чата
-        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.chat_tokens WHERE user_id = {user_id}")
-        print(f'[DEBUG] Deleted chat_tokens')
-        
-        # 5. Пул токенов чата
-        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.chat_tokens_pool WHERE user_id = {user_id}")
-        print(f'[DEBUG] Deleted chat_tokens_pool')
-        
-        # 6. Доступ к чату
-        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.chat_access WHERE user_id = {user_id}")
-        print(f'[DEBUG] Deleted chat_access')
-        
-        # 7. Прогресс пользователя
-        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.user_progress WHERE user_id = {user_id}")
-        print(f'[DEBUG] Deleted user_progress')
-        
-        # 8. Покупки пользователя
-        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.user_purchases WHERE user_id = {user_id}")
-        print(f'[DEBUG] Deleted user_purchases')
-        
-        # 9. Наконец, удаляем самого пользователя
+        # Удаляем самого пользователя (это критично, поэтому не ловим ошибку)
         cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.users WHERE id = {user_id}")
         print(f'[DEBUG] Deleted user')
         
