@@ -494,26 +494,27 @@ def generate_docx_document(
     if property and property.get('realEstate'):
         real_estate = property.get('realEstate', [])
         if real_estate:
-            item = real_estate[0]
-            area_text = str(item.get('area', ''))
-            land_area = item.get('landArea')
-            
-            # Формируем текст о земельном участке только если он указан
-            land_text = ""
-            if land_area and land_area != 0:
-                land_text = f" с земельным участком площадью {land_area} кв. м."
-            
-            if item.get('isSoleResidence', False):
-                p6 = doc.add_paragraph(f"В собственности Должника находится {item.get('type', 'недвижимость')}, общей площадью {area_text} кв. м.{land_text} по адресу: {item.get('address', 'Место для ввода текста.')}, являющийся единственным пригодным для постоянного проживания помещением для него и членов его семьи и не подлежит реализации.")
-            else:
-                p6 = doc.add_paragraph(f"В собственности Должника находится {item.get('type', 'недвижимость')}, общей площадью {area_text} кв. м.{land_text} по адресу: {item.get('address', 'Место для ввода текста.')}.")
-            
-            p6_format = p6.paragraph_format
-            p6_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-            p6_format.first_line_indent = Cm(1)
-            p6_format.space_before = Pt(0)
-            p6_format.space_after = Pt(0)
-            p6_format.line_spacing = 1.0
+            # Обрабатываем все объекты недвижимости
+            for idx, item in enumerate(real_estate):
+                area_text = str(item.get('area', ''))
+                land_area = item.get('landArea')
+                
+                # Формируем текст о земельном участке только если он указан
+                land_text = ""
+                if land_area and land_area != 0:
+                    land_text = f" с земельным участком площадью {land_area} кв. м."
+                
+                if item.get('isSoleResidence', False):
+                    p6 = doc.add_paragraph(f"В собственности Должника находится {item.get('type', 'недвижимость')}, общей площадью {area_text} кв. м.{land_text} по адресу: {item.get('address', 'Место для ввода текста.')}, являющийся единственным пригодным для постоянного проживания помещением для него и членов его семьи и не подлежит реализации.")
+                else:
+                    p6 = doc.add_paragraph(f"В собственности Должника находится {item.get('type', 'недвижимость')}, общей площадью {area_text} кв. м.{land_text} по адресу: {item.get('address', 'Место для ввода текста.')}.")
+                
+                p6_format = p6.paragraph_format
+                p6_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                p6_format.first_line_indent = Cm(1)
+                p6_format.space_before = Pt(0)
+                p6_format.space_after = Pt(0)
+                p6_format.line_spacing = 1.0
     else:
         p6 = doc.add_paragraph("В собственности Должника находится недвижимое имущество, являющееся единственным пригодным для постоянного проживания помещением для него и членов его семьи.")
         p6_format = p6.paragraph_format
@@ -526,19 +527,22 @@ def generate_docx_document(
     if property and property.get('vehicles'):
         vehicles = property.get('vehicles', [])
         if vehicles:
-            vehicle = vehicles[0]
-            vehicle_brand = vehicle.get('brand', 'Место для ввода текста.')
-            vehicle_model = vehicle.get('model', 'Место для ввода текста.')
-            vehicle_year = vehicle.get('year', 'Место для ввода текста.')
-            vehicle_reg = vehicle.get('registrationNumber', 'Место для ввода текста.')
-            vehicle_vin = vehicle.get('vin', 'Место для ввода текста.')
-            p7 = doc.add_paragraph(f"Кроме того, в собственности Должника находится автомобиль марки {vehicle_brand} {vehicle_model} {vehicle_year} г., государственный регистрационный номер: {vehicle_reg}, идентификационный номер VIN: {vehicle_vin}.")
-            p7_format = p7.paragraph_format
-            p7_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-            p7_format.first_line_indent = Cm(1)
-            p7_format.space_before = Pt(0)
-            p7_format.space_after = Pt(0)
-            p7_format.line_spacing = 1.0
+            # Обрабатываем все транспортные средства
+            for idx, vehicle in enumerate(vehicles):
+                vehicle_brand = vehicle.get('brand', 'Место для ввода текста.')
+                vehicle_model = vehicle.get('model', 'Место для ввода текста.')
+                vehicle_year = vehicle.get('year', 'Место для ввода текста.')
+                vehicle_reg = vehicle.get('registrationNumber', 'Место для ввода текста.')
+                vehicle_vin = vehicle.get('vin', 'Место для ввода текста.')
+                
+                intro = "Кроме того, в собственности Должника находится" if idx == 0 else "Также в собственности Должника находится"
+                p7 = doc.add_paragraph(f"{intro} автомобиль марки {vehicle_brand} {vehicle_model} {vehicle_year} г., государственный регистрационный номер: {vehicle_reg}, идентификационный номер VIN: {vehicle_vin}.")
+                p7_format = p7.paragraph_format
+                p7_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                p7_format.first_line_indent = Cm(1)
+                p7_format.space_before = Pt(0)
+                p7_format.space_after = Pt(0)
+                p7_format.line_spacing = 1.0
     
     p8 = doc.add_paragraph("Какое-либо имущество, на которое может быть обращено взыскание в соответствии с действующим законодательством, у Должника отсутствует.")
     p8_format = p8.paragraph_format
