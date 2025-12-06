@@ -23,8 +23,8 @@ export function useAdminSupport() {
   const isAdmin = user?.is_admin;
   const currentUser = user;
   
-  // Для админа, залогиненного через пароль, используем специальный ID = -1
-  const adminUserId = currentUser?.id || -1;
+  // Для админа, залогиненного через пароль, используем ID = 1 (admin из БД)
+  const adminUserId = currentUser?.id || 1;
 
   useEffect(() => {
     const isAdminAuthenticated = sessionStorage.getItem('admin_authenticated');
