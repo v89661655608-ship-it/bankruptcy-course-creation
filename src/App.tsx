@@ -25,6 +25,7 @@ import Support from "./pages/Support";
 import AdminSupport from "./pages/AdminSupport";
 import DocumentConstructor from "./pages/DocumentConstructor";
 import AttachmentMotion from "./pages/AttachmentMotion";
+import AbsenceMotion from "./pages/AbsenceMotion";
 import Settings from "./pages/Settings";
 import TestPayment from "./pages/TestPayment";
 import NotFound from "./pages/NotFound";
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/admin-support" element={<AdminSupport />} />
             <Route path="/document-constructor" element={<DocumentConstructor />} />
             <Route path="/attachment-motion" element={<AttachmentMotion />} />
+            <Route path="/absence-motion" element={<AbsenceMotion />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/oferta" element={<Oferta />} />
             <Route path="/privacy" element={<Privacy />} />

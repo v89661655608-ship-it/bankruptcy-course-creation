@@ -54,6 +54,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         debt_reason_data = body_data.get('debtReasonData', {})
         appendices_data = body_data.get('appendicesData', {})
         attachment_motion_data = body_data.get('attachmentMotionData', {})
+        absence_motion_data = body_data.get('absenceMotionData', {})
         doc_format = body_data.get('format', 'docx')
         
         if doc_format == 'attachment-motion':
@@ -72,6 +73,31 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'createdAt': datetime.now().isoformat(),
                     'format': 'docx',
                     'fileName': f"ходатайство_приобщение_{personal_data.get('inn', 'doc')}.docx"
+                }
+            }
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps(result),
+                'isBase64Encoded': False
+            }
+        
+        if doc_format == 'absence-motion':
+            if not personal_data:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Недостаточно данных для генерации ходатайства'}),
+                    'isBase64Encoded': False
+                }
+            docx_base64 = generate_absence_motion_document(personal_data, additional_fields, absence_motion_data)
+            result = {
+                'success': True,
+                'document': {
+                    'data': docx_base64,
+                    'createdAt': datetime.now().isoformat(),
+                    'format': 'docx',
+                    'fileName': f"ходатайство_отсутствие_{personal_data.get('inn', 'doc')}.docx"
                 }
             }
             return {
@@ -1707,3 +1733,133 @@ def generate_attachment_motion_document(
     doc.save(buffer)
     buffer.seek(0)
     return base64.b64encode(buffer.read()).decode('utf-8')
+
+
+def generate_absence_motion_document(
+    personal: Dict[str, Any],
+    additional: Dict[str, Any],
+    motion_data: Dict[str, Any]
+) -> str:
+    '''Генерирует DOCX документ ходатайства о рассмотрении дела в отсутствие должника'''
+    
+    doc = Document()
+    
+    if additional is None:
+        additional = {}
+    
+    passport = personal.get('passport', {})
+    registration = personal.get('registration', {})
+    
+    registration_address = registration.get('address', '')
+    auto_court = determine_court_by_address(registration_address)
+    
+    court_name = additional.get('courtName', auto_court['name'])
+    court_address = additional.get('courtAddress', auto_court['address'])
+    phone = personal.get('phone', 'Место для ввода текста.')
+    email = personal.get('email', 'Место для ввода текста.')
+    full_name = personal.get('fullName', 'Место для ввода текста.')
+    
+    case_number = motion_data.get('caseNumber', 'Место для ввода текста.')
+    hearing_date = motion_data.get('hearingDate', '')
+    
+    # Форматируем дату в русский формат
+    if hearing_date:
+        from datetime import datetime as dt
+        try:
+            date_obj = dt.strptime(hearing_date, '%Y-%m-%d')
+            formatted_date = date_obj.strftime('%d.%m.%Y')
+        except:
+            formatted_date = hearing_date
+    else:
+        formatted_date = 'Место для ввода текста.'
+    
+    # Шапка документа с форматированием
+    def add_header_paragraph(text):
+        p = doc.add_paragraph(text)
+        p_format = p.paragraph_format
+        p_format.space_before = Pt(0)
+        p_format.space_after = Pt(0)
+        p_format.line_spacing_rule = WD_LINE_SPACING.SINGLE
+        p_format.left_indent = Cm(7)
+        return p
+    
+    add_header_paragraph(f"В {court_name}")
+    add_header_paragraph(f"Адрес: {court_address}")
+    add_header_paragraph("")
+    
+    add_header_paragraph(f"Должник:")
+    add_header_paragraph(f"{full_name}")
+    add_header_paragraph(f"Адрес: {registration.get('address', 'Место для ввода текста.')}")
+    add_header_paragraph("")
+    
+    add_header_paragraph(f"Паспорт: серия {passport.get('series', 'Место для ввода текста.')} номер {passport.get('number', 'Место для ввода текста.')}")
+    add_header_paragraph(f"выдан: {passport.get('issuedBy', 'Место для ввода текста.')}")
+    add_header_paragraph(f"дата выдачи: {passport.get('issueDate', 'Место для ввода текста.')}")
+    add_header_paragraph(f"код подразделения: {passport.get('code', 'Место для ввода текста.')}")
+    add_header_paragraph(f"тел. {phone}")
+    add_header_paragraph(f"e-mail: {email}")
+    add_header_paragraph("")
+    add_header_paragraph(f"Номер дела: {case_number}")
+    add_header_paragraph("")
+    
+    doc.add_paragraph()
+    
+    title = doc.add_heading("ХОДАТАЙСТВО", level=1)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title_format = title.paragraph_format
+    title_format.space_before = Pt(0)
+    title_format.space_after = Pt(0)
+    title_format.line_spacing = 1.0
+    
+    subtitle = doc.add_heading("О РАССМОТРЕНИИ ДЕЛА В ОТСУТСТВИИ ДОЛЖНИКА", level=1)
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    subtitle_format = subtitle.paragraph_format
+    subtitle_format.space_before = Pt(0)
+    subtitle_format.space_after = Pt(0)
+    subtitle_format.line_spacing = 1.0
+    
+    doc.add_paragraph()
+    
+    # Функция для добавления абзацев с форматированием
+    def add_body_paragraph(text):
+        p = doc.add_paragraph(text)
+        p_format = p.paragraph_format
+        p_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p_format.first_line_indent = Cm(1)
+        p_format.space_before = Pt(0)
+        p_format.space_after = Pt(0)
+        p_format.line_spacing = 1.0
+        return p
+    
+    # Склоняем ФИО и название суда в родительный падеж
+    full_name_genitive = decline_full_name_genitive(full_name)
+    court_name_genitive = decline_court_name_genitive(court_name)
+    
+    # Основной текст
+    add_body_paragraph(f"В производстве {court_name_genitive} находится дело № {case_number} по заявлению {full_name_genitive} о признании несостоятельным (банкротом).")
+    add_body_paragraph(f"{formatted_date} г. назначено судебное заседание по рассмотрению указанного дела.")
+    add_body_paragraph("В силу ч. 2 ст. 156 Арбитражного процессуального кодекса Российской Федерации стороны вправе известить арбитражный суд о возможности рассмотрения дела в их отсутствие.")
+    add_body_paragraph("На основании изложенного, руководствуясь ч. 2 ст. 156, ч. 1 ст. 41 Арбитражного процессуального кодекса Российской Федерации,")
+    
+    doc.add_paragraph()
+    
+    # Заголовок ПРОШУ
+    prosh_heading = doc.add_paragraph("ПРОШУ:")
+    prosh_heading.runs[0].bold = True
+    prosh_heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    doc.add_paragraph()
+    
+    add_body_paragraph(f"рассмотреть дело № {case_number} по существу в отсутствие заявителя.")
+    
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # Подпись для absence motion
+    add_body_paragraph(f"Должник: {full_name}")
+    add_body_paragraph(f"Дата: {datetime.now().strftime('%d.%m.%Y')}")
+    
+    buffer_absence = io.BytesIO()
+    doc.save(buffer_absence)
+    buffer_absence.seek(0)
+    return base64.b64encode(buffer_absence.read()).decode('utf-8')
