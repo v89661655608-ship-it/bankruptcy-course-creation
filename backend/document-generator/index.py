@@ -699,7 +699,7 @@ def generate_docx_document(
         # Добавляем выписки из ЕГРЮЛ для кредиторов
         start_idx = len(included_items) + 1
         for creditor_idx in range(len(creditors)):
-            appendices_list.append(f"{start_idx + creditor_idx}. Выписка из ЕГРЮЛ на кредитора {creditor_idx + 1} 2 листа;")
+            appendices_list.append(f"{start_idx + creditor_idx}. Выписка из ЕГРЮЛ на кредитора {creditor_idx + 1};")
     else:
         # Дефолтный список если данные не переданы
         appendices_list = [
