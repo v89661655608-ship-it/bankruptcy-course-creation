@@ -31,6 +31,17 @@ export default function AdminHeader({ onLogout, onSendTestEmail, sendingTestEmai
             <Icon name="Mail" size={16} className="mr-2" />
             {sendingTestEmail ? 'Отправка...' : 'Тест письма'}
           </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              // Устанавливаем фейковый токен для доступа к курсам
+              sessionStorage.setItem('admin_viewing_course', 'true');
+              navigate('/dashboard');
+            }}
+          >
+            <Icon name="Play" size={16} className="mr-2" />
+            К курсам
+          </Button>
           <Button variant="outline" onClick={onLogout}>
             <Icon name="LogOut" size={16} className="mr-2" />
             Выйти

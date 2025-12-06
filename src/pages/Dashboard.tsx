@@ -67,8 +67,15 @@ export const Dashboard = () => {
   const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
   const progressIntervals = useRef<{ [key: number]: NodeJS.Timeout }>({});
 
+  const getToken = () => {
+    const isAdminViewing = sessionStorage.getItem('admin_authenticated');
+    return isAdminViewing ? 'admin_session_token' : token;
+  };
+
   useEffect(() => {
-    if (!token) {
+    // Проверяем админа из sessionStorage или обычный токен
+    const isAdminViewing = sessionStorage.getItem('admin_authenticated');
+    if (!token && !isAdminViewing) {
       navigate('/login');
       return;
     }
@@ -76,8 +83,8 @@ export const Dashboard = () => {
     loadCourseContent();
     loadCourseFiles();
     
-    // Показываем модалку смены пароля если пользователь не менял пароль
-    if (user && !(user as any).password_changed_by_user) {
+    // Показываем модалку смены пароля если пользователь не менял пароль (только для обычных пользователей)
+    if (user && !(user as any).password_changed_by_user && !isAdminViewing) {
       // Задержка 2 секунды после загрузки
       setTimeout(() => {
         setShowPasswordModal(true);
@@ -87,7 +94,9 @@ export const Dashboard = () => {
 
   const loadCourseContent = async () => {
     try {
-      const data = await course.getContent(token!);
+      const currentToken = getToken();
+      if (!currentToken) return;
+      const data = await course.getContent(currentToken);
       if (data.error) {
         setError(data.error);
       } else {
@@ -125,7 +134,9 @@ export const Dashboard = () => {
 
   const markLessonComplete = async (lessonId: number) => {
     try {
-      await course.updateProgress(token!, lessonId, true, 0);
+      const currentToken = getToken();
+      if (!currentToken) return;
+      await course.updateProgress(currentToken, lessonId, true, 0);
       loadCourseContent();
     } catch (err) {
       console.error('Error updating progress:', err);
@@ -162,9 +173,12 @@ export const Dashboard = () => {
         );
         
         try {
-          await course.updateProgress(token!, lessonId, completed, watchTime);
-          if (completed) {
-            clearInterval(progressIntervals.current[lessonId]);
+          const currentToken = getToken();
+          if (currentToken) {
+            await course.updateProgress(currentToken, lessonId, completed, watchTime);
+            if (completed) {
+              clearInterval(progressIntervals.current[lessonId]);
+            }
           }
         } catch (err) {
           console.error('Error updating progress:', err);
@@ -201,9 +215,12 @@ export const Dashboard = () => {
         }))
       );
       
-      course.updateProgress(token!, lessonId, completed, watchTime).catch(err => {
-        console.error('Error saving progress on pause:', err);
-      });
+      const currentToken = getToken();
+      if (currentToken) {
+        course.updateProgress(currentToken, lessonId, completed, watchTime).catch(err => {
+          console.error('Error saving progress on pause:', err);
+        });
+      }
     }
   };
 
@@ -234,7 +251,10 @@ export const Dashboard = () => {
       );
       
       try {
-        await course.updateProgress(token!, lessonId, true, watchTime);
+        const currentToken = getToken();
+        if (currentToken) {
+          await course.updateProgress(currentToken, lessonId, true, watchTime);
+        }
       } catch (err) {
         console.error('Error marking as completed:', err);
       }
@@ -251,7 +271,9 @@ export const Dashboard = () => {
 
   const loadCourseFiles = async () => {
     try {
-      const data = await getFiles(token!);
+      const currentToken = getToken();
+      if (!currentToken) return;
+      const data = await getFiles(currentToken);
       if (!data.error) {
         setFiles(data.files || []);
       }
