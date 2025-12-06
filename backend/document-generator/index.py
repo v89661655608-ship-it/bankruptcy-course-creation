@@ -545,15 +545,17 @@ def generate_docx_document(
                 p7_format.line_spacing = 1.0
     
     # Добавляем фразу об отсутствии имущества только если:
-    # - есть ровно один объект недвижимости с галочкой "единственное жилье"
-    # - нет транспортных средств
+    # - стоит галочка "Имущество отсутствует" ИЛИ
+    # - есть ровно один объект недвижимости с галочкой "единственное жилье" и нет транспортных средств
     real_estate = property.get('realEstate', []) if property else []
     vehicles = property.get('vehicles', []) if property else []
+    no_property_checked = property.get('noProperty', False) if property else False
     
     should_show_no_property = (
-        len(real_estate) == 1 and 
-        real_estate[0].get('isSoleResidence', False) and 
-        len(vehicles) == 0
+        no_property_checked or
+        (len(real_estate) == 1 and 
+         real_estate[0].get('isSoleResidence', False) and 
+         len(vehicles) == 0)
     )
     
     if should_show_no_property:
