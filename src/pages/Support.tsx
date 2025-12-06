@@ -21,7 +21,6 @@ export default function Support() {
     setReplyToMessage,
     editingMessage,
     setEditingMessage,
-    messagesEndRef,
     userId,
     navigate,
     handleImageSelect,
@@ -104,7 +103,6 @@ export default function Support() {
                     </div>
                   );
                 })}
-                <div ref={messagesEndRef} />
               </>
             )}
           </CardContent>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +14,6 @@ export function useSupportChat() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -418,7 +417,6 @@ export function useSupportChat() {
     setReplyToMessage,
     editingMessage,
     setEditingMessage,
-    messagesEndRef,
     userId,
     navigate,
     handleImageSelect,

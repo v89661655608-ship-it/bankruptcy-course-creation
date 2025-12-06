@@ -21,7 +21,6 @@ interface AdminChatWindowProps {
   setReplyToMessage: (msg: Message | null) => void;
   editingMessage: Message | null;
   setEditingMessage: (msg: Message | null) => void;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
   handleImageSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSendMessage: () => void;
@@ -50,7 +49,6 @@ export default function AdminChatWindow({
   setReplyToMessage,
   editingMessage,
   setEditingMessage,
-  messagesEndRef,
   handleImageSelect,
   handleFileSelect,
   handleSendMessage,
@@ -230,7 +228,6 @@ export default function AdminChatWindow({
             </div>
           );
         })}
-        <div ref={messagesEndRef} />
       </CardContent>
 
       <div className="border-t p-4">

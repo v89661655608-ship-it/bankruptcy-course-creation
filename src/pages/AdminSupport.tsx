@@ -21,7 +21,6 @@ export default function AdminSupport() {
     setReplyToMessage,
     editingMessage,
     setEditingMessage,
-    messagesEndRef,
     navigate,
     handleImageSelect,
     handleFileSelect,
@@ -66,7 +65,6 @@ export default function AdminSupport() {
             setReplyToMessage={setReplyToMessage}
             editingMessage={editingMessage}
             setEditingMessage={setEditingMessage}
-            messagesEndRef={messagesEndRef}
             handleImageSelect={handleImageSelect}
             handleFileSelect={handleFileSelect}
             handleSendMessage={handleSendMessage}

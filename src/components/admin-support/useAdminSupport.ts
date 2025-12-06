@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +16,6 @@ export function useAdminSupport() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -24,8 +23,8 @@ export function useAdminSupport() {
   const isAdmin = user?.is_admin;
   const currentUser = user;
   
-  // Для админа, залогиненного через пароль, используем фиксированный ID
-  const adminUserId = currentUser?.id || 0;
+  // Для админа, залогиненного через пароль, используем специальный ID = -1
+  const adminUserId = currentUser?.id || -1;
 
   useEffect(() => {
     const isAdminAuthenticated = sessionStorage.getItem('admin_authenticated');
@@ -347,9 +346,8 @@ export function useAdminSupport() {
   };
 
   const handleReaction = async (messageId: number, reaction: string) => {
-    console.log('🔥 Admin adding reaction:', { messageId, reaction, adminUserId, currentUser, user });
     try {
-      const response = await fetch(
+      await fetch(
         'https://functions.poehali.dev/92d0eff0-8de5-4a02-b849-378019f1af28?action=react',
         {
           method: 'POST',
@@ -361,12 +359,11 @@ export function useAdminSupport() {
           })
         }
       );
-      console.log('✅ Reaction response:', response.ok, await response.text());
       if (selectedChatUserId) {
         await loadMessages(selectedChatUserId);
       }
     } catch (error) {
-      console.error('❌ Error adding reaction:', error);
+      console.error('Error adding reaction:', error);
     }
   };
 
@@ -417,7 +414,6 @@ export function useAdminSupport() {
     setReplyToMessage,
     editingMessage,
     setEditingMessage,
-    messagesEndRef,
     navigate,
     handleImageSelect,
     handleFileSelect,
