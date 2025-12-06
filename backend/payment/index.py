@@ -885,7 +885,7 @@ def check_course_access(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[
     
     conn = get_db_connection()
     try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        with conn.cursor() as cur:
             # Проверяем наличие активной подписки на курс (course или combo) в user_purchases
             # Экранируем email для безопасности
             safe_email = email.replace("'", "''")
@@ -904,14 +904,16 @@ def check_course_access(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[
             print(f"[CHECK_ACCESS] Result: {user}")
             
             if user:
+                # user is a tuple: (id, email, expires_at, product_type)
+                user_id, user_email, expires_at, product_type = user
                 return {
                     'statusCode': 200,
                     'headers': headers,
                     'body': json.dumps({
                         'has_active_course': True,
-                        'email': user['email'],
-                        'expires_at': user['expires_at'].isoformat() if user['expires_at'] else None,
-                        'product_type': user['product_type']
+                        'email': user_email,
+                        'expires_at': expires_at.isoformat() if expires_at else None,
+                        'product_type': product_type
                     })
                 }
             else:
