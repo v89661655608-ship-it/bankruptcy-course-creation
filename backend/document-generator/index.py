@@ -1631,9 +1631,17 @@ def generate_attachment_motion_document(
     
     title = doc.add_heading("ХОДАТАЙСТВО", level=1)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title_format = title.paragraph_format
+    title_format.space_before = Pt(0)
+    title_format.space_after = Pt(0)
+    title_format.line_spacing = 1.0
     
     subtitle = doc.add_heading("О ПРИОБЩЕНИИ ДОКУМЕНТОВ", level=1)
     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    subtitle_format = subtitle.paragraph_format
+    subtitle_format.space_before = Pt(0)
+    subtitle_format.space_after = Pt(0)
+    subtitle_format.line_spacing = 1.0
     
     doc.add_paragraph()
     
