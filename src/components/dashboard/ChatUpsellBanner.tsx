@@ -16,13 +16,7 @@ export default function ChatUpsellBanner({ user }: ChatUpsellBannerProps) {
   if (!user) return null;
 
   const chatExpires = user.chat_expires_at ? new Date(user.chat_expires_at) : null;
-  const courseExpires = user.expires_at ? new Date(user.expires_at) : null;
   const now = new Date();
-
-  // Если у пользователя нет активного курса - не показываем баннер
-  if (!courseExpires || courseExpires <= now) {
-    return null;
-  }
 
   // Если у пользователя активный чат - не показываем баннер
   if (chatExpires && chatExpires > now) {

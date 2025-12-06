@@ -54,25 +54,45 @@ export default function DashboardHeader({ user, onLogout }: DashboardHeaderProps
               </>
             ) : (
               <>
-                <Button 
-                  variant={hasChatAccess ? "outline" : "ghost"} 
-                  size="sm" 
-                  onClick={() => hasChatAccess && navigate('/support')}
-                  disabled={!hasChatAccess}
-                  className={!hasChatAccess ? "opacity-50 cursor-not-allowed" : ""}
-                  title={!hasChatAccess ? "Доступ к чату не активен. Купите подписку." : ""}
-                >
-                  <Icon name="MessageCircle" size={16} className="mr-2" />
-                  Поддержка юристов
-                  {!hasChatAccess && (
-                    <Icon name="Lock" size={14} className="ml-1 text-muted-foreground" />
-                  )}
-                </Button>
+                {hasChatAccess ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => navigate('/support')}
+                  >
+                    <Icon name="MessageCircle" size={16} className="mr-2" />
+                    Поддержка юристов
+                  </Button>
+                ) : (
+                  <div className="flex items-center gap-1 md:gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      disabled
+                      className="opacity-50 cursor-not-allowed hidden md:flex"
+                      title="Доступ к чату не активен"
+                    >
+                      <Icon name="MessageCircle" size={16} className="mr-2" />
+                      Поддержка юристов
+                      <Icon name="Lock" size={14} className="ml-1 text-muted-foreground" />
+                    </Button>
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      onClick={() => navigate('/payment-form?product=chat')}
+                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 whitespace-nowrap"
+                    >
+                      <Icon name="Sparkles" size={16} className="mr-1 md:mr-2" />
+                      <span className="hidden md:inline">Купить чат 3999₽</span>
+                      <span className="md:hidden">Чат 3999₽</span>
+                    </Button>
+                  </div>
+                )}
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => navigate('/document-constructor')}
-                  className="relative"
+                  className="relative hidden lg:flex"
                 >
                   <Icon name="FileText" size={16} className="mr-2" />
                   Конструктор документов
@@ -84,11 +104,12 @@ export default function DashboardHeader({ user, onLogout }: DashboardHeaderProps
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigate('/settings')}
+                  className="hidden md:flex"
                 >
                   <Icon name="Settings" size={16} className="mr-2" />
                   Настройки
                 </Button>
-                <Button variant="ghost" size="sm" onClick={onLogout}>
+                <Button variant="ghost" size="sm" onClick={onLogout} className="hidden md:flex">
                   <Icon name="LogOut" size={16} className="mr-2" />
                   Выйти
                 </Button>
