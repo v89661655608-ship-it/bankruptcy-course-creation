@@ -31,10 +31,6 @@ export default function AdminHeader({ onLogout, onSendTestEmail, sendingTestEmai
             <Icon name="Mail" size={16} className="mr-2" />
             {sendingTestEmail ? 'Отправка...' : 'Тест письма'}
           </Button>
-          <Button variant="outline" onClick={() => navigate('/admin')}>
-            <Icon name="ArrowLeft" size={16} className="mr-2" />
-            К курсам
-          </Button>
           <Button variant="outline" onClick={onLogout}>
             <Icon name="LogOut" size={16} className="mr-2" />
             Выйти
