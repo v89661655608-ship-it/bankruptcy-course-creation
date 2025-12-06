@@ -19,11 +19,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Max-Age': '86400'
             },
-            'body': ''
+            'body': '',
+            'isBase64Encoded': False
         }
     
     headers_out = {
@@ -32,10 +33,17 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     }
     
     try:
-        body_data = json.loads(event.get('body', '{}'))
-        user_email = body_data.get('email', '').strip()
-        user_name = body_data.get('name', 'Клиент')
-        amount = float(body_data.get('amount', 0))
+        # Support both GET (query params) and POST (body)
+        if method == 'GET':
+            params = event.get('queryStringParameters') or {}
+            user_email = params.get('email', '').strip()
+            user_name = params.get('name', 'Клиент')
+            amount = float(params.get('amount', 2999))
+        else:
+            body_data = json.loads(event.get('body', '{}'))
+            user_email = body_data.get('email', '').strip()
+            user_name = body_data.get('name', 'Клиент')
+            amount = float(body_data.get('amount', 0))
         
         if not user_email:
             return {
@@ -52,19 +60,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': json.dumps({
                 'success': True,
                 'message': f'Email sent to {user_email}'
-            })
+            }),
+            'isBase64Encoded': False
         }
     
     except Exception as e:
         import traceback
+        error_details = {
+            'error': str(e),
+            'type': type(e).__name__,
+            'traceback': traceback.format_exc()
+        }
+        print(f"[RESEND] ❌ ERROR: {json.dumps(error_details)}")
         return {
             'statusCode': 500,
             'headers': headers_out,
-            'body': json.dumps({
-                'error': str(e),
-                'type': type(e).__name__,
-                'traceback': traceback.format_exc()
-            })
+            'body': json.dumps(error_details),
+            'isBase64Encoded': False
         }
 
 def send_consultation_confirmation_email(user_email: str, user_name: str, amount: float):
