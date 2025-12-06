@@ -27,7 +27,11 @@ from email.mime.multipart import MIMEMultipart
 import bcrypt
 
 def get_db_connection():
-    return psycopg2.connect(os.environ['DATABASE_URL'])
+    conn = psycopg2.connect(os.environ['DATABASE_URL'])
+    with conn.cursor() as cur:
+        cur.execute("SET search_path TO t_p19166386_bankruptcy_course_cr, public")
+    conn.commit()
+    return conn
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
