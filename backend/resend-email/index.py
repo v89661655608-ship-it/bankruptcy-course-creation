@@ -152,11 +152,32 @@ def send_consultation_confirmation_email(user_email: str, user_name: str, amount
 </html>
     '''
     
+    # Текстовая версия письма для совместимости с почтовыми провайдерами
+    text_body = f'''
+Здравствуйте, {user_name}!
+
+Спасибо за оплату консультации! Ваш платёж на сумму {amount:.2f} ₽ успешно получен.
+
+СЛЕДУЮЩИЙ ШАГ:
+Для записи на консультацию свяжитесь со мной в WhatsApp: {whatsapp_url}
+
+Важно: Напишите мне в WhatsApp, чтобы мы договорились об удобном времени для консультации.
+
+Если у вас возникнут вопросы, просто ответьте на это письмо или напишите мне в WhatsApp.
+
+С уважением,
+Валентина Голосова
+Арбитражный управляющий
+WhatsApp: {whatsapp_url}
+    '''
+    
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
     msg['From'] = smtp_user
     msg['To'] = user_email
     
+    # Сначала текстовая версия, потом HTML (стандарт MIME)
+    msg.attach(MIMEText(text_body, 'plain', 'utf-8'))
     msg.attach(MIMEText(html_body, 'html', 'utf-8'))
     
     print(f"[RESEND] Connecting to SMTP {smtp_host}:{smtp_port}")
