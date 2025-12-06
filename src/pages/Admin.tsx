@@ -77,11 +77,6 @@ const Admin = () => {
   });
 
   useEffect(() => {
-    if (!token || !user?.is_admin) {
-      navigate('/login');
-      return;
-    }
-    
     const isAdminAuthenticated = sessionStorage.getItem('admin_authenticated');
     if (!isAdminAuthenticated) {
       navigate('/admin-login');
@@ -91,7 +86,7 @@ const Admin = () => {
     loadModules();
     loadLessons();
     loadFiles();
-  }, [token, user, navigate]);
+  }, [navigate]);
 
   const loadModules = async () => {
     try {
