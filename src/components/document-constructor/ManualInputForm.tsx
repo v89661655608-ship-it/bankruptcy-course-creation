@@ -58,16 +58,16 @@ export default function ManualInputForm({
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-9 gap-1">
-            <TabsTrigger value="personal">Личные</TabsTrigger>
-            <TabsTrigger value="credit">Кредиты</TabsTrigger>
-            <TabsTrigger value="income">Доходы</TabsTrigger>
-            <TabsTrigger value="property">Имущество</TabsTrigger>
-            <TabsTrigger value="contacts">Суд</TabsTrigger>
-            <TabsTrigger value="benefits">Льготы</TabsTrigger>
-            <TabsTrigger value="children">Дети</TabsTrigger>
-            <TabsTrigger value="transactions">Сделки</TabsTrigger>
-            <TabsTrigger value="debt-reason">Причина долгов</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-9 gap-1 text-xs">
+            <TabsTrigger value="personal" className="text-xs px-2">Личные</TabsTrigger>
+            <TabsTrigger value="credit" className="text-xs px-2">Кредиты</TabsTrigger>
+            <TabsTrigger value="income" className="text-xs px-2">Доходы</TabsTrigger>
+            <TabsTrigger value="property" className="text-xs px-2">Имущество</TabsTrigger>
+            <TabsTrigger value="contacts" className="text-xs px-2">Суд</TabsTrigger>
+            <TabsTrigger value="benefits" className="text-xs px-2">Льготы</TabsTrigger>
+            <TabsTrigger value="children" className="text-xs px-2">Дети</TabsTrigger>
+            <TabsTrigger value="transactions" className="text-xs px-2">Сделки</TabsTrigger>
+            <TabsTrigger value="debt-reason" className="text-xs px-2">Причина</TabsTrigger>
           </TabsList>
 
           <TabsContent value="personal">
