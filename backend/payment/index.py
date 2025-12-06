@@ -885,18 +885,18 @@ def check_course_access(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             # Проверяем наличие активной подписки на курс (course или combo) в user_purchases
-            cur.execute(
-                """SELECT u.id, u.email, up.expires_at, up.product_type 
+            # Экранируем email для безопасности
+            safe_email = email.replace("'", "''")
+            query = f"""SELECT u.id, u.email, up.expires_at, up.product_type 
                 FROM t_p19166386_bankruptcy_course_cr.users u 
                 JOIN t_p19166386_bankruptcy_course_cr.user_purchases up ON u.id = up.user_id
-                WHERE LOWER(u.email) = %s 
+                WHERE LOWER(u.email) = '{safe_email}' 
                 AND up.payment_status = 'completed'
                 AND (up.expires_at IS NULL OR up.expires_at > CURRENT_TIMESTAMP)
                 AND up.product_type IN ('course', 'combo')
                 ORDER BY up.created_at DESC
-                LIMIT 1""",
-                (email,)
-            )
+                LIMIT 1"""
+            cur.execute(query)
             user = cur.fetchone()
             
             if user:
