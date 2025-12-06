@@ -125,3 +125,14 @@ export interface TransactionsData {
 export interface DebtReasonData {
   reason: string;
 }
+
+export interface AppendixItem {
+  id: string;
+  title: string;
+  pages: string;
+  isIncluded: boolean;
+}
+
+export interface AppendicesData {
+  items: AppendixItem[];
+}

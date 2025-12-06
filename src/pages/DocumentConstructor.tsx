@@ -9,7 +9,7 @@ import ProgressSidebar from "@/components/document-constructor/ProgressSidebar";
 import ManualInputForm from "@/components/document-constructor/ManualInputForm";
 
 import AdditionalFieldsForm from "@/components/document-constructor/AdditionalFieldsForm";
-import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields, BenefitsData, ChildrenData, TransactionsData, DebtReasonData } from "@/components/document-constructor/types";
+import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields, BenefitsData, ChildrenData, TransactionsData, DebtReasonData, AppendicesData } from "@/components/document-constructor/types";
 import funcUrls from "../../backend/func2url.json";
 
 const STORAGE_KEY = 'documentConstructorData';
@@ -41,6 +41,7 @@ export default function DocumentConstructor() {
   const [childrenData, setChildrenData] = useState<ChildrenData | null>(savedData.childrenData || null);
   const [transactionsData, setTransactionsData] = useState<TransactionsData | null>(savedData.transactionsData || null);
   const [debtReasonData, setDebtReasonData] = useState<DebtReasonData | null>(savedData.debtReasonData || null);
+  const [appendicesData, setAppendicesData] = useState<AppendicesData | null>(savedData.appendicesData || null);
 
   useEffect(() => {
     const dataToSave = {
@@ -53,9 +54,10 @@ export default function DocumentConstructor() {
       childrenData,
       transactionsData,
       debtReasonData,
+      appendicesData,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-  }, [personalData, creditData, incomeData, propertyData, additionalFields, benefitsData, childrenData, transactionsData, debtReasonData]);
+  }, [personalData, creditData, incomeData, propertyData, additionalFields, benefitsData, childrenData, transactionsData, debtReasonData, appendicesData]);
 
   const handleEsiaAuth = async () => {
     alert('Интеграция с ЕСИА/Госуслуги в разработке. Требуется регистрация в ЕСИА и получение сертификатов.');
@@ -95,6 +97,7 @@ export default function DocumentConstructor() {
           childrenData,
           transactionsData,
           debtReasonData,
+          appendicesData,
           format
         })
       });
@@ -193,11 +196,13 @@ export default function DocumentConstructor() {
               onChildrenSubmit={setChildrenData}
               onTransactionsSubmit={setTransactionsData}
               onDebtReasonSubmit={setDebtReasonData}
+              onAppendicesSubmit={setAppendicesData}
               additionalFieldsData={additionalFields || undefined}
               benefitsData={benefitsData || undefined}
               childrenData={childrenData || undefined}
               transactionsData={transactionsData || undefined}
               debtReasonData={debtReasonData || undefined}
+              appendicesData={appendicesData || undefined}
             />
           )}
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Icon from "@/components/ui/icon";
-import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields, BenefitsData, ChildrenData, TransactionsData, DebtReasonData } from "./types";
+import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields, BenefitsData, ChildrenData, TransactionsData, DebtReasonData, AppendicesData } from "./types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PersonalDataForm from "./forms/PersonalDataForm";
 import CreditDataForm from "./forms/CreditDataForm";
@@ -12,6 +12,7 @@ import BenefitsForm from "./BenefitsForm";
 import ChildrenForm from "./ChildrenForm";
 import TransactionsForm from "./TransactionsForm";
 import DebtReasonForm from "./DebtReasonForm";
+import AppendicesForm from "./AppendicesForm";
 
 interface ManualInputFormProps {
   onPersonalDataSubmit: (data: PersonalData) => void;
@@ -23,11 +24,13 @@ interface ManualInputFormProps {
   onChildrenSubmit: (data: ChildrenData) => void;
   onTransactionsSubmit: (data: TransactionsData) => void;
   onDebtReasonSubmit: (data: DebtReasonData) => void;
+  onAppendicesSubmit: (data: AppendicesData) => void;
   additionalFieldsData?: AdditionalFields;
   benefitsData?: BenefitsData;
   childrenData?: ChildrenData;
   transactionsData?: TransactionsData;
   debtReasonData?: DebtReasonData;
+  appendicesData?: AppendicesData;
 }
 
 export default function ManualInputForm({
@@ -40,11 +43,13 @@ export default function ManualInputForm({
   onChildrenSubmit,
   onTransactionsSubmit,
   onDebtReasonSubmit,
+  onAppendicesSubmit,
   additionalFieldsData,
   benefitsData,
   childrenData,
   transactionsData,
-  debtReasonData
+  debtReasonData,
+  appendicesData
 }: ManualInputFormProps) {
   const [activeTab, setActiveTab] = useState("personal");
 
@@ -58,7 +63,7 @@ export default function ManualInputForm({
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-9 gap-1 text-xs">
+          <TabsList className="grid w-full grid-cols-10 gap-1 text-xs">
             <TabsTrigger value="personal" className="text-xs px-2">Личные</TabsTrigger>
             <TabsTrigger value="credit" className="text-xs px-2">Кредиты</TabsTrigger>
             <TabsTrigger value="income" className="text-xs px-2">Доходы</TabsTrigger>
@@ -68,6 +73,7 @@ export default function ManualInputForm({
             <TabsTrigger value="children" className="text-xs px-2">Дети</TabsTrigger>
             <TabsTrigger value="transactions" className="text-xs px-2">Сделки</TabsTrigger>
             <TabsTrigger value="debt-reason" className="text-xs px-2">Причина</TabsTrigger>
+            <TabsTrigger value="appendices" className="text-xs px-2">Приложения</TabsTrigger>
           </TabsList>
 
           <TabsContent value="personal">
@@ -134,6 +140,16 @@ export default function ManualInputForm({
             <DebtReasonForm
               onSubmit={(data) => {
                 onDebtReasonSubmit(data);
+                setActiveTab("appendices");
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="appendices">
+            <AppendicesForm
+              initialData={appendicesData}
+              onSubmit={(data) => {
+                onAppendicesSubmit(data);
               }}
             />
           </TabsContent>
