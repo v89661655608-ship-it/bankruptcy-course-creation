@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Icon from "@/components/ui/icon";
 import { PropertyData } from "../types";
 import { useToast } from "@/hooks/use-toast";
+import funcUrls from "../../../../backend/func2url.json";
 
 interface ValidationErrors {
   [key: string]: string;
@@ -41,15 +42,7 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
     }
 
     try {
-      const response = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Token 7c3000a82bae1cfe5f3d0d2ca9b8a03b506a370b'
-        },
-        body: JSON.stringify({ query, count: 5 })
-      });
+      const response = await fetch(`${funcUrls['address-suggest']}?query=${encodeURIComponent(query)}`);
 
       if (response.ok) {
         const data = await response.json();

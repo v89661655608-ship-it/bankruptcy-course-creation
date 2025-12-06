@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "name": "Test address suggestion with valid query",
+      "method": "GET",
+      "path": "/?query=Москва Тверская",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "suggestions": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test address suggestion with short query",
+      "method": "GET",
+      "path": "/?query=Мо",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "suggestions": []
+      }
+    }
+  ]
+}
