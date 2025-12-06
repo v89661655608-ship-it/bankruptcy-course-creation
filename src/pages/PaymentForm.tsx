@@ -70,6 +70,16 @@ const PaymentForm = () => {
         'Тестовая оплата 1₽ вместо 3900₽',
         'Проверка: оплата → письмо → доступ к курсу'
       ]
+    },
+    'test-chat': {
+      title: 'Тестовая оплата чата (проверка продления)',
+      price: 1,
+      features: [
+        'Доступ к чату с юристами на 1 месяц',
+        'Проверка логики продления подписки',
+        'Тестовая оплата 1₽ вместо 3999₽',
+        'Проверка: оплата → +30 дней к chat_expires_at'
+      ]
     }
   };
 
@@ -126,7 +136,7 @@ const PaymentForm = () => {
     }
 
     // Для отдельной покупки чата проверяем наличие курса
-    if (productType === 'chat' && !emailVerified) {
+    if ((productType === 'chat' || productType === 'test-chat') && !emailVerified) {
       toast({
         title: 'Требуется проверка email',
         description: 'Сначала проверьте, что у вас есть активный курс',
@@ -149,7 +159,7 @@ const PaymentForm = () => {
           email,
           name,
           amount: currentProduct.price,
-          product_type: productType === 'test' ? 'course' : productType,
+          product_type: productType === 'test' ? 'course' : productType === 'test-chat' ? 'chat' : productType,
           return_url: returnUrl
         })
       });
@@ -222,7 +232,7 @@ const PaymentForm = () => {
 
               <div>
                 <Label htmlFor="email">
-                  {productType === 'chat' ? 'Email с активным курсом' : 'Email для получения доступа'}
+                  {(productType === 'chat' || productType === 'test-chat') ? 'Email с активным курсом' : 'Email для получения доступа'}
                 </Label>
                 <div className="flex gap-2">
                   <Input
@@ -236,7 +246,7 @@ const PaymentForm = () => {
                     }}
                     required
                   />
-                  {productType === 'chat' && (
+                  {(productType === 'chat' || productType === 'test-chat') && (
                     <Button
                       type="button"
                       variant="outline"
