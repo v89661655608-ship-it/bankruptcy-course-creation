@@ -273,9 +273,14 @@ export const Dashboard = () => {
     try {
       const currentToken = getToken();
       if (!currentToken) return;
+      console.log('Dashboard - Loading files with token:', currentToken.substring(0, 20) + '...');
       const data = await getFiles(currentToken);
+      console.log('Dashboard - Files response:', data);
       if (!data.error) {
+        console.log('Dashboard - Setting files:', data.files);
         setFiles(data.files || []);
+      } else {
+        console.error('Dashboard - Files error:', data.error);
       }
     } catch (err) {
       console.error('Error loading files:', err);
