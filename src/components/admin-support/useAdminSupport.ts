@@ -25,14 +25,15 @@ export function useAdminSupport() {
   const currentUser = user;
 
   useEffect(() => {
-    if (!user || !isAdmin) {
-      navigate('/dashboard');
+    const isAdminAuthenticated = sessionStorage.getItem('admin_authenticated');
+    if (!isAdminAuthenticated) {
+      navigate('/admin-login');
       return;
     }
     loadChats();
     const interval = setInterval(loadChats, 5000);
     return () => clearInterval(interval);
-  }, [isAdmin]);
+  }, [navigate]);
 
   useEffect(() => {
     if (selectedChatUserId) {
