@@ -28,9 +28,6 @@ import bcrypt
 
 def get_db_connection():
     conn = psycopg2.connect(os.environ['DATABASE_URL'])
-    with conn.cursor() as cur:
-        cur.execute("SET search_path TO t_p19166386_bankruptcy_course_cr, public")
-    conn.commit()
     return conn
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -890,8 +887,8 @@ def check_course_access(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[
             # Проверяем наличие активной подписки на курс (course или combo) в user_purchases
             cur.execute(
                 """SELECT u.id, u.email, up.expires_at, up.product_type 
-                FROM users u 
-                JOIN user_purchases up ON u.id = up.user_id
+                FROM t_p19166386_bankruptcy_course_cr.users u 
+                JOIN t_p19166386_bankruptcy_course_cr.user_purchases up ON u.id = up.user_id
                 WHERE LOWER(u.email) = %s 
                 AND up.payment_status = 'completed'
                 AND (up.expires_at IS NULL OR up.expires_at > CURRENT_TIMESTAMP)
