@@ -55,6 +55,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         appendices_data = body_data.get('appendicesData', {})
         attachment_motion_data = body_data.get('attachmentMotionData', {})
         absence_motion_data = body_data.get('absenceMotionData', {})
+        property_exclusion_motion_data = body_data.get('propertyExclusionMotionData', {})
         doc_format = body_data.get('format', 'docx')
         
         if doc_format == 'attachment-motion':
@@ -98,6 +99,31 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'createdAt': datetime.now().isoformat(),
                     'format': 'docx',
                     'fileName': f"ходатайство_отсутствие_{personal_data.get('inn', 'doc')}.docx"
+                }
+            }
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps(result),
+                'isBase64Encoded': False
+            }
+        
+        if doc_format == 'property-exclusion-motion':
+            if not personal_data:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Недостаточно данных для генерации ходатайства'}),
+                    'isBase64Encoded': False
+                }
+            docx_base64 = generate_property_exclusion_motion_document(personal_data, additional_fields, property_data, property_exclusion_motion_data)
+            result = {
+                'success': True,
+                'document': {
+                    'data': docx_base64,
+                    'createdAt': datetime.now().isoformat(),
+                    'format': 'docx',
+                    'fileName': f"ходатайство_исключение_имущества_{personal_data.get('inn', 'doc')}.docx"
                 }
             }
             return {
@@ -1863,3 +1889,165 @@ def generate_absence_motion_document(
     doc.save(buffer_absence)
     buffer_absence.seek(0)
     return base64.b64encode(buffer_absence.read()).decode('utf-8')
+
+
+def generate_property_exclusion_motion_document(
+    personal: Dict[str, Any],
+    additional: Dict[str, Any],
+    property_data: Dict[str, Any],
+    motion_data: Dict[str, Any]
+) -> str:
+    '''Генерирует DOCX документ ходатайства об исключении имущества из конкурсной массы'''
+    
+    doc = Document()
+    
+    if additional is None:
+        additional = {}
+    
+    passport = personal.get('passport', {})
+    registration = personal.get('registration', {})
+    
+    registration_address = registration.get('address', '')
+    auto_court = determine_court_by_address(registration_address)
+    
+    court_name = additional.get('courtName', auto_court['name'])
+    court_address = additional.get('courtAddress', auto_court['address'])
+    phone = personal.get('phone', 'Место для ввода текста.')
+    email = personal.get('email', 'Место для ввода текста.')
+    full_name = personal.get('fullName', 'Место для ввода текста.')
+    
+    case_number = motion_data.get('caseNumber', 'Место для ввода текста.')
+    
+    # Находим единственное жилье
+    sole_residence = None
+    if property_data and property_data.get('realEstate'):
+        for item in property_data.get('realEstate', []):
+            if item.get('isSoleResidence', False):
+                sole_residence = item
+                break
+    
+    # Шапка документа с форматированием
+    def add_header_paragraph(text):
+        p = doc.add_paragraph(text)
+        p_format = p.paragraph_format
+        p_format.space_before = Pt(0)
+        p_format.space_after = Pt(0)
+        p_format.line_spacing_rule = WD_LINE_SPACING.SINGLE
+        p_format.left_indent = Cm(7)
+        return p
+    
+    add_header_paragraph(f"В {court_name}")
+    add_header_paragraph(f"Адрес: {court_address}")
+    add_header_paragraph("")
+    
+    add_header_paragraph(f"Должник:")
+    add_header_paragraph(f"{full_name}")
+    add_header_paragraph(f"Адрес: {registration.get('address', 'Место для ввода текста.')}")
+    add_header_paragraph("")
+    
+    add_header_paragraph(f"Паспорт: серия {passport.get('series', 'Место для ввода текста.')} номер {passport.get('number', 'Место для ввода текста.')}")
+    add_header_paragraph(f"выдан: {passport.get('issuedBy', 'Место для ввода текста.')}")
+    add_header_paragraph(f"дата выдачи: {passport.get('issueDate', 'Место для ввода текста.')}")
+    add_header_paragraph(f"код подразделения: {passport.get('code', 'Место для ввода текста.')}")
+    add_header_paragraph(f"тел. {phone}")
+    add_header_paragraph(f"e-mail: {email}")
+    add_header_paragraph("")
+    add_header_paragraph(f"Номер дела: {case_number}")
+    add_header_paragraph("")
+    
+    doc.add_paragraph()
+    
+    title = doc.add_heading("ХОДАТАЙСТВО", level=1)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title_format = title.paragraph_format
+    title_format.space_before = Pt(0)
+    title_format.space_after = Pt(0)
+    title_format.line_spacing = 1.0
+    
+    subtitle = doc.add_heading("ОБ ИСКЛЮЧЕНИИ ИМУЩЕСТВА ИЗ КОНКУРСНОЙ МАССЫ", level=1)
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    subtitle_format = subtitle.paragraph_format
+    subtitle_format.space_before = Pt(0)
+    subtitle_format.space_after = Pt(0)
+    subtitle_format.line_spacing = 1.0
+    
+    doc.add_paragraph()
+    
+    # Функция для добавления абзацев с форматированием
+    def add_body_paragraph(text):
+        p = doc.add_paragraph(text)
+        p_format = p.paragraph_format
+        p_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p_format.first_line_indent = Cm(1)
+        p_format.space_before = Pt(0)
+        p_format.space_after = Pt(0)
+        p_format.line_spacing = 1.0
+        return p
+    
+    # Склоняем ФИО и название суда в родительный падеж
+    full_name_genitive = decline_full_name_genitive(full_name)
+    court_name_genitive = decline_court_name_genitive(court_name)
+    
+    # Основной текст
+    add_body_paragraph(f"В производстве {court_name_genitive} находится дело № {case_number} по заявлению {full_name_genitive} о признании несостоятельным (банкротом).")
+    
+    doc.add_paragraph()
+    
+    add_body_paragraph("В соответствии со ст. 213.25 Федерального закона от 26.10.2002 N 127-ФЗ «О несостоятельности (банкротстве)» (далее - Закон о банкротстве) все имущество гражданина, имеющееся на дату принятия решения арбитражного суда о признании гражданина банкротом и введении реализации имущества гражданина и выявленное или приобретенное после даты принятия указанного решения, составляет конкурсную массу, за исключением имущества, определенного п. 3 названной статьи.")
+    add_body_paragraph("Согласно п. 3 ст. 213.25 Закона о банкротстве из конкурсной массы исключается имущество, на которое не может быть обращено взыскание в соответствии с гражданским процессуальным законодательством.")
+    
+    doc.add_paragraph()
+    
+    add_body_paragraph("Частью 1 ст. 446 ГПК РФ предусмотрено, что взыскание по исполнительным документам не может быть обращено на жилое помещение (его части), принадлежащее гражданину-должнику на праве собственности, если для гражданина-должника и членов его семьи, совместно проживающих в принадлежащем помещении, оно является единственным пригодным для постоянного проживания помещением, за исключением указанного в настоящем абзаце имущества, если оно является предметом ипотеки и на него в соответствии с законодательством об ипотеке может быть обращено взыскание.")
+    add_body_paragraph("Согласно ч. 1 ст. 16 ЖК РФ к жилым помещениям относятся: жилой дом, часть жилого дома; квартира, часть квартиры; комната.")
+    add_body_paragraph("По смыслу приведенных правовых норм, предусмотренный абз. 2 ч. 1 ст. 446 ГПК РФ имущественный (исполнительский) иммунитет означает запрет обращать взыскание на любой вид жилого помещения, определенный Жилищным кодексом Российской Федерации, если соответствующее жилое помещение является для должника и членов его семьи единственным пригодным для постоянного проживания помещением и не является предметом ипотеки.")
+    
+    doc.add_paragraph()
+    
+    # Описание имущества
+    if sole_residence:
+        area_text = str(sole_residence.get('area', ''))
+        land_area = sole_residence.get('landArea')
+        land_text = ""
+        if land_area and land_area != 0:
+            land_text = f" с земельным участком площадью {land_area} кв. м."
+        
+        property_description = f"У должника в собственности имеется {sole_residence.get('type', 'недвижимость')}, общей площадью {area_text} кв. м.{land_text} по адресу: {sole_residence.get('address', 'Место для ввода текста.')}, которое является единственным жильем для должника и членов его семьи. Данный объект недвижимости не является предметом ипотеки."
+    else:
+        property_description = "У должника в собственности имеется жилое помещение, которое является единственным жильем для должника и членов его семьи. Данный объект недвижимости не является предметом ипотеки."
+    
+    add_body_paragraph(property_description)
+    add_body_paragraph("На основании вышеизложенного данное имущество подлежит исключению из конкурсной массы.")
+    
+    doc.add_paragraph()
+    
+    add_body_paragraph("На основании вышеизложенного и, руководствуясь статьей 213.25 Федерального закона от 26.10.2002 N 127-ФЗ «О несостоятельности (банкротстве)», прошу:")
+    
+    doc.add_paragraph()
+    
+    # Заголовок ПРОШУ (уже включен в текст выше, но для структуры можно оставить отдельный параграф)
+    # Просительная часть
+    if sole_residence:
+        area_text = str(sole_residence.get('area', ''))
+        land_area = sole_residence.get('landArea')
+        land_text = ""
+        if land_area and land_area != 0:
+            land_text = f" с земельным участком площадью {land_area} кв. м."
+        
+        petition_text = f"1. Исключить из конкурсной массы {full_name_genitive} следующее имущество: {sole_residence.get('type', 'недвижимость')}, общей площадью {area_text} кв. м.{land_text} по адресу: {sole_residence.get('address', 'Место для ввода текста.')}."
+    else:
+        petition_text = f"1. Исключить из конкурсной массы {full_name_genitive} следующее имущество: жилое помещение, являющееся единственным пригодным для постоянного проживания."
+    
+    add_body_paragraph(petition_text)
+    
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # Подпись
+    add_body_paragraph(f"Должник: {full_name}")
+    add_body_paragraph(f"Дата: {datetime.now().strftime('%d.%m.%Y')}")
+    
+    buffer_property = io.BytesIO()
+    doc.save(buffer_property)
+    buffer_property.seek(0)
+    return base64.b64encode(buffer_property.read()).decode('utf-8')
