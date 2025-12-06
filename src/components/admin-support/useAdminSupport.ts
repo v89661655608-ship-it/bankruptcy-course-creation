@@ -347,8 +347,9 @@ export function useAdminSupport() {
   };
 
   const handleReaction = async (messageId: number, reaction: string) => {
+    console.log('🔥 Admin adding reaction:', { messageId, reaction, adminUserId, currentUser, user });
     try {
-      await fetch(
+      const response = await fetch(
         'https://functions.poehali.dev/92d0eff0-8de5-4a02-b849-378019f1af28?action=react',
         {
           method: 'POST',
@@ -360,11 +361,12 @@ export function useAdminSupport() {
           })
         }
       );
+      console.log('✅ Reaction response:', response.ok, await response.text());
       if (selectedChatUserId) {
         await loadMessages(selectedChatUserId);
       }
     } catch (error) {
-      console.error('Error adding reaction:', error);
+      console.error('❌ Error adding reaction:', error);
     }
   };
 
