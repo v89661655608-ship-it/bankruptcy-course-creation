@@ -64,7 +64,7 @@ export default function ChatSupportSection({ user }: ChatSupportSectionProps) {
           </Card>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 px-2 md:px-0">
           <Card className="border-2 border-purple-200 shadow-xl hover:shadow-2xl transition-all">
             <CardContent className="pt-8">
               <div className="flex items-center gap-3 mb-6">
