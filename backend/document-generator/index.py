@@ -151,6 +151,32 @@ def format_number(num):
     return f"{float(num):,.0f}".replace(',', ' ')
 
 
+def get_page_word(pages_str: str) -> str:
+    """Склонение слова 'лист' в зависимости от числа"""
+    # Извлекаем число из строки
+    import re
+    numbers = re.findall(r'\d+', pages_str)
+    if not numbers:
+        return pages_str
+    
+    num = int(numbers[0])
+    
+    # Правила склонения
+    if num % 10 == 1 and num % 100 != 11:
+        word = "лист"
+    elif num % 10 in [2, 3, 4] and num % 100 not in [12, 13, 14]:
+        word = "листа"
+    else:
+        word = "листов"
+    
+    # Если в строке уже есть слово "лист", заменяем его
+    if 'лист' in pages_str.lower():
+        return pages_str
+    
+    # Добавляем слово к числу
+    return f"{pages_str} {word}"
+
+
 def determine_court_by_address(address: str) -> Dict[str, str]:
     '''Определяет арбитражный суд по адресу регистрации'''
     
@@ -664,14 +690,16 @@ def generate_docx_document(
             
             # Форматируем строку приложения
             if pages and pages.strip():
-                appendices_list.append(f"{idx}. {title} {pages};")
+                # Добавляем склонение слова "лист"
+                pages_formatted = get_page_word(pages)
+                appendices_list.append(f"{idx}. {title} {pages_formatted};")
             else:
                 appendices_list.append(f"{idx}. {title} Место для ввода текста.;")
         
         # Добавляем выписки из ЕГРЮЛ для кредиторов
         start_idx = len(included_items) + 1
         for creditor_idx in range(len(creditors)):
-            appendices_list.append(f"{start_idx + creditor_idx}. Выписка из ЕГРЮЛ на кредитора {creditor_idx + 1};")
+            appendices_list.append(f"{start_idx + creditor_idx}. Выписка из ЕГРЮЛ на кредитора {creditor_idx + 1} 2 листа;")
     else:
         # Дефолтный список если данные не переданы
         appendices_list = [
