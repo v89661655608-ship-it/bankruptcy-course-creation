@@ -23,6 +23,9 @@ export function useAdminSupport() {
 
   const isAdmin = user?.is_admin;
   const currentUser = user;
+  
+  // Для админа, залогиненного через пароль, используем фиксированный ID
+  const adminUserId = currentUser?.id || 0;
 
   useEffect(() => {
     const isAdminAuthenticated = sessionStorage.getItem('admin_authenticated');
@@ -358,7 +361,7 @@ export function useAdminSupport() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message_id: messageId,
-            user_id: currentUser?.id,
+            user_id: adminUserId,
             reaction
           })
         }
@@ -396,7 +399,7 @@ export function useAdminSupport() {
   };
 
   const hasUserReacted = (reactions: Array<{ reaction: string; user_id: number }>, emoji: string) => {
-    return reactions.some(r => r.reaction === emoji && r.user_id === currentUser?.id);
+    return reactions.some(r => r.reaction === emoji && r.user_id === adminUserId);
   };
 
   return {
