@@ -30,35 +30,47 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
     isSoleResidence: false,
   });
 
-  useEffect(() => {
-    const loadYandexMaps = () => {
-      if (window.ymaps) return;
-      
-      const script = document.createElement('script');
-      script.src = 'https://api-maps.yandex.ru/2.1/?apikey=26e2e727-fc5c-44fc-bcfa-fb78cfce5de8&lang=ru_RU';
-      script.async = true;
-      document.head.appendChild(script);
-    };
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
 
-    loadYandexMaps();
-  }, []);
+  const searchAddresses = async (query: string) => {
+    if (query.length < 3) {
+      setAddressSuggestions([]);
+      setShowAddressSuggestions(false);
+      return;
+    }
 
-  useEffect(() => {
-    const initAddressAutocomplete = () => {
-      if (!window.ymaps || !addressInputRef.current) return;
-
-      window.ymaps.ready(() => {
-        const suggestView = new window.ymaps.SuggestView(addressInputRef.current!);
-        suggestView.events.add('select', (e: any) => {
-          const selectedAddress = e.get('item').value;
-          setPropertyForm({ ...propertyForm, address: selectedAddress });
-        });
+    try {
+      const response = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Token 7c3000a82bae1cfe5f3d0d2ca9b8a03b506a370b'
+        },
+        body: JSON.stringify({ query, count: 5 })
       });
-    };
 
-    const timer = setTimeout(initAddressAutocomplete, 500);
-    return () => clearTimeout(timer);
-  }, []);
+      if (response.ok) {
+        const data = await response.json();
+        setAddressSuggestions(data.suggestions || []);
+        setShowAddressSuggestions(true);
+      }
+    } catch (error) {
+      console.error('Ошибка поиска адреса:', error);
+    }
+  };
+
+  const handleAddressChange = (value: string) => {
+    setPropertyForm({ ...propertyForm, address: value });
+    searchAddresses(value);
+  };
+
+  const selectAddress = (suggestion: any) => {
+    setPropertyForm({ ...propertyForm, address: suggestion.value });
+    setShowAddressSuggestions(false);
+    setAddressSuggestions([]);
+  };
 
   const [vehicleForm, setVehicleForm] = useState({
     type: "",
@@ -244,18 +256,30 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
               <p className="text-sm text-red-500 mt-1">{errors.cadastralNumber}</p>
             )}
           </div>
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 relative">
             <Label htmlFor="address">Адрес</Label>
             <Input
               ref={addressInputRef}
               id="address"
               value={propertyForm.address}
-              onChange={(e) =>
-                setPropertyForm({ ...propertyForm, address: e.target.value })
-              }
+              onChange={(e) => handleAddressChange(e.target.value)}
+              onFocus={() => propertyForm.address.length >= 3 && setShowAddressSuggestions(true)}
               placeholder="Начните вводить адрес..."
               className={errors.address ? 'border-red-500' : ''}
             />
+            {showAddressSuggestions && addressSuggestions.length > 0 && (
+              <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {addressSuggestions.map((suggestion, index) => (
+                  <div
+                    key={index}
+                    onClick={() => selectAddress(suggestion)}
+                    className="px-4 py-2 hover:bg-purple-50 cursor-pointer border-b last:border-b-0"
+                  >
+                    <p className="text-sm font-medium">{suggestion.value}</p>
+                  </div>
+                ))}
+              </div>
+            )}
             {errors.address && (
               <p className="text-sm text-red-500 mt-1">{errors.address}</p>
             )}
