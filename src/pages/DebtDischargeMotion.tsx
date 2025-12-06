@@ -4,24 +4,46 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import Icon from "@/components/ui/icon";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import funcUrls from "../../backend/func2url.json";
 
-const STORAGE_KEY = 'absenceMotionData';
+const STORAGE_KEY = 'debtDischargeMotionData';
 
-interface AbsenceMotionData {
+interface DebtDischargeMotionData {
   caseNumber: string;
   hearingDate: string;
+  propertyStatus: 'not-found' | 'found-and-sold';
+  propertySaleAmount?: string;
+  noContestableTrans actions: boolean;
+  hasEmployment: boolean;
+  employerName?: string;
+  monthlyIncome?: string;
+  totalDebt: string;
 }
 
 const loadFromStorage = () => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : { caseNumber: '', hearingDate: '' };
+    return saved ? JSON.parse(saved) : { 
+      caseNumber: '', 
+      hearingDate: '',
+      propertyStatus: 'not-found',
+      noContestablTransactions: true,
+      hasEmployment: false,
+      totalDebt: ''
+    };
   } catch {
-    return { caseNumber: '', hearingDate: '' };
+    return { 
+      caseNumber: '', 
+      hearingDate: '',
+      propertyStatus: 'not-found',
+      noContestablTransactions: true,
+      hasEmployment: false,
+      totalDebt: ''
+    };
   }
 };
 
@@ -37,7 +59,8 @@ const loadPersonalData = () => {
         phone: data.personalData?.phone || '',
         email: data.personalData?.email || '',
         passport: data.personalData?.passport || {},
-        registration: data.personalData?.registration || {}
+        registration: data.personalData?.registration || {},
+        childrenData: data.childrenData || null
       };
     }
     return null;
@@ -46,12 +69,17 @@ const loadPersonalData = () => {
   }
 };
 
-export default function AbsenceMotion() {
+export default function DebtDischargeMotion() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [motionData, setMotionData] = useState<AbsenceMotionData>(loadFromStorage());
+  const [motionData, setMotionData] = useState<DebtDischargeMotionData>(loadFromStorage());
   const [isGenerating, setIsGenerating] = useState(false);
   const personalData = loadPersonalData();
+
+  // Проверяем наличие несовершеннолетних детей
+  const hasMinorChildren = personalData?.childrenData && 
+    !personalData.childrenData.noChildren && 
+    personalData.childrenData.children?.length > 0;
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(motionData));
@@ -76,6 +104,33 @@ export default function AbsenceMotion() {
       return;
     }
 
+    if (!motionData.totalDebt) {
+      toast({
+        title: 'Ошибка',
+        description: 'Укажите общую сумму реестра требований кредиторов',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (motionData.propertyStatus === 'found-and-sold' && !motionData.propertySaleAmount) {
+      toast({
+        title: 'Ошибка',
+        description: 'Укажите сумму реализации имущества',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (motionData.hasEmployment && (!motionData.employerName || !motionData.monthlyIncome)) {
+      toast({
+        title: 'Ошибка',
+        description: 'Укажите данные о работодателе и доходе',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     if (!personalData) {
       toast({
         title: 'Ошибка',
@@ -94,13 +149,14 @@ export default function AbsenceMotion() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          format: 'absence-motion',
+          format: 'debt-discharge-motion',
           personalData: personalData,
           additionalFields: {
             courtName: personalData.courtName,
             courtAddress: personalData.courtAddress
           },
-          absenceMotionData: motionData
+          childrenData: personalData.childrenData,
+          debtDischargeMotionData: motionData
         })
       });
 
@@ -172,34 +228,10 @@ export default function AbsenceMotion() {
             <Icon name="FileText" size={20} className="mr-2" />
             К заявлению о банкротстве
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/attachment-motion')}
-          >
-            <Icon name="FileStack" size={20} className="mr-2" />
-            Ходатайство о приобщении
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/property-exclusion-motion')}
-          >
-            <Icon name="Home" size={20} className="mr-2" />
-            Исключение имущества
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/debt-discharge-motion')}
-          >
-            <Icon name="BadgeCheck" size={20} className="mr-2" />
-            Списание долгов
-          </Button>
         </div>
-        <h1 className="text-3xl font-bold mb-2">Ходатайство о рассмотрении в моё отсутствие</h1>
+        <h1 className="text-3xl font-bold mb-2">Ходатайство об освобождении должника от долгов</h1>
         <p className="text-muted-foreground">
-          Генерация ходатайства для рассмотрения дела о банкротстве в отсутствие должника
+          Генерация ходатайства о списании долгов после завершения процедуры реализации имущества
         </p>
         <Badge variant="outline" className="mt-2">
           <Icon name="TestTube" size={14} className="mr-1" />
@@ -251,6 +283,14 @@ export default function AbsenceMotion() {
                   <span className="text-muted-foreground">Суд:</span>
                   <span className="font-medium">{personalData.courtName || 'Не указан'}</span>
                 </div>
+                {hasMinorChildren && (
+                  <div className="flex items-center gap-2 mt-2 p-2 bg-blue-50 rounded">
+                    <Icon name="Baby" size={16} className="text-blue-500" />
+                    <span className="text-xs text-blue-700">
+                      Обнаружены данные о несовершеннолетних детях
+                    </span>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -259,10 +299,10 @@ export default function AbsenceMotion() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon name="Hash" size={20} />
-                Номер дела
+                Основные данные
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="caseNumber">Номер дела</Label>
                 <Input
@@ -271,23 +311,10 @@ export default function AbsenceMotion() {
                   onChange={(e) => setMotionData({ ...motionData, caseNumber: e.target.value })}
                   placeholder="Например: А40-123456/2024"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Укажите полный номер дела о банкротстве
-                </p>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Icon name="Calendar" size={20} />
-                Дата судебного заседания
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
               <div className="space-y-2">
-                <Label htmlFor="hearingDate">Дата заседания</Label>
+                <Label htmlFor="hearingDate">Дата судебного заседания</Label>
                 <Input
                   id="hearingDate"
                   type="date"
@@ -295,9 +322,149 @@ export default function AbsenceMotion() {
                   onChange={(e) => setMotionData({ ...motionData, hearingDate: e.target.value })}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Укажите дату назначенного судебного заседания
+                  Дата заседания по рассмотрению отчета финансового управляющего
                 </p>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="totalDebt">Общая сумма реестра требований кредиторов (руб.)</Label>
+                <Input
+                  id="totalDebt"
+                  type="number"
+                  value={motionData.totalDebt}
+                  onChange={(e) => setMotionData({ ...motionData, totalDebt: e.target.value })}
+                  placeholder="Например: 850000"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Icon name="Package" size={20} />
+                Имущество конкурсной массы
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="property-not-found"
+                    name="propertyStatus"
+                    checked={motionData.propertyStatus === 'not-found'}
+                    onChange={() => setMotionData({ ...motionData, propertyStatus: 'not-found', propertySaleAmount: undefined })}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor="property-not-found" className="cursor-pointer">
+                    Имущество, подлежащее включению в конкурсную массу, не выявлено
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="property-found"
+                    name="propertyStatus"
+                    checked={motionData.propertyStatus === 'found-and-sold'}
+                    onChange={() => setMotionData({ ...motionData, propertyStatus: 'found-and-sold' })}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor="property-found" className="cursor-pointer">
+                    Имущество выявлено, добровольно передано и реализовано на торгах
+                  </Label>
+                </div>
+
+                {motionData.propertyStatus === 'found-and-sold' && (
+                  <div className="ml-6 space-y-2">
+                    <Label htmlFor="propertySaleAmount">Сумма реализации имущества (руб.)</Label>
+                    <Input
+                      id="propertySaleAmount"
+                      type="number"
+                      value={motionData.propertySaleAmount || ''}
+                      onChange={(e) => setMotionData({ ...motionData, propertySaleAmount: e.target.value })}
+                      placeholder="Например: 250000"
+                    />
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Icon name="FileCheck" size={20} />
+                Сделки должника
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="noContestablTransactions"
+                  checked={motionData.noContestablTransactions}
+                  onCheckedChange={(checked) => 
+                    setMotionData({ ...motionData, noContestablTransactions: checked as boolean })
+                  }
+                />
+                <Label htmlFor="noContestablTransactions" className="cursor-pointer">
+                  Сделок должника, подлежащих оспариванию, не выявлено
+                </Label>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Icon name="Briefcase" size={20} />
+                Трудовая деятельность
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="hasEmployment"
+                  checked={motionData.hasEmployment}
+                  onCheckedChange={(checked) => 
+                    setMotionData({ 
+                      ...motionData, 
+                      hasEmployment: checked as boolean,
+                      employerName: checked ? motionData.employerName : undefined,
+                      monthlyIncome: checked ? motionData.monthlyIncome : undefined
+                    })
+                  }
+                />
+                <Label htmlFor="hasEmployment" className="cursor-pointer">
+                  Должник в настоящее время осуществляет трудовую деятельность
+                </Label>
+              </div>
+
+              {motionData.hasEmployment && (
+                <div className="ml-6 space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="employerName">Наименование работодателя</Label>
+                    <Input
+                      id="employerName"
+                      value={motionData.employerName || ''}
+                      onChange={(e) => setMotionData({ ...motionData, employerName: e.target.value })}
+                      placeholder="Например: ООО Ромашка"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="monthlyIncome">Ежемесячный доход (руб.)</Label>
+                    <Input
+                      id="monthlyIncome"
+                      type="number"
+                      value={motionData.monthlyIncome || ''}
+                      onChange={(e) => setMotionData({ ...motionData, monthlyIncome: e.target.value })}
+                      placeholder="Например: 45000"
+                    />
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -333,11 +500,19 @@ export default function AbsenceMotion() {
                   )}
                   <span>Дата заседания</span>
                 </div>
+                <div className="flex items-center gap-2">
+                  {motionData.totalDebt ? (
+                    <Icon name="CheckCircle" size={16} className="text-green-500" />
+                  ) : (
+                    <Icon name="Circle" size={16} className="text-muted-foreground" />
+                  )}
+                  <span>Сумма реестра</span>
+                </div>
               </div>
 
               <Button
                 onClick={handleGenerateDocument}
-                disabled={!personalData || !motionData.caseNumber || !motionData.hearingDate || isGenerating}
+                disabled={!personalData || !motionData.caseNumber || !motionData.hearingDate || !motionData.totalDebt || isGenerating}
                 className="w-full"
               >
                 {isGenerating ? (
@@ -359,9 +534,9 @@ export default function AbsenceMotion() {
                   Важная информация
                 </p>
                 <div className="text-xs space-y-1 text-muted-foreground">
-                  <p>• Проверьте правильность номера дела</p>
-                  <p>• Убедитесь в корректности даты заседания</p>
+                  <p>• Проверьте все введенные данные</p>
                   <p>• Документ формируется в формате DOCX</p>
+                  <p>• Используется после завершения реализации имущества</p>
                 </div>
               </div>
             </CardContent>

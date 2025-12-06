@@ -186,6 +186,14 @@ export default function DocumentConstructor() {
             <Icon name="Home" size={20} className="mr-2" />
             Исключение имущества
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/debt-discharge-motion')}
+          >
+            <Icon name="BadgeCheck" size={20} className="mr-2" />
+            Списание долгов
+          </Button>
         </div>
         <h1 className="text-3xl font-bold mb-2">Конструктор судебных документов</h1>
         <p className="text-muted-foreground">

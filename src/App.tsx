@@ -27,6 +27,7 @@ import DocumentConstructor from "./pages/DocumentConstructor";
 import AttachmentMotion from "./pages/AttachmentMotion";
 import AbsenceMotion from "./pages/AbsenceMotion";
 import PropertyExclusionMotion from "./pages/PropertyExclusionMotion";
+import DebtDischargeMotion from "./pages/DebtDischargeMotion";
 import Settings from "./pages/Settings";
 import TestPayment from "./pages/TestPayment";
 import NotFound from "./pages/NotFound";
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/attachment-motion" element={<AttachmentMotion />} />
             <Route path="/absence-motion" element={<AbsenceMotion />} />
             <Route path="/property-exclusion-motion" element={<PropertyExclusionMotion />} />
+            <Route path="/debt-discharge-motion" element={<DebtDischargeMotion />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/oferta" element={<Oferta />} />
             <Route path="/privacy" element={<Privacy />} />

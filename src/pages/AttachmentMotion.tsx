@@ -206,6 +206,30 @@ export default function AttachmentMotion() {
             <Icon name="FileText" size={20} className="mr-2" />
             К заявлению о банкротстве
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/absence-motion')}
+          >
+            <Icon name="UserX" size={20} className="mr-2" />
+            Рассмотрение в отсутствие
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/property-exclusion-motion')}
+          >
+            <Icon name="Home" size={20} className="mr-2" />
+            Исключение имущества
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/debt-discharge-motion')}
+          >
+            <Icon name="BadgeCheck" size={20} className="mr-2" />
+            Списание долгов
+          </Button>
         </div>
         <h1 className="text-3xl font-bold mb-2">Ходатайство о приобщении документов</h1>
         <p className="text-muted-foreground">

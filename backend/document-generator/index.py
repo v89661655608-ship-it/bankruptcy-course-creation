@@ -56,6 +56,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         attachment_motion_data = body_data.get('attachmentMotionData', {})
         absence_motion_data = body_data.get('absenceMotionData', {})
         property_exclusion_motion_data = body_data.get('propertyExclusionMotionData', {})
+        debt_discharge_motion_data = body_data.get('debtDischargeMotionData', {})
         doc_format = body_data.get('format', 'docx')
         
         if doc_format == 'attachment-motion':
@@ -124,6 +125,31 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'createdAt': datetime.now().isoformat(),
                     'format': 'docx',
                     'fileName': f"ходатайство_исключение_имущества_{personal_data.get('inn', 'doc')}.docx"
+                }
+            }
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps(result),
+                'isBase64Encoded': False
+            }
+        
+        if doc_format == 'debt-discharge-motion':
+            if not personal_data:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Недостаточно данных для генерации ходатайства'}),
+                    'isBase64Encoded': False
+                }
+            docx_base64 = generate_debt_discharge_motion_document(personal_data, additional_fields, children_data, debt_discharge_motion_data)
+            result = {
+                'success': True,
+                'document': {
+                    'data': docx_base64,
+                    'createdAt': datetime.now().isoformat(),
+                    'format': 'docx',
+                    'fileName': f"ходатайство_освобождение_от_долгов_{personal_data.get('inn', 'doc')}.docx"
                 }
             }
             return {
@@ -2051,3 +2077,189 @@ def generate_property_exclusion_motion_document(
     doc.save(buffer_property)
     buffer_property.seek(0)
     return base64.b64encode(buffer_property.read()).decode('utf-8')
+
+
+def generate_debt_discharge_motion_document(
+    personal: Dict[str, Any],
+    additional: Dict[str, Any],
+    children_data: Dict[str, Any],
+    motion_data: Dict[str, Any]
+) -> str:
+    '''Генерирует DOCX документ ходатайства об освобождении должника от долгов'''
+    
+    doc = Document()
+    
+    if additional is None:
+        additional = {}
+    
+    passport = personal.get('passport', {})
+    registration = personal.get('registration', {})
+    
+    registration_address = registration.get('address', '')
+    auto_court = determine_court_by_address(registration_address)
+    
+    court_name = additional.get('courtName', auto_court['name'])
+    court_address = additional.get('courtAddress', auto_court['address'])
+    phone = personal.get('phone', 'Место для ввода текста.')
+    email = personal.get('email', 'Место для ввода текста.')
+    full_name = personal.get('fullName', 'Место для ввода текста.')
+    
+    case_number = motion_data.get('caseNumber', 'Место для ввода текста.')
+    hearing_date = motion_data.get('hearingDate', '')
+    property_status = motion_data.get('propertyStatus', 'not-found')
+    property_sale_amount = motion_data.get('propertySaleAmount', '')
+    no_contestable_transactions = motion_data.get('noContestablTransactions', True)
+    has_employment = motion_data.get('hasEmployment', False)
+    employer_name = motion_data.get('employerName', '')
+    monthly_income = motion_data.get('monthlyIncome', '')
+    total_debt = motion_data.get('totalDebt', '0')
+    
+    # Форматируем дату в русский формат
+    if hearing_date:
+        from datetime import datetime as dt
+        try:
+            date_obj = dt.strptime(hearing_date, '%Y-%m-%d')
+            formatted_date = date_obj.strftime('%d.%m.%Y')
+        except:
+            formatted_date = hearing_date
+    else:
+        formatted_date = 'Место для ввода текста.'
+    
+    # Шапка документа с форматированием
+    def add_header_paragraph(text):
+        p = doc.add_paragraph(text)
+        p_format = p.paragraph_format
+        p_format.space_before = Pt(0)
+        p_format.space_after = Pt(0)
+        p_format.line_spacing_rule = WD_LINE_SPACING.SINGLE
+        p_format.left_indent = Cm(7)
+        return p
+    
+    add_header_paragraph(f"В {court_name}")
+    add_header_paragraph(f"Адрес: {court_address}")
+    add_header_paragraph("")
+    
+    add_header_paragraph(f"Должник:")
+    add_header_paragraph(f"{full_name}")
+    add_header_paragraph(f"Адрес: {registration.get('address', 'Место для ввода текста.')}")
+    add_header_paragraph("")
+    
+    add_header_paragraph(f"Паспорт: серия {passport.get('series', 'Место для ввода текста.')} номер {passport.get('number', 'Место для ввода текста.')}")
+    add_header_paragraph(f"выдан: {passport.get('issuedBy', 'Место для ввода текста.')}")
+    add_header_paragraph(f"дата выдачи: {passport.get('issueDate', 'Место для ввода текста.')}")
+    add_header_paragraph(f"код подразделения: {passport.get('code', 'Место для ввода текста.')}")
+    add_header_paragraph(f"тел. {phone}")
+    add_header_paragraph(f"e-mail: {email}")
+    add_header_paragraph("")
+    add_header_paragraph(f"Номер дела: {case_number}")
+    add_header_paragraph("")
+    
+    doc.add_paragraph()
+    
+    title = doc.add_heading("ХОДАТАЙСТВО", level=1)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title_format = title.paragraph_format
+    title_format.space_before = Pt(0)
+    title_format.space_after = Pt(0)
+    title_format.line_spacing = 1.0
+    
+    subtitle = doc.add_heading("ОБ ОСВОБОЖДЕНИИ ДОЛЖНИКА ОТ ДОЛГОВ", level=1)
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    subtitle_format = subtitle.paragraph_format
+    subtitle_format.space_before = Pt(0)
+    subtitle_format.space_after = Pt(0)
+    subtitle_format.line_spacing = 1.0
+    
+    doc.add_paragraph()
+    
+    # Функция для добавления абзацев с форматированием
+    def add_body_paragraph(text):
+        p = doc.add_paragraph(text)
+        p_format = p.paragraph_format
+        p_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p_format.first_line_indent = Cm(1)
+        p_format.space_before = Pt(0)
+        p_format.space_after = Pt(0)
+        p_format.line_spacing = 1.0
+        return p
+    
+    # Склоняем ФИО в родительный падеж
+    full_name_genitive = decline_full_name_genitive(full_name)
+    
+    # Основной текст
+    add_body_paragraph(f"Судебное заседание по рассмотрению отчета финансового управляющего назначено на {formatted_date} г.")
+    add_body_paragraph("Настоящим, Должник сообщает Суду следующую информацию по результату проведенных мероприятий:")
+    
+    doc.add_paragraph()
+    
+    # Пункт об имуществе
+    if property_status == 'not-found':
+        add_body_paragraph("• В ходе всех предусмотренных законом проведенных мероприятий, имущества, подлежащего включению в конкурсную массу не выявлено.")
+    else:
+        sale_amount_formatted = format_number(property_sale_amount) if property_sale_amount else 'Место для ввода текста.'
+        add_body_paragraph(f"• В ходе всех предусмотренных законом проведенных мероприятий имущество выявлено, добровольно передано финансовому управляющему и реализовано на торгах на сумму {sale_amount_formatted} рублей.")
+    
+    # Пункт о сделках (условно)
+    if no_contestable_transactions:
+        add_body_paragraph("• Сделок должника, подлежащих оспариванию не выявлено.")
+    
+    # Признаки фиктивного банкротства
+    add_body_paragraph("• Признаков фиктивного/преднамеренного банкротства не выявлено.")
+    
+    # Лица на иждивении
+    has_minor_children = children_data and not children_data.get('noChildren', True) and children_data.get('children')
+    if has_minor_children:
+        children_list = children_data.get('children', [])
+        children_names = ', '.join([child.get('fullName', 'ФИО') for child in children_list])
+        add_body_paragraph(f"• У должника имеются несовершеннолетние дети на иждивении: {children_names}.")
+    else:
+        add_body_paragraph("• Лиц на иждивении не имеется.")
+    
+    # Трудовая деятельность
+    if has_employment:
+        income_formatted = format_number(monthly_income) if monthly_income else 'Место для ввода текста.'
+        add_body_paragraph(f"• Должник в настоящее время осуществляет трудовую деятельность в {employer_name} и получает доход в размере {income_formatted} рублей, что не хватает для расчетов с кредиторами.")
+    else:
+        add_body_paragraph("• Должник в настоящее время трудовую деятельность не осуществляет.")
+    
+    # Реестр требований кредиторов
+    debt_formatted = format_number(total_debt) if total_debt else 'Место для ввода текста.'
+    add_body_paragraph(f"• Реестр требований кредиторов сформирован в общей сумме {debt_formatted} рублей.")
+    
+    doc.add_paragraph()
+    
+    # Правовое обоснование
+    add_body_paragraph("Как неоднократно отмечал Верховный Суд Российской Федерации, основной задачей института потребительского банкротства является социальная реабилитация гражданина - предоставление ему возможности заново выстроить экономические отношения, законно избавившись от необходимости отвечать по старым обязательствам, что в определенной степени ущемляет права кредиторов должника, вследствие чего к должнику законодателем предъявляются повышенные требования в части добросовестности, подразумевающие, помимо прочего, честное сотрудничество с финансовым управляющим и кредиторами, открытое взаимодействие с судом.")
+    add_body_paragraph("Таким образом, такое положение гражданина-банкрота перед кредиторами возможно при условии его добросовестного поведения с кредиторами (в том числе до возбуждения дела о банкротстве), управляющим и судом.")
+    
+    doc.add_paragraph()
+    
+    add_body_paragraph("В настоящем деле о банкротстве при проведении всех мероприятий, предусмотренных Законом в рамках процедуры банкротства гражданина, со стороны Должника не было установлено недобросовестного поведения, не были выявлены сделки, совершенные Должником во вред кредиторам, не установлены факты сокрытия информации и пр., таким образом отсутствуют основания о не списании долгов и Должник ходатайствует о завершении процедуры банкротства в его отношении и полном списании всех долгов.")
+    
+    doc.add_paragraph()
+    
+    add_body_paragraph("На основании изложенного,")
+    
+    doc.add_paragraph()
+    
+    # Заголовок ПРОШУ
+    prosh_heading = doc.add_paragraph("ПРОШУ:")
+    prosh_heading.runs[0].bold = True
+    prosh_heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    doc.add_paragraph()
+    
+    add_body_paragraph(f"1. Завершить процедуру банкротства в отношении меня, {full_name}.")
+    add_body_paragraph(f"2. Освободить {full_name_genitive} от дальнейшего исполнения обязанностей перед кредиторами включенными в реестр требований кредиторов, а также тех, которые имелись у Должника на дату введения процедуры банкротства.")
+    
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # Подпись
+    add_body_paragraph(f"Должник: {full_name}")
+    add_body_paragraph(f"Дата: {datetime.now().strftime('%d.%m.%Y')}")
+    
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return base64.b64encode(buffer.read()).decode('utf-8')
