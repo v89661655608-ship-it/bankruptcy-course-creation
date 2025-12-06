@@ -874,6 +874,8 @@ def check_course_access(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[
     body_data = json.loads(event.get('body', '{}'))
     email = body_data.get('email', '').strip().lower()
     
+    print(f"[CHECK_ACCESS] Checking email: {email}")
+    
     if not email:
         return {
             'statusCode': 400,
@@ -896,8 +898,10 @@ def check_course_access(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[
                 AND up.product_type IN ('course', 'combo')
                 ORDER BY up.created_at DESC
                 LIMIT 1"""
+            print(f"[CHECK_ACCESS] Query: {query}")
             cur.execute(query)
             user = cur.fetchone()
+            print(f"[CHECK_ACCESS] Result: {user}")
             
             if user:
                 return {
