@@ -333,9 +333,9 @@ export const Dashboard = () => {
           totalLessons={totalLessons} 
         />
 
-        <ChatUpsellBanner user={user} />
-
         <WelcomeVideo files={files} />
+
+        <ChatUpsellBanner user={user} />
 
         <div className="space-y-6">
           {modules.map((module, moduleIndex) => (
