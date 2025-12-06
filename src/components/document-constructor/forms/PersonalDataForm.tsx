@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import Icon from "@/components/ui/icon";
 import { PersonalData } from "../types";
+import BasicInfoSection from "./personal-sections/BasicInfoSection";
+import PassportSection from "./personal-sections/PassportSection";
+import RegistrationAddressSection from "./personal-sections/RegistrationAddressSection";
+import MaritalStatusSection from "./personal-sections/MaritalStatusSection";
+import ContactInfoSection from "./personal-sections/ContactInfoSection";
 
 interface AddressSuggestion {
   value: string;
@@ -145,6 +148,17 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
     setShowAddressSuggestions(false);
   };
 
+  const handleAddressFocus = () => {
+    if (addressSuggestions.length > 0) {
+      setShowAddressSuggestions(true);
+    }
+  };
+
+  // Обработчик изменения полей формы
+  const handleFieldChange = (field: string, value: string) => {
+    setPersonalForm({ ...personalForm, [field]: value });
+  };
+
   const validateInn = (inn: string): boolean => {
     if (!/^\d{12}$/.test(inn)) return false;
     const coefficients = [7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
@@ -246,262 +260,63 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="fullName">ФИО *</Label>
-          <Input
-            id="fullName"
-            value={personalForm.fullName}
-            onChange={(e) =>
-              setPersonalForm({ ...personalForm, fullName: e.target.value })
-            }
-            required
-            className={errors.fullName ? 'border-red-500' : ''}
-          />
-          {errors.fullName && (
-            <p className="text-sm text-red-500 mt-1">{errors.fullName}</p>
-          )}
-        </div>
-        <div>
-          <Label htmlFor="birthDate">Дата рождения *</Label>
-          <Input
-            id="birthDate"
-            type="date"
-            value={personalForm.birthDate}
-            onChange={(e) =>
-              setPersonalForm({ ...personalForm, birthDate: e.target.value })
-            }
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="birthPlace">Место рождения *</Label>
-          <Input
-            id="birthPlace"
-            value={personalForm.birthPlace}
-            onChange={(e) =>
-              setPersonalForm({ ...personalForm, birthPlace: e.target.value })
-            }
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="inn">ИНН *</Label>
-          <Input
-            id="inn"
-            value={personalForm.inn}
-            onChange={(e) =>
-              setPersonalForm({ ...personalForm, inn: e.target.value })
-            }
-            placeholder="12 цифр"
-            maxLength={12}
-            required
-            className={errors.inn ? 'border-red-500' : ''}
-          />
-          {errors.inn && (
-            <p className="text-sm text-red-500 mt-1">{errors.inn}</p>
-          )}
-        </div>
-        <div>
-          <Label htmlFor="snils">СНИЛС *</Label>
-          <Input
-            id="snils"
-            placeholder="123-456-789 00"
-            value={personalForm.snils}
-            onChange={(e) =>
-              setPersonalForm({ ...personalForm, snils: e.target.value })
-            }
-            required
-            className={errors.snils ? 'border-red-500' : ''}
-          />
-          {errors.snils && (
-            <p className="text-sm text-red-500 mt-1">{errors.snils}</p>
-          )}
-        </div>
-      </div>
+      <BasicInfoSection
+        personalForm={{
+          fullName: personalForm.fullName,
+          inn: personalForm.inn,
+          snils: personalForm.snils,
+          birthDate: personalForm.birthDate,
+          birthPlace: personalForm.birthPlace,
+        }}
+        errors={errors}
+        onChange={handleFieldChange}
+      />
 
-      <div className="border-t pt-4 mt-4">
-        <h3 className="font-medium mb-3">Паспортные данные</h3>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="passportSeries">Серия *</Label>
-            <Input
-              id="passportSeries"
-              value={personalForm.passportSeries}
-              onChange={(e) =>
-                setPersonalForm({
-                  ...personalForm,
-                  passportSeries: e.target.value,
-                })
-              }
-              placeholder="45 18"
-              maxLength={5}
-              required
-              className={errors.passportSeries ? 'border-red-500' : ''}
-            />
-            {errors.passportSeries && (
-              <p className="text-sm text-red-500 mt-1">{errors.passportSeries}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="passportNumber">Номер *</Label>
-            <Input
-              id="passportNumber"
-              value={personalForm.passportNumber}
-              onChange={(e) =>
-                setPersonalForm({
-                  ...personalForm,
-                  passportNumber: e.target.value,
-                })
-              }
-              placeholder="123456"
-              maxLength={6}
-              required
-              className={errors.passportNumber ? 'border-red-500' : ''}
-            />
-            {errors.passportNumber && (
-              <p className="text-sm text-red-500 mt-1">{errors.passportNumber}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="passportIssueDate">Дата выдачи *</Label>
-            <Input
-              id="passportIssueDate"
-              type="date"
-              value={personalForm.passportIssueDate}
-              onChange={(e) =>
-                setPersonalForm({
-                  ...personalForm,
-                  passportIssueDate: e.target.value,
-                })
-              }
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="passportCode">Код подразделения *</Label>
-            <Input
-              id="passportCode"
-              placeholder="770-001"
-              value={personalForm.passportCode}
-              onChange={(e) =>
-                setPersonalForm({
-                  ...personalForm,
-                  passportCode: e.target.value,
-                })
-              }
-              maxLength={7}
-              required
-              className={errors.passportCode ? 'border-red-500' : ''}
-            />
-            {errors.passportCode && (
-              <p className="text-sm text-red-500 mt-1">{errors.passportCode}</p>
-            )}
-          </div>
-          <div className="sm:col-span-2">
-            <Label htmlFor="passportIssuedBy">Кем выдан *</Label>
-            <Input
-              id="passportIssuedBy"
-              value={personalForm.passportIssuedBy}
-              onChange={(e) =>
-                setPersonalForm({
-                  ...personalForm,
-                  passportIssuedBy: e.target.value,
-                })
-              }
-              required
-            />
-          </div>
-        </div>
-      </div>
+      <PassportSection
+        personalForm={{
+          passportSeries: personalForm.passportSeries,
+          passportNumber: personalForm.passportNumber,
+          passportIssueDate: personalForm.passportIssueDate,
+          passportIssuedBy: personalForm.passportIssuedBy,
+          passportCode: personalForm.passportCode,
+        }}
+        errors={errors}
+        onChange={handleFieldChange}
+      />
 
-      <div className="border-t pt-4 mt-4">
-        <h3 className="font-medium mb-3">Адрес регистрации</h3>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-2 relative">
-            <Label htmlFor="registrationAddress">Адрес *</Label>
-            <div className="relative">
-              <Input
-                id="registrationAddress"
-                value={personalForm.registrationAddress}
-                onChange={(e) => handleAddressChange(e.target.value)}
-                onFocus={() => addressSuggestions.length > 0 && setShowAddressSuggestions(true)}
-                required
-                className={errors.registrationAddress ? 'border-red-500' : ''}
-                placeholder="г. Москва, ул. Ленина, д. 1, кв. 1"
-              />
-              {isSearchingAddress && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
-                </div>
-              )}
-            </div>
-            {errors.registrationAddress && (
-              <p className="text-sm text-red-500 mt-1">{errors.registrationAddress}</p>
-            )}
-            
-            {showAddressSuggestions && addressSuggestions.length > 0 && (
-              <div 
-                ref={addressSuggestionsRef}
-                className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto"
-              >
-                {addressSuggestions.map((suggestion, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => selectAddress(suggestion)}
-                    className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
-                  >
-                    <p className="text-sm">{suggestion.value}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="registrationDate">Дата регистрации</Label>
-            <Input
-              id="registrationDate"
-              type="date"
-              value={personalForm.registrationDate}
-              onChange={(e) =>
-                setPersonalForm({
-                  ...personalForm,
-                  registrationDate: e.target.value,
-                })
-              }
-            />
-          </div>
-        </div>
-      </div>
+      <RegistrationAddressSection
+        personalForm={{
+          registrationAddress: personalForm.registrationAddress,
+          registrationDate: personalForm.registrationDate,
+        }}
+        errors={errors}
+        addressSuggestions={addressSuggestions}
+        showAddressSuggestions={showAddressSuggestions}
+        isSearchingAddress={isSearchingAddress}
+        addressSuggestionsRef={addressSuggestionsRef}
+        onChange={handleFieldChange}
+        onAddressChange={handleAddressChange}
+        onAddressFocus={handleAddressFocus}
+        onSelectAddress={selectAddress}
+      />
 
-      <div className="border-t pt-4 mt-4">
-        <h3 className="font-medium mb-3">Контактные данные</h3>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="phone">Телефон</Label>
-            <Input
-              id="phone"
-              value={personalForm.phone}
-              onChange={(e) =>
-                setPersonalForm({ ...personalForm, phone: e.target.value })
-              }
-              placeholder="+7 (999) 123-45-67"
-            />
-          </div>
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={personalForm.email}
-              onChange={(e) =>
-                setPersonalForm({ ...personalForm, email: e.target.value })
-              }
-              placeholder="ivanov@example.com"
-            />
-          </div>
-        </div>
-      </div>
+      <MaritalStatusSection
+        personalForm={{
+          maritalStatus: personalForm.maritalStatus,
+          spouseName: personalForm.spouseName,
+          marriageDate: personalForm.marriageDate,
+          divorceDate: personalForm.divorceDate,
+        }}
+        onChange={handleFieldChange}
+      />
+
+      <ContactInfoSection
+        personalForm={{
+          phone: personalForm.phone,
+          email: personalForm.email,
+        }}
+        onChange={handleFieldChange}
+      />
 
       <Button type="submit" className="w-full">
         <Icon name="Save" className="mr-2" size={18} />
