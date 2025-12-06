@@ -174,20 +174,20 @@ export default function ProgressSidebar({
           <p className="text-xs text-muted-foreground">
             Скачайте готовые документы, внимательно вычитайте их на предмет опечаток и скорректируйте в соответствии с Вашими данными и индивидуальной информацией. Помните, генератор документов служит Вам помощником, не отдавайте в руки робота судьбу вашего банкротства!
           </p>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Icon name="AlertCircle" size={18} />
-            Важная информация
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm space-y-2 text-muted-foreground">
-          <p>• Все данные передаются через защищенное соединение</p>
-          <p>• Документы формируются в соответствии с действующим законодательством</p>
-          <p>• Рекомендуем консультацию юриста перед подачей</p>
+          <Separator />
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium flex items-center gap-2">
+              <Icon name="AlertCircle" size={16} />
+              Важная информация
+            </p>
+            <div className="text-xs space-y-1 text-muted-foreground">
+              <p>• Все данные передаются через защищенное соединение</p>
+              <p>• Документы формируются в соответствии с действующим законодательством</p>
+              <p>• Рекомендуем консультацию юриста перед подачей</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
