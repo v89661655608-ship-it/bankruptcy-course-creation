@@ -544,13 +544,26 @@ def generate_docx_document(
                 p7_format.space_after = Pt(0)
                 p7_format.line_spacing = 1.0
     
-    p8 = doc.add_paragraph("Какое-либо имущество, на которое может быть обращено взыскание в соответствии с действующим законодательством, у Должника отсутствует.")
-    p8_format = p8.paragraph_format
-    p8_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-    p8_format.first_line_indent = Cm(1)
-    p8_format.space_before = Pt(0)
-    p8_format.space_after = Pt(0)
-    p8_format.line_spacing = 1.0
+    # Добавляем фразу об отсутствии имущества только если:
+    # - есть ровно один объект недвижимости с галочкой "единственное жилье"
+    # - нет транспортных средств
+    real_estate = property.get('realEstate', []) if property else []
+    vehicles = property.get('vehicles', []) if property else []
+    
+    should_show_no_property = (
+        len(real_estate) == 1 and 
+        real_estate[0].get('isSoleResidence', False) and 
+        len(vehicles) == 0
+    )
+    
+    if should_show_no_property:
+        p8 = doc.add_paragraph("Какое-либо имущество, на которое может быть обращено взыскание в соответствии с действующим законодательством, у Должника отсутствует.")
+        p8_format = p8.paragraph_format
+        p8_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p8_format.first_line_indent = Cm(1)
+        p8_format.space_before = Pt(0)
+        p8_format.space_after = Pt(0)
+        p8_format.line_spacing = 1.0
     
     def add_body_paragraph(text):
         p = doc.add_paragraph(text)
