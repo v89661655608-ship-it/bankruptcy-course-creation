@@ -53,7 +53,33 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         transactions_data = body_data.get('transactionsData', {})
         debt_reason_data = body_data.get('debtReasonData', {})
         appendices_data = body_data.get('appendicesData', {})
+        attachment_motion_data = body_data.get('attachmentMotionData', {})
         doc_format = body_data.get('format', 'docx')
+        
+        if doc_format == 'attachment-motion':
+            if not personal_data:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Недостаточно данных для генерации ходатайства'}),
+                    'isBase64Encoded': False
+                }
+            docx_base64 = generate_attachment_motion_document(personal_data, additional_fields, attachment_motion_data)
+            result = {
+                'success': True,
+                'document': {
+                    'data': docx_base64,
+                    'createdAt': datetime.now().isoformat(),
+                    'format': 'docx',
+                    'fileName': f"ходатайство_приобщение_{personal_data.get('inn', 'doc')}.docx"
+                }
+            }
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps(result),
+                'isBase64Encoded': False
+            }
         
         if not personal_data or not credit_data:
             return {
@@ -175,6 +201,49 @@ def get_page_word(pages_str: str) -> str:
     
     # Добавляем слово к числу
     return f"{pages_str} {word}"
+
+
+def decline_full_name_genitive(full_name: str) -> str:
+    """Склонение ФИО в родительный падеж (простая реализация)"""
+    # Простое склонение для распространенных окончаний
+    # Для более точного склонения нужна библиотека pymorphy2
+    parts = full_name.split()
+    if len(parts) != 3:
+        return full_name
+    
+    surname, name, patronymic = parts
+    
+    # Склонение фамилии
+    if surname.endswith('ов') or surname.endswith('ев') or surname.endswith('ин') or surname.endswith('ын'):
+        surname_declined = surname + 'а'
+    elif surname.endswith('ский') or surname.endswith('цкий'):
+        surname_declined = surname[:-2] + 'ого'
+    elif surname.endswith('ая'):
+        surname_declined = surname[:-2] + 'ой'
+    elif surname.endswith('а'):
+        surname_declined = surname[:-1] + 'ы'
+    else:
+        surname_declined = surname + 'а'
+    
+    # Склонение имени
+    if name.endswith('а') or name.endswith('я'):
+        name_declined = name[:-1] + 'ы'
+    elif name.endswith('й'):
+        name_declined = name[:-1] + 'я'
+    else:
+        name_declined = name + 'а'
+    
+    # Склонение отчества
+    if patronymic.endswith('ич'):
+        patronymic_declined = patronymic + 'а'
+    elif patronymic.endswith('на'):
+        patronymic_declined = patronymic[:-1] + 'ы'
+    elif patronymic.endswith('вна') or patronymic.endswith('ична'):
+        patronymic_declined = patronymic[:-1] + 'ы'
+    else:
+        patronymic_declined = patronymic + 'а'
+    
+    return f"{surname_declined} {name_declined} {patronymic_declined}"
 
 
 def determine_court_by_address(address: str) -> Dict[str, str]:
@@ -1496,3 +1565,113 @@ def generate_bankruptcy_application(
 ) -> str:
     '''Генерирует текст заявления о банкротстве (устарело, используйте DOCX/PDF)'''
     return "Используйте формат DOCX или PDF для генерации документа"
+
+
+def generate_attachment_motion_document(
+    personal: Dict[str, Any],
+    additional: Dict[str, Any],
+    motion_data: Dict[str, Any]
+) -> str:
+    '''Генерирует DOCX документ ходатайства о приобщении документов'''
+    
+    doc = Document()
+    
+    if additional is None:
+        additional = {}
+    
+    passport = personal.get('passport', {})
+    registration = personal.get('registration', {})
+    
+    registration_address = registration.get('address', '')
+    auto_court = determine_court_by_address(registration_address)
+    
+    court_name = additional.get('courtName', auto_court['name'])
+    court_address = additional.get('courtAddress', auto_court['address'])
+    phone = personal.get('phone', 'Место для ввода текста.')
+    email = personal.get('email', 'Место для ввода текста.')
+    full_name = personal.get('fullName', 'Место для ввода текста.')
+    
+    case_number = motion_data.get('caseNumber', 'Место для ввода текста.')
+    documents = motion_data.get('documents', [])
+    
+    # Шапка документа с форматированием
+    def add_header_paragraph(text):
+        p = doc.add_paragraph(text)
+        p_format = p.paragraph_format
+        p_format.space_before = Pt(0)
+        p_format.space_after = Pt(0)
+        p_format.line_spacing_rule = WD_LINE_SPACING.SINGLE
+        p_format.left_indent = Cm(7)
+        return p
+    
+    add_header_paragraph(f"В {court_name}")
+    add_header_paragraph(f"Адрес: {court_address}")
+    add_header_paragraph("")
+    
+    add_header_paragraph(f"Должник:")
+    add_header_paragraph(f"{full_name}")
+    add_header_paragraph(f"Адрес: {registration.get('address', 'Место для ввода текста.')}")
+    add_header_paragraph("")
+    
+    add_header_paragraph(f"Паспорт: серия {passport.get('series', 'Место для ввода текста.')} номер {passport.get('number', 'Место для ввода текста.')}")
+    add_header_paragraph(f"выдан: {passport.get('issuedBy', 'Место для ввода текста.')}")
+    add_header_paragraph(f"дата выдачи: {passport.get('issueDate', 'Место для ввода текста.')}")
+    add_header_paragraph(f"код подразделения: {passport.get('code', 'Место для ввода текста.')}")
+    add_header_paragraph(f"тел. {phone}")
+    add_header_paragraph(f"e-mail: {email}")
+    add_header_paragraph("")
+    add_header_paragraph("")
+    
+    doc.add_paragraph()
+    
+    title = doc.add_heading("ХОДАТАЙСТВО", level=1)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    subtitle = doc.add_heading("О ПРИОБЩЕНИИ ДОКУМЕНТОВ", level=1)
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    doc.add_paragraph()
+    
+    # Функция для добавления абзацев с форматированием
+    def add_body_paragraph(text):
+        p = doc.add_paragraph(text)
+        p_format = p.paragraph_format
+        p_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p_format.first_line_indent = Cm(1)
+        p_format.space_before = Pt(0)
+        p_format.space_after = Pt(0)
+        p_format.line_spacing = 1.0
+        return p
+    
+    # Склоняем ФИО в родительный падеж
+    full_name_genitive = decline_full_name_genitive(full_name)
+    
+    # Основной текст
+    add_body_paragraph(f"В производстве {court_name} находится дело № {case_number} по заявлению {full_name_genitive} о признании несостоятельным (банкротом).")
+    
+    doc.add_paragraph()
+    
+    add_body_paragraph("Должник просит приобщить к материалам дела документы:")
+    
+    doc.add_paragraph()
+    
+    # Список документов
+    if documents:
+        for idx, doc_title in enumerate(documents, 1):
+            add_body_paragraph(f"{idx}. {doc_title}.")
+    else:
+        add_body_paragraph("1. Место для ввода текста.")
+        add_body_paragraph("2. Место для ввода текста.")
+        add_body_paragraph("3. Место для ввода текста.")
+    
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # Подпись
+    add_body_paragraph(f"Должник: {full_name}")
+    add_body_paragraph(f"Дата: {datetime.now().strftime('%d.%m.%Y')}")
+    
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return base64.b64encode(buffer.read()).decode('utf-8')

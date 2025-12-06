@@ -24,6 +24,7 @@ import ChatAccess from "./pages/ChatAccess";
 import Support from "./pages/Support";
 import AdminSupport from "./pages/AdminSupport";
 import DocumentConstructor from "./pages/DocumentConstructor";
+import AttachmentMotion from "./pages/AttachmentMotion";
 import Settings from "./pages/Settings";
 import TestPayment from "./pages/TestPayment";
 import NotFound from "./pages/NotFound";
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/support" element={<Support />} />
             <Route path="/admin-support" element={<AdminSupport />} />
             <Route path="/document-constructor" element={<DocumentConstructor />} />
+            <Route path="/attachment-motion" element={<AttachmentMotion />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/oferta" element={<Oferta />} />
             <Route path="/privacy" element={<Privacy />} />

@@ -162,6 +162,14 @@ export default function DocumentConstructor() {
             <Icon name="ArrowLeft" size={20} className="mr-2" />
             Назад в личный кабинет
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/attachment-motion')}
+          >
+            <Icon name="FileStack" size={20} className="mr-2" />
+            Ходатайство о приобщении
+          </Button>
         </div>
         <h1 className="text-3xl font-bold mb-2">Конструктор судебных документов</h1>
         <p className="text-muted-foreground">
