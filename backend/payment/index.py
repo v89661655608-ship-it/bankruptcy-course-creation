@@ -903,7 +903,7 @@ def send_consultation_confirmation_email(user_email: str, user_name: str, amount
     if not all([smtp_host, smtp_user, smtp_password]):
         return
     
-    whatsapp_url = 'https://wa.me/79261200206'
+    whatsapp_url = 'https://wa.me/79661655608'
     subject = 'Оплата консультации подтверждена — bankrot-kurs.ru'
     
     html_body = f'''

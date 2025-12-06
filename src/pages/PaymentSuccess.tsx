@@ -30,7 +30,7 @@ const PaymentSuccess = () => {
       // Если оплата консультации успешна, перенаправляем в WhatsApp
       if (result.paid === true && productType === 'consultation') {
         const message = encodeURIComponent('Здравствуйте! На сайте произведена оплата личной консультации, запишите меня на ближайшее время');
-        const whatsappUrl = `https://wa.me/79261200206?text=${message}`;
+        const whatsappUrl = `https://wa.me/79661655608?text=${message}`;
         setTimeout(() => {
           window.location.href = whatsappUrl;
         }, 2000); // 2 секунды задержки, чтобы пользователь увидел сообщение об успехе
@@ -104,7 +104,7 @@ const PaymentSuccess = () => {
                   <Button
                     onClick={() => {
                       const message = encodeURIComponent('Здравствуйте! На сайте произведена оплата личной консультации, запишите меня на ближайшее время');
-                      window.location.href = `https://wa.me/79261200206?text=${message}`;
+                      window.location.href = `https://wa.me/79661655608?text=${message}`;
                     }}
                     className="w-full bg-green-600 hover:bg-green-700 text-white"
                     size="lg"
