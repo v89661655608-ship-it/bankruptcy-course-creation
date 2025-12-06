@@ -328,6 +328,51 @@ def decline_full_name_genitive(full_name: str) -> str:
     return f"{surname_declined} {name_declined} {patronymic_declined}"
 
 
+def decline_full_name_accusative(full_name: str) -> str:
+    """Склонение ФИО в винительный падеж (кого? что?)"""
+    parts = full_name.split()
+    if len(parts) != 3:
+        return full_name
+    
+    surname, name, patronymic = parts
+    
+    # Склонение фамилии
+    if surname.endswith('ова') or surname.endswith('ева') or surname.endswith('ина') or surname.endswith('ына'):
+        # Женские фамилии: Петрова -> Петрову
+        surname_declined = surname[:-1] + 'у'
+    elif surname.endswith('ая'):
+        surname_declined = surname[:-2] + 'ую'
+    elif surname.endswith('ов') or surname.endswith('ев') or surname.endswith('ин') or surname.endswith('ын'):
+        # Мужские фамилии: Петров -> Петрова
+        surname_declined = surname + 'а'
+    elif surname.endswith('ский') or surname.endswith('цкий'):
+        surname_declined = surname[:-2] + 'ого'
+    elif surname.endswith('а'):
+        surname_declined = surname[:-1] + 'у'
+    else:
+        surname_declined = surname + 'а'
+    
+    # Склонение имени
+    if name.endswith('а') or name.endswith('я'):
+        name_declined = name[:-1] + 'у'
+    elif name.endswith('й'):
+        name_declined = name[:-1] + 'я'
+    else:
+        name_declined = name + 'а'
+    
+    # Склонение отчества
+    if patronymic.endswith('ич'):
+        patronymic_declined = patronymic + 'а'
+    elif patronymic.endswith('на'):
+        patronymic_declined = patronymic[:-1] + 'у'
+    elif patronymic.endswith('вна') or patronymic.endswith('ична'):
+        patronymic_declined = patronymic[:-1] + 'у'
+    else:
+        patronymic_declined = patronymic + 'а'
+    
+    return f"{surname_declined} {name_declined} {patronymic_declined}"
+
+
 def decline_court_name_genitive(court_name: str) -> str:
     """Склонение названия суда в родительный падеж"""
     
@@ -2183,8 +2228,9 @@ def generate_debt_discharge_motion_document(
         p_format.line_spacing = 1.0
         return p
     
-    # Склоняем ФИО и название суда в родительный падеж
+    # Склоняем ФИО в разные падежи
     full_name_genitive = decline_full_name_genitive(full_name)
+    full_name_accusative = decline_full_name_accusative(full_name)
     court_name_genitive = decline_court_name_genitive(court_name)
     
     # Вводный абзац с номером дела
@@ -2256,7 +2302,7 @@ def generate_debt_discharge_motion_document(
     doc.add_paragraph()
     
     add_body_paragraph(f"1. Завершить процедуру банкротства в отношении {full_name_genitive}.")
-    add_body_paragraph(f"2. Освободить {full_name_genitive} от дальнейшего исполнения обязанностей перед кредиторами включенными в реестр требований кредиторов, а также тех, которые имелись у Должника на дату введения процедуры банкротства.")
+    add_body_paragraph(f"2. Освободить {full_name_accusative} от дальнейшего исполнения обязанностей перед кредиторами включенными в реестр требований кредиторов, а также тех, которые имелись у Должника на дату введения процедуры банкротства.")
     
     doc.add_paragraph()
     doc.add_paragraph()
