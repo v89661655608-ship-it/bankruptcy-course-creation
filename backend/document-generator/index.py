@@ -2249,7 +2249,7 @@ def generate_debt_discharge_motion_document(
     
     doc.add_paragraph()
     
-    add_body_paragraph(f"1. Завершить процедуру банкротства в отношении меня, {full_name}.")
+    add_body_paragraph(f"1. Завершить процедуру банкротства в отношении {full_name_genitive}.")
     add_body_paragraph(f"2. Освободить {full_name_genitive} от дальнейшего исполнения обязанностей перед кредиторами включенными в реестр требований кредиторов, а также тех, которые имелись у Должника на дату введения процедуры банкротства.")
     
     doc.add_paragraph()
