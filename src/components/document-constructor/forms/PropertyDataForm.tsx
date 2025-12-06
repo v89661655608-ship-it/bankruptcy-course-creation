@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Icon from "@/components/ui/icon";
 import { PropertyData } from "../types";
+import { useToast } from "@/hooks/use-toast";
 
 interface ValidationErrors {
   [key: string]: string;
@@ -15,7 +16,9 @@ interface PropertyDataFormProps {
 }
 
 export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
+  const { toast } = useToast();
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const addressInputRef = useRef<HTMLInputElement>(null);
   const [noProperty, setNoProperty] = useState(false);
   const [propertyForm, setPropertyForm] = useState({
     propertyType: "",
@@ -26,6 +29,36 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
     landArea: "",
     isSoleResidence: false,
   });
+
+  useEffect(() => {
+    const loadYandexMaps = () => {
+      if (window.ymaps) return;
+      
+      const script = document.createElement('script');
+      script.src = 'https://api-maps.yandex.ru/2.1/?apikey=26e2e727-fc5c-44fc-bcfa-fb78cfce5de8&lang=ru_RU';
+      script.async = true;
+      document.head.appendChild(script);
+    };
+
+    loadYandexMaps();
+  }, []);
+
+  useEffect(() => {
+    const initAddressAutocomplete = () => {
+      if (!window.ymaps || !addressInputRef.current) return;
+
+      window.ymaps.ready(() => {
+        const suggestView = new window.ymaps.SuggestView(addressInputRef.current!);
+        suggestView.events.add('select', (e: any) => {
+          const selectedAddress = e.get('item').value;
+          setPropertyForm({ ...propertyForm, address: selectedAddress });
+        });
+      });
+    };
+
+    const timer = setTimeout(initAddressAutocomplete, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const [vehicleForm, setVehicleForm] = useState({
     type: "",
@@ -89,6 +122,11 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
       landArea: "",
       isSoleResidence: false,
     });
+
+    toast({
+      title: 'Имущество добавлено',
+      description: `${propertyForm.propertyType} по адресу: ${propertyForm.address}`,
+    });
   };
 
   const handleAddVehicle = () => {
@@ -131,6 +169,11 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
       registrationNumber: "",
       vin: "",
     });
+
+    toast({
+      title: 'ТС добавлено',
+      description: `${vehicleForm.brand} ${vehicleForm.model} (${vehicleForm.year} г.)`,
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -141,7 +184,10 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
       vehicles: vehicles,
     };
     onSubmit(data);
-    alert("Данные об имуществе сохранены");
+    toast({
+      title: 'Сохранено',
+      description: 'Данные об имуществе успешно сохранены',
+    });
   };
 
   return (
@@ -201,11 +247,13 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
           <div className="sm:col-span-2">
             <Label htmlFor="address">Адрес</Label>
             <Input
+              ref={addressInputRef}
               id="address"
               value={propertyForm.address}
               onChange={(e) =>
                 setPropertyForm({ ...propertyForm, address: e.target.value })
               }
+              placeholder="Начните вводить адрес..."
               className={errors.address ? 'border-red-500' : ''}
             />
             {errors.address && (
