@@ -443,8 +443,23 @@ def generate_docx_document(
             for child in children_list:
                 child_name = child.get('fullName', 'ФИО')
                 birth_date = child.get('birthDate', 'года рождения')
-                lives_with = 'проживающая вместе с Должником' if child.get('livesWithDebtor', False) else 'проживающая отдельно от Должника'
-                p4 = doc.add_paragraph(f"На иждивении у Должника находится несовершеннолетний(яя) {child_name} {birth_date} года рождения, {lives_with}.")
+                
+                # Определяем пол по отчеству (последнее слово в ФИО)
+                name_parts = child_name.split()
+                is_male = True  # по умолчанию мужской род
+                if len(name_parts) >= 3:
+                    patronymic = name_parts[2].lower()
+                    # Женские отчества заканчиваются на 'вна' или 'чна'
+                    if patronymic.endswith('вна') or patronymic.endswith('ична'):
+                        is_male = False
+                
+                # Склонение слов в зависимости от пола
+                gender_word = 'несовершеннолетний' if is_male else 'несовершеннолетняя'
+                living_with = 'проживающий вместе с Должником' if is_male else 'проживающая вместе с Должником'
+                living_apart = 'проживающий отдельно от Должника' if is_male else 'проживающая отдельно от Должника'
+                lives_with = living_with if child.get('livesWithDebtor', False) else living_apart
+                
+                p4 = doc.add_paragraph(f"На иждивении у Должника находится {gender_word} {child_name} {birth_date} года рождения, {lives_with}.")
                 p4_format = p4.paragraph_format
                 p4_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
                 p4_format.first_line_indent = Cm(1)
