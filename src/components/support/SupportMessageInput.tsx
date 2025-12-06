@@ -41,14 +41,14 @@ export default function SupportMessageInput({
   handleSendMessage
 }: SupportMessageInputProps) {
   return (
-    <div className="border-t p-4">
+    <div className="border-t p-2 md:p-4">
       {replyToMessage && (
         <div className="mb-2 p-2 bg-muted rounded-lg flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Icon name="Reply" size={16} />
-            <span className="text-sm">Ответ на: {replyToMessage.message.substring(0, 50)}...</span>
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <Icon name="Reply" size={16} className="flex-shrink-0" />
+            <span className="text-xs md:text-sm truncate">Ответ на: {replyToMessage.message.substring(0, 30)}...</span>
           </div>
-          <button onClick={() => setReplyToMessage(null)}>
+          <button onClick={() => setReplyToMessage(null)} className="flex-shrink-0">
             <Icon name="X" size={16} />
           </button>
         </div>
@@ -56,14 +56,14 @@ export default function SupportMessageInput({
       
       {editingMessage && (
         <div className="mb-2 p-2 bg-yellow-50 rounded-lg flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Icon name="Pencil" size={16} />
-            <span className="text-sm">Редактирование сообщения</span>
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <Icon name="Pencil" size={16} className="flex-shrink-0" />
+            <span className="text-xs md:text-sm">Редактирование сообщения</span>
           </div>
           <button onClick={() => {
             setEditingMessage(null);
             setNewMessage('');
-          }}>
+          }} className="flex-shrink-0">
             <Icon name="X" size={16} />
           </button>
         </div>
@@ -90,17 +90,17 @@ export default function SupportMessageInput({
       
       {selectedFile && (
         <div className="mb-3 p-2 bg-muted rounded-lg flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Icon name="FileText" size={20} />
-            <span className="text-sm">{selectedFile.name}</span>
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <Icon name="FileText" size={20} className="flex-shrink-0" />
+            <span className="text-xs md:text-sm truncate">{selectedFile.name}</span>
           </div>
-          <button onClick={() => setSelectedFile(null)}>
+          <button onClick={() => setSelectedFile(null)} className="flex-shrink-0">
             <Icon name="X" size={16} />
           </button>
         </div>
       )}
       
-      <div className="flex gap-2">
+      <div className="flex gap-1 md:gap-2">
         <input
           type="file"
           accept="image/*"
@@ -113,8 +113,9 @@ export default function SupportMessageInput({
           size="icon"
           onClick={() => document.getElementById('image-upload')?.click()}
           disabled={editingMessage !== null}
+          className="h-9 w-9 md:h-10 md:w-10"
         >
-          <Icon name="Image" size={20} />
+          <Icon name="Image" size={18} className="md:size-5" />
         </Button>
         
         <input
@@ -129,8 +130,9 @@ export default function SupportMessageInput({
           size="icon"
           onClick={() => document.getElementById('file-upload')?.click()}
           disabled={editingMessage !== null}
+          className="h-9 w-9 md:h-10 md:w-10"
         >
-          <Icon name="Paperclip" size={20} />
+          <Icon name="Paperclip" size={18} className="md:size-5" />
         </Button>
 
         <Input
@@ -143,17 +145,19 @@ export default function SupportMessageInput({
               handleSendMessage();
             }
           }}
-          className="flex-1"
+          className="flex-1 text-sm md:text-base h-9 md:h-10"
         />
 
         <Button
           onClick={handleSendMessage}
           disabled={isSending || (!newMessage.trim() && !selectedImage && !selectedFile)}
+          className="h-9 w-9 md:h-10 md:w-10"
+          size="icon"
         >
           {isSending ? (
-            <Icon name="Loader2" size={20} className="animate-spin" />
+            <Icon name="Loader2" size={18} className="animate-spin md:size-5" />
           ) : (
-            <Icon name="Send" size={20} />
+            <Icon name="Send" size={18} className="md:size-5" />
           )}
         </Button>
       </div>

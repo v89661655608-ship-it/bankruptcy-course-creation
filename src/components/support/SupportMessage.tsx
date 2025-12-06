@@ -28,15 +28,15 @@ export default function SupportMessage({
 }: SupportMessageProps) {
   return (
     <div className={`flex ${msg.is_from_admin ? 'justify-start' : 'justify-end'}`}>
-      <div className={`max-w-[70%] ${msg.is_from_admin ? '' : 'ml-auto'}`}>
+      <div className={`max-w-[85%] md:max-w-[70%] ${msg.is_from_admin ? '' : 'ml-auto'}`}>
         {msg.is_from_admin && (
-          <p className="text-xs text-muted-foreground mb-1 ml-2">
+          <p className="text-[10px] md:text-xs text-muted-foreground mb-1 ml-2">
             Юрист
           </p>
         )}
         
         <div
-          className={`rounded-2xl px-4 py-2 ${
+          className={`rounded-2xl px-3 py-2 md:px-4 ${
             msg.is_from_admin
               ? 'bg-muted text-foreground'
               : !msg.read_by_admin
@@ -45,10 +45,10 @@ export default function SupportMessage({
           }`}
         >
           {msg.reply_to_id && (
-            <div className={`mb-2 p-2 rounded border-l-2 ${
+            <div className={`mb-2 p-1.5 md:p-2 rounded border-l-2 ${
               msg.is_from_admin ? 'bg-white border-gray-300' : 'bg-purple-700 border-purple-400'
             }`}>
-              <p className={`text-xs ${msg.is_from_admin ? 'text-muted-foreground' : 'text-purple-200'}`}>
+              <p className={`text-[10px] md:text-xs ${msg.is_from_admin ? 'text-muted-foreground' : 'text-purple-200'}`}>
                 Ответ на сообщение #{msg.reply_to_id}
               </p>
             </div>
@@ -74,13 +74,13 @@ export default function SupportMessage({
               <Icon name="Download" size={16} />
             </a>
           )}
-          <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+          <p className="whitespace-pre-wrap break-words text-sm md:text-base">{msg.message}</p>
           <div className="flex items-center gap-2 mt-1">
-            <p className={`text-xs ${msg.is_from_admin ? 'text-muted-foreground' : 'text-purple-200'}`}>
+            <p className={`text-[10px] md:text-xs ${msg.is_from_admin ? 'text-muted-foreground' : 'text-purple-200'}`}>
               {formatTime(msg.created_at)}
             </p>
             {msg.edited_at && (
-              <span className={`text-xs italic ${msg.is_from_admin ? 'text-muted-foreground' : 'text-purple-300'}`}>
+              <span className={`text-[10px] md:text-xs italic ${msg.is_from_admin ? 'text-muted-foreground' : 'text-purple-300'}`}>
                 (изменено)
               </span>
             )}
@@ -88,7 +88,7 @@ export default function SupportMessage({
         </div>
 
         {msg.reactions && msg.reactions.length > 0 && (
-          <div className="flex gap-1 mt-1 ml-2">
+          <div className="flex gap-1 mt-1 ml-1 md:ml-2">
             {['👍', '❤️', '👏', '🙏'].map((emoji) => {
               const count = getReactionCount(msg.reactions, emoji);
               if (count === 0) return null;
@@ -96,7 +96,7 @@ export default function SupportMessage({
                 <button
                   key={emoji}
                   onClick={() => handleReaction(msg.id, emoji)}
-                  className={`text-xs px-2 py-1 rounded-full ${
+                  className={`text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1 rounded-full ${
                     hasUserReacted(msg.reactions, emoji)
                       ? 'bg-purple-100 border-purple-400'
                       : 'bg-muted'
@@ -109,12 +109,12 @@ export default function SupportMessage({
           </div>
         )}
 
-        <div className="flex gap-2 mt-1 ml-2 items-center flex-wrap">
+        <div className="flex gap-1.5 md:gap-2 mt-1 ml-1 md:ml-2 items-center flex-wrap">
           {['👍', '❤️', '👏', '🙏'].map((emoji) => (
             <button
               key={emoji}
               onClick={() => handleReaction(msg.id, emoji)}
-              className="text-sm hover:scale-125 transition-transform cursor-pointer"
+              className="text-base md:text-sm hover:scale-125 transition-transform cursor-pointer p-1"
               title={`Реакция ${emoji}`}
             >
               {emoji}
@@ -134,14 +134,14 @@ export default function SupportMessage({
                   setEditingMessage(msg);
                   setNewMessage(msg.message);
                 }}
-                className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                className="text-xs text-muted-foreground hover:text-foreground cursor-pointer p-1"
                 title="Редактировать"
               >
                 <Icon name="Pencil" size={14} />
               </button>
               <button
                 onClick={() => handleDeleteMessage(msg.id)}
-                className="text-xs text-red-500 hover:text-red-700 cursor-pointer"
+                className="text-xs text-red-500 hover:text-red-700 cursor-pointer p-1"
                 title="Удалить"
               >
                 <Icon name="Trash2" size={14} />

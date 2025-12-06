@@ -37,34 +37,35 @@ export default function Support() {
   let lastDate = '';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8 px-4">
-      <div className="container mx-auto max-w-4xl">
-        <Card className="h-[80vh] flex flex-col">
-          <CardHeader className="border-b">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 md:py-8 md:px-4">
+      <div className="container mx-auto max-w-4xl h-screen md:h-auto">
+        <Card className="h-screen md:h-[80vh] flex flex-col rounded-none md:rounded-lg">
+          <CardHeader className="border-b py-3 md:py-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 md:gap-3 flex-1">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate('/dashboard')}
+                  className="-ml-2"
                 >
                   <Icon name="ArrowLeft" size={20} />
                 </Button>
-                <div>
-                  <CardTitle>Поддержка юристов</CardTitle>
-                  <p className="text-sm text-muted-foreground">
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-base md:text-xl">Поддержка юристов</CardTitle>
+                  <p className="text-xs md:text-sm text-muted-foreground hidden md:block">
                     Задайте вопрос нашим специалистам
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1 hidden md:block">
                     По регламенту ответ придёт в течение суток, но мы сделаем всё возможное, чтобы ответить быстрее.
                   </p>
                 </div>
               </div>
-              <Icon name="MessageCircle" size={24} className="text-purple-600" />
+              <Icon name="MessageCircle" size={20} className="text-purple-600 md:size-6 flex-shrink-0" />
             </div>
           </CardHeader>
 
-          <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+          <CardContent className="flex-1 overflow-y-auto p-2 md:p-4 space-y-2 md:space-y-4">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
                 <Icon name="MessageCircle" size={64} className="mb-4 opacity-20" />
