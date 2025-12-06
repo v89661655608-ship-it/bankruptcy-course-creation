@@ -190,34 +190,34 @@ export default function AdminChatWindow({
                       <button
                         key={emoji}
                         onClick={() => handleReaction(msg.id, emoji)}
-                        className="text-sm hover:scale-125 transition-transform"
+                        className="text-sm hover:scale-125 transition-transform cursor-pointer"
                         title={`Реакция ${emoji}`}
                       >
                         {emoji}
                       </button>
                     ))}
+                    <button
+                      onClick={() => setReplyToMessage(msg)}
+                      className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                      title="Ответить"
+                    >
+                      <Icon name="Reply" size={14} />
+                    </button>
                     {msg.is_from_admin && (
                       <>
-                        <button
-                          onClick={() => setReplyToMessage(msg)}
-                          className="text-xs text-muted-foreground hover:text-foreground"
-                          title="Ответить"
-                        >
-                          <Icon name="Reply" size={14} />
-                        </button>
                         <button
                           onClick={() => {
                             setEditingMessage(msg);
                             setNewMessage(msg.message);
                           }}
-                          className="text-xs text-muted-foreground hover:text-foreground"
+                          className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
                           title="Редактировать"
                         >
                           <Icon name="Pencil" size={14} />
                         </button>
                         <button
                           onClick={() => handleDeleteMessage(msg.id, msg.user_id)}
-                          className="text-xs text-red-500 hover:text-red-700"
+                          className="text-xs text-red-500 hover:text-red-700 cursor-pointer"
                           title="Удалить"
                         >
                           <Icon name="Trash2" size={14} />
