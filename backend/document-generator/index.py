@@ -51,6 +51,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         benefits_data = body_data.get('benefitsData', {})
         children_data = body_data.get('childrenData', {})
         transactions_data = body_data.get('transactionsData', {})
+        debt_reason_data = body_data.get('debtReasonData', {})
         doc_format = body_data.get('format', 'docx')
         
         if not personal_data or not credit_data:
@@ -89,7 +90,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         elif doc_format == 'pdf':
             pdf_base64 = generate_pdf_document(
-                personal_data, credit_data, income_data, property_data, additional_fields, benefits_data, children_data, transactions_data
+                personal_data, credit_data, income_data, property_data, additional_fields, benefits_data, children_data, transactions_data, debt_reason_data
             )
             result = {
                 'success': True,
@@ -102,7 +103,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         elif doc_format == 'docx':
             docx_base64 = generate_docx_document(
-                personal_data, credit_data, income_data, property_data, additional_fields, benefits_data, children_data, transactions_data
+                personal_data, credit_data, income_data, property_data, additional_fields, benefits_data, children_data, transactions_data, debt_reason_data
             )
             result = {
                 'success': True,
@@ -271,7 +272,8 @@ def generate_docx_document(
     additional: Dict[str, Any] = None,
     benefits: Dict[str, Any] = None,
     children: Dict[str, Any] = None,
-    transactions: Dict[str, Any] = None
+    transactions: Dict[str, Any] = None,
+    debt_reason: Dict[str, Any] = None
 ) -> str:
     '''Генерирует DOCX документ по шаблону и возвращает base64'''
     
@@ -411,7 +413,11 @@ def generate_docx_document(
         p1_format.space_after = Pt(0)
         p1_format.line_spacing = 1.0
         
-        p2 = doc.add_paragraph("Такая ситуация возникла в связи с тем, что Должник не рассчитал свои силы и возможности, кредиты приобретались при рождении детей и тратились на семейные нужды, впоследствии Должником была потеряна работа.")
+        debt_reason_text = "Такая ситуация возникла в связи с тем, что Должник не рассчитал свои силы и возможности, кредиты приобретались при рождении детей и тратились на семейные нужды, впоследствии Должником была потеряна работа."
+        if debt_reason and debt_reason.get('reason'):
+            debt_reason_text = debt_reason.get('reason')
+        
+        p2 = doc.add_paragraph(debt_reason_text)
         p2_format = p2.paragraph_format
         p2_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         p2_format.first_line_indent = Cm(1)
@@ -650,7 +656,8 @@ def generate_pdf_document(
     additional: Dict[str, Any] = None,
     benefits: Dict[str, Any] = None,
     children: Dict[str, Any] = None,
-    transactions: Dict[str, Any] = None
+    transactions: Dict[str, Any] = None,
+    debt_reason: Dict[str, Any] = None
 ) -> str:
     '''Генерирует PDF документ по шаблону и возвращает base64'''
     
