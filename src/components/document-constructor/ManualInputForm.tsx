@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Icon from "@/components/ui/icon";
-import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields, BenefitsData, ChildrenData, TransactionsData } from "./types";
+import { PersonalData, CreditData, IncomeData, PropertyData, AdditionalFields, BenefitsData, ChildrenData, TransactionsData, DebtReasonData } from "./types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PersonalDataForm from "./forms/PersonalDataForm";
 import CreditDataForm from "./forms/CreditDataForm";
@@ -11,6 +11,7 @@ import AdditionalFieldsForm from "./AdditionalFieldsForm";
 import BenefitsForm from "./BenefitsForm";
 import ChildrenForm from "./ChildrenForm";
 import TransactionsForm from "./TransactionsForm";
+import DebtReasonForm from "./DebtReasonForm";
 
 interface ManualInputFormProps {
   onPersonalDataSubmit: (data: PersonalData) => void;
@@ -21,10 +22,12 @@ interface ManualInputFormProps {
   onBenefitsSubmit: (data: BenefitsData) => void;
   onChildrenSubmit: (data: ChildrenData) => void;
   onTransactionsSubmit: (data: TransactionsData) => void;
+  onDebtReasonSubmit: (data: DebtReasonData) => void;
   additionalFieldsData?: AdditionalFields;
   benefitsData?: BenefitsData;
   childrenData?: ChildrenData;
   transactionsData?: TransactionsData;
+  debtReasonData?: DebtReasonData;
 }
 
 export default function ManualInputForm({
@@ -36,10 +39,12 @@ export default function ManualInputForm({
   onBenefitsSubmit,
   onChildrenSubmit,
   onTransactionsSubmit,
+  onDebtReasonSubmit,
   additionalFieldsData,
   benefitsData,
   childrenData,
-  transactionsData
+  transactionsData,
+  debtReasonData
 }: ManualInputFormProps) {
   const [activeTab, setActiveTab] = useState("personal");
 
@@ -53,7 +58,7 @@ export default function ManualInputForm({
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-8 gap-1">
+          <TabsList className="grid w-full grid-cols-9 gap-1">
             <TabsTrigger value="personal">Личные</TabsTrigger>
             <TabsTrigger value="credit">Кредиты</TabsTrigger>
             <TabsTrigger value="income">Доходы</TabsTrigger>
@@ -62,6 +67,7 @@ export default function ManualInputForm({
             <TabsTrigger value="benefits">Льготы</TabsTrigger>
             <TabsTrigger value="children">Дети</TabsTrigger>
             <TabsTrigger value="transactions">Сделки</TabsTrigger>
+            <TabsTrigger value="debt-reason">Причина долгов</TabsTrigger>
           </TabsList>
 
           <TabsContent value="personal">
@@ -118,8 +124,17 @@ export default function ManualInputForm({
               initialData={transactionsData}
               onSave={(data) => {
                 onTransactionsSubmit(data);
+                setActiveTab("debt-reason");
               }}
               onCancel={() => setActiveTab("children")}
+            />
+          </TabsContent>
+
+          <TabsContent value="debt-reason">
+            <DebtReasonForm
+              onSubmit={(data) => {
+                onDebtReasonSubmit(data);
+              }}
             />
           </TabsContent>
         </Tabs>

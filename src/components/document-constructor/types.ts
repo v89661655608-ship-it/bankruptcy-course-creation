@@ -121,3 +121,7 @@ export interface TransactionsData {
     counterparty: string;
   }>;
 }
+
+export interface DebtReasonData {
+  reason: string;
+}
