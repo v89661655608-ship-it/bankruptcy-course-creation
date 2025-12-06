@@ -68,13 +68,19 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
 
 def send_consultation_confirmation_email(user_email: str, user_name: str, amount: float):
+    print(f"[RESEND] Starting email send to {user_email}")
+    
     smtp_host = os.environ.get('SMTP_HOST')
     smtp_port = int(os.environ.get('SMTP_PORT', 465))
     smtp_user = os.environ.get('SMTP_USER')
     smtp_password = os.environ.get('SMTP_PASSWORD')
     
+    print(f"[RESEND] SMTP config: host={smtp_host}, port={smtp_port}, user={smtp_user}, pass={'***' if smtp_password else 'MISSING'}")
+    
     if not all([smtp_host, smtp_user, smtp_password]):
-        raise Exception('SMTP credentials not configured')
+        error_msg = f"SMTP credentials missing: host={smtp_host}, user={smtp_user}, password={'set' if smtp_password else 'MISSING'}"
+        print(f"[RESEND] ERROR: {error_msg}")
+        raise Exception(error_msg)
     
     whatsapp_url = 'https://wa.me/79661655608'
     subject = 'Оплата консультации подтверждена — bankrot-kurs.ru'
@@ -141,8 +147,10 @@ def send_consultation_confirmation_email(user_email: str, user_name: str, amount
     
     msg.attach(MIMEText(html_body, 'html', 'utf-8'))
     
-    print(f"[EMAIL] Sending consultation confirmation to {user_email}")
+    print(f"[RESEND] Connecting to SMTP {smtp_host}:{smtp_port}")
     with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+        print(f"[RESEND] Logging in as {smtp_user}")
         server.login(smtp_user, smtp_password)
+        print(f"[RESEND] Sending message to {user_email}")
         server.send_message(msg)
-    print(f"[EMAIL] Successfully sent consultation confirmation to {user_email}")
+    print(f"[RESEND] ✅ Successfully sent consultation confirmation to {user_email}")
