@@ -1,0 +1,19 @@
+{
+  "tests": [
+    {
+      "name": "Test resend consultation email",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "email": "test@example.com",
+        "name": "Test User",
+        "amount": 9999
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
