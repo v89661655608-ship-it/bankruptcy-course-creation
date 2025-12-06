@@ -94,6 +94,27 @@ export default function AdditionalFieldsForm({ initialData, onSave, onCancel }: 
 
   return (
     <Card className="p-6">
+      <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-start gap-2">
+          <Icon name="Info" size={20} className="text-blue-600 mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-blue-900">
+            <p className="font-medium mb-1">Определение подсудности</p>
+            <p>
+              Определить подсудность можно на сайте{' '}
+              <a 
+                href="https://arbitr.ru/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline font-medium"
+              >
+                arbitr.ru
+              </a>
+              {' '}во вкладке внизу страницы «Арбитражные суды субъектов Российской Федерации»
+            </p>
+          </div>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="courtName">Название суда</Label>
