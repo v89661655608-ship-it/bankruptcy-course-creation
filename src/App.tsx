@@ -30,6 +30,7 @@ import PropertyExclusionMotion from "./pages/PropertyExclusionMotion";
 import DebtDischargeMotion from "./pages/DebtDischargeMotion";
 import Settings from "./pages/Settings";
 import TestPayment from "./pages/TestPayment";
+import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin-users" element={<AdminUsers />} />
             <Route path="/admin-resend-token" element={<AdminResendToken />} />
             <Route path="/chat-access" element={<ChatAccess />} />
             <Route path="/support" element={<Support />} />

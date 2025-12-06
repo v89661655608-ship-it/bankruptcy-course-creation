@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "name": "List all users",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "list"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "users": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
