@@ -26,6 +26,8 @@ export interface PersonalData {
     birthDate: string;
     isMinor: boolean;
   }>;
+  phone?: string;
+  email?: string;
 }
 
 export interface CreditData {

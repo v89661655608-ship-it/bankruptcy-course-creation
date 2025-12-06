@@ -58,7 +58,7 @@ export default function ManualInputForm({
             <TabsTrigger value="credit">Кредиты</TabsTrigger>
             <TabsTrigger value="income">Доходы</TabsTrigger>
             <TabsTrigger value="property">Имущество</TabsTrigger>
-            <TabsTrigger value="contacts">Контакты</TabsTrigger>
+            <TabsTrigger value="contacts">Суд</TabsTrigger>
             <TabsTrigger value="benefits">Льготы</TabsTrigger>
             <TabsTrigger value="children">Дети</TabsTrigger>
             <TabsTrigger value="transactions">Сделки</TabsTrigger>

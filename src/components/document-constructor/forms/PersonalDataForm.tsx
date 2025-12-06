@@ -48,6 +48,8 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
       spouseName: "",
       marriageDate: "",
       divorceDate: "",
+      phone: "",
+      email: "",
     };
   });
 
@@ -235,6 +237,8 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
         divorceDate: personalForm.divorceDate || undefined,
       },
       children: [],
+      phone: personalForm.phone || undefined,
+      email: personalForm.email || undefined,
     };
     onSubmit(data);
     alert("Персональные данные сохранены");
@@ -465,6 +469,35 @@ export default function PersonalDataForm({ onSubmit }: PersonalDataFormProps) {
                   registrationDate: e.target.value,
                 })
               }
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t pt-4 mt-4">
+        <h3 className="font-medium mb-3">Контактные данные</h3>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="phone">Телефон</Label>
+            <Input
+              id="phone"
+              value={personalForm.phone}
+              onChange={(e) =>
+                setPersonalForm({ ...personalForm, phone: e.target.value })
+              }
+              placeholder="+7 (999) 123-45-67"
+            />
+          </div>
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={personalForm.email}
+              onChange={(e) =>
+                setPersonalForm({ ...personalForm, email: e.target.value })
+              }
+              placeholder="ivanov@example.com"
             />
           </div>
         </div>

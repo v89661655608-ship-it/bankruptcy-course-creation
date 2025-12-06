@@ -22,9 +22,20 @@ export default function AdditionalFieldsForm({ initialData, onSave, onCancel }: 
     }
   );
 
+  const handleSave = () => {
+    // Поля phone и email теперь в PersonalDataForm, поэтому очищаем их здесь
+    const dataToSave = {
+      courtName: formData.courtName,
+      courtAddress: formData.courtAddress,
+      phone: "",
+      email: ""
+    };
+    onSave(dataToSave);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    handleSave();
   };
 
   return (
@@ -47,27 +58,6 @@ export default function AdditionalFieldsForm({ initialData, onSave, onCancel }: 
             value={formData.courtAddress}
             onChange={(e) => setFormData({ ...formData, courtAddress: e.target.value })}
             placeholder="г. Москва, ул. Большая Тульская, д. 17"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="phone">Телефон</Label>
-          <Input
-            id="phone"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            placeholder="+7 (999) 123-45-67"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            placeholder="ivanov@example.com"
           />
         </div>
 
