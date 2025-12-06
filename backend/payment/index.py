@@ -896,7 +896,7 @@ def check_course_access(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[
                 AND up.payment_status = 'completed'
                 AND (up.expires_at IS NULL OR up.expires_at > CURRENT_TIMESTAMP)
                 AND up.product_type IN ('course', 'combo')
-                ORDER BY up.created_at DESC
+                ORDER BY up.purchase_date DESC
                 LIMIT 1"""
             print(f"[CHECK_ACCESS] Query: {query}")
             cur.execute(query)
