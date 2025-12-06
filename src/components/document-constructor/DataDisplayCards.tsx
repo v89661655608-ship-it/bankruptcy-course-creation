@@ -1,19 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Icon from "@/components/ui/icon";
-import { PersonalData, CreditData, IncomeData, PropertyData } from "./types";
+import { PersonalData, CreditData, IncomeData, PropertyData, ChildrenData } from "./types";
 
 interface DataDisplayCardsProps {
   personalData: PersonalData | null;
   creditData: CreditData | null;
   incomeData: IncomeData | null;
   propertyData: PropertyData | null;
+  childrenData?: ChildrenData | null;
 }
 
 export default function DataDisplayCards({
   personalData,
   creditData,
   incomeData,
-  propertyData
+  propertyData,
+  childrenData
 }: DataDisplayCardsProps) {
   return (
     <>
@@ -59,7 +61,11 @@ export default function DataDisplayCards({
               </div>
               <div>
                 <p className="text-muted-foreground mb-1">Несовершеннолетние дети</p>
-                <p className="font-medium">{personalData.children.filter(c => c.isMinor).length}</p>
+                <p className="font-medium">
+                  {childrenData && !childrenData.noChildren && childrenData.children 
+                    ? childrenData.children.length 
+                    : personalData.children.filter(c => c.isMinor).length}
+                </p>
               </div>
             </div>
           </CardContent>

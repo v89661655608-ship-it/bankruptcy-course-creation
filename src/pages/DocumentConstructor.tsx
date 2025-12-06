@@ -244,6 +244,7 @@ export default function DocumentConstructor() {
             creditData={creditData}
             incomeData={incomeData}
             propertyData={propertyData}
+            childrenData={childrenData}
           />
         </div>
 
