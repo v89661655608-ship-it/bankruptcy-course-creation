@@ -77,6 +77,18 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
   const [properties, setProperties] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
 
+  useEffect(() => {
+    const saved = localStorage.getItem('documentConstructorData');
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (data.propertyData) {
+        setProperties(data.propertyData.realEstate || []);
+        setVehicles(data.propertyData.vehicles || []);
+        setNoProperty(data.propertyData.noProperty || false);
+      }
+    }
+  }, []);
+
   const validateCadastralNumber = (number: string): boolean => {
     return /^\d{2}:\d{2}:\d{6,7}:\d{1,5}$/.test(number);
   };
@@ -178,6 +190,24 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
     toast({
       title: 'ТС добавлено',
       description: `${vehicleForm.brand} ${vehicleForm.model} (${vehicleForm.year} г.)`,
+    });
+  };
+
+  const handleRemoveProperty = (index: number) => {
+    const newProperties = properties.filter((_, idx) => idx !== index);
+    setProperties(newProperties);
+    toast({
+      title: 'Удалено',
+      description: 'Объект недвижимости удален из списка',
+    });
+  };
+
+  const handleRemoveVehicle = (index: number) => {
+    const newVehicles = vehicles.filter((_, idx) => idx !== index);
+    setVehicles(newVehicles);
+    toast({
+      title: 'Удалено',
+      description: 'Транспортное средство удалено из списка',
     });
   };
 
@@ -433,7 +463,16 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
         <div className="space-y-2">
           <h3 className="font-medium">Добавленное имущество:</h3>
           {properties.map((property, idx) => (
-            <div key={idx} className="border rounded p-3 bg-background">
+            <div key={idx} className="border rounded p-3 bg-background relative">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleRemoveProperty(idx)}
+                className="absolute top-2 right-2 h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+              >
+                <Icon name="X" size={16} />
+              </Button>
               <p className="font-medium capitalize">{property.type}</p>
               <p className="text-sm text-muted-foreground">{property.address}</p>
               <p className="text-sm">
@@ -457,7 +496,16 @@ export default function PropertyDataForm({ onSubmit }: PropertyDataFormProps) {
         <div className="space-y-2">
           <h3 className="font-medium">Добавленные транспортные средства:</h3>
           {vehicles.map((vehicle, idx) => (
-            <div key={idx} className="border rounded p-3 bg-background">
+            <div key={idx} className="border rounded p-3 bg-background relative">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleRemoveVehicle(idx)}
+                className="absolute top-2 right-2 h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+              >
+                <Icon name="X" size={16} />
+              </Button>
               <p className="font-medium">{vehicle.brand} {vehicle.model} ({vehicle.year})</p>
               <p className="text-sm text-muted-foreground">
                 Гос. номер: {vehicle.registrationNumber || 'не указан'}
