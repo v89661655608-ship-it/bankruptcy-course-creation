@@ -31,13 +31,7 @@ export function useSupportChat() {
     return () => clearInterval(interval);
   }, [user]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   const loadMessages = async () => {
     if (!userId) return;
