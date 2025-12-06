@@ -71,7 +71,7 @@ const PaymentForm = () => {
         'Проверка: оплата → письмо → доступ к курсу'
       ]
     },
-    'test-chat': {
+    test_chat: {
       title: 'Тестовая оплата чата (проверка продления)',
       price: 1,
       features: [
@@ -136,7 +136,7 @@ const PaymentForm = () => {
     }
 
     // Для отдельной покупки чата проверяем наличие курса
-    if ((productType === 'chat' || productType === 'test-chat') && !emailVerified) {
+    if ((productType === 'chat' || productType === 'test_chat') && !emailVerified) {
       toast({
         title: 'Требуется проверка email',
         description: 'Сначала проверьте, что у вас есть активный курс',
@@ -159,7 +159,7 @@ const PaymentForm = () => {
           email,
           name,
           amount: currentProduct.price,
-          product_type: productType === 'test' ? 'course' : productType === 'test-chat' ? 'chat' : productType,
+          product_type: productType === 'test' ? 'course' : productType === 'test_chat' ? 'chat' : productType,
           return_url: returnUrl
         })
       });
@@ -232,7 +232,7 @@ const PaymentForm = () => {
 
               <div>
                 <Label htmlFor="email">
-                  {(productType === 'chat' || productType === 'test-chat') ? 'Email с активным курсом' : 'Email для получения доступа'}
+                  {(productType === 'chat' || productType === 'test_chat') ? 'Email с активным курсом' : 'Email для получения доступа'}
                 </Label>
                 <div className="flex gap-2">
                   <Input
@@ -246,7 +246,7 @@ const PaymentForm = () => {
                     }}
                     required
                   />
-                  {(productType === 'chat' || productType === 'test-chat') && (
+                  {(productType === 'chat' || productType === 'test_chat') && (
                     <Button
                       type="button"
                       variant="outline"
