@@ -250,6 +250,26 @@ def decline_full_name_genitive(full_name: str) -> str:
     return f"{surname_declined} {name_declined} {patronymic_declined}"
 
 
+def decline_court_name_genitive(court_name: str) -> str:
+    """Склонение названия суда в родительный падеж"""
+    
+    # Арбитражный суд города Москвы -> Арбитражного суда города Москвы
+    if 'Арбитражный суд города Москвы' in court_name:
+        return 'Арбитражного суда города Москвы'
+    
+    # Арбитражный суд города Санкт-Петербурга и Ленинградской области -> Арбитражного суда города Санкт-Петербурга и Ленинградской области
+    if 'Арбитражный суд города Санкт-Петербурга' in court_name:
+        return 'Арбитражного суда города Санкт-Петербурга и Ленинградской области'
+    
+    # Универсальное правило для всех остальных:
+    # Арбитражный суд [название] области/края/республики -> Арбитражного суда [название] области/края/республики
+    if court_name.startswith('Арбитражный суд '):
+        return court_name.replace('Арбитражный суд ', 'Арбитражного суда ')
+    
+    # Если не удалось определить - возвращаем как есть
+    return court_name
+
+
 def determine_court_by_address(address: str) -> Dict[str, str]:
     '''Определяет арбитражный суд по адресу регистрации'''
     
@@ -1656,11 +1676,12 @@ def generate_attachment_motion_document(
         p_format.line_spacing = 1.0
         return p
     
-    # Склоняем ФИО в родительный падеж
+    # Склоняем ФИО и название суда в родительный падеж
     full_name_genitive = decline_full_name_genitive(full_name)
+    court_name_genitive = decline_court_name_genitive(court_name)
     
     # Основной текст
-    add_body_paragraph(f"В производстве {court_name} находится дело № {case_number} по заявлению {full_name_genitive} о признании несостоятельным (банкротом).")
+    add_body_paragraph(f"В производстве {court_name_genitive} находится дело № {case_number} по заявлению {full_name_genitive} о признании несостоятельным (банкротом).")
     add_body_paragraph("Согласно статье 41 АПК РФ лица, участвующие в деле, вправе, в том числе, представлять доказательства, заявлять ходатайства.")
     add_body_paragraph("На основании изложенного, Должник просит приобщить к материалам дела следующие документы:")
     
