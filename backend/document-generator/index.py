@@ -495,13 +495,18 @@ def generate_docx_document(
         real_estate = property.get('realEstate', [])
         if real_estate:
             item = real_estate[0]
-            area_text = str(item.get('area', 'Место для ввода текста.'))
-            land_area_text = str(item.get('landArea', 'Место для ввода текста.'))
+            area_text = str(item.get('area', ''))
+            land_area = item.get('landArea')
+            
+            # Формируем текст о земельном участке только если он указан
+            land_text = ""
+            if land_area and land_area != 0:
+                land_text = f" с земельным участком площадью {land_area} кв. м."
             
             if item.get('isSoleResidence', False):
-                p6 = doc.add_paragraph(f"В собственности Должника находится {item.get('type', 'недвижимость')}, общей площадью {area_text} кв. м. с земельным участком площадью {land_area_text} кв. м. по адресу: {item.get('address', 'Место для ввода текста.')}, являющийся единственным пригодным для постоянного проживания помещением для него и членов его семьи и не подлежит реализации.")
+                p6 = doc.add_paragraph(f"В собственности Должника находится {item.get('type', 'недвижимость')}, общей площадью {area_text} кв. м.{land_text} по адресу: {item.get('address', 'Место для ввода текста.')}, являющийся единственным пригодным для постоянного проживания помещением для него и членов его семьи и не подлежит реализации.")
             else:
-                p6 = doc.add_paragraph(f"В собственности Должника находится {item.get('type', 'недвижимость')}, общей площадью {area_text} кв. м. с земельным участком площадью {land_area_text} кв. м. по адресу: {item.get('address', 'Место для ввода текста.')}.")
+                p6 = doc.add_paragraph(f"В собственности Должника находится {item.get('type', 'недвижимость')}, общей площадью {area_text} кв. м.{land_text} по адресу: {item.get('address', 'Место для ввода текста.')}.")
             
             p6_format = p6.paragraph_format
             p6_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
@@ -510,7 +515,7 @@ def generate_docx_document(
             p6_format.space_after = Pt(0)
             p6_format.line_spacing = 1.0
     else:
-        p6 = doc.add_paragraph("В собственности Должника находится Место для ввода текста., общей площадью Место для ввода текста. с земельным участком площадью Место для ввода текста. кв. м. по адресу: Место для ввода текста. являющийся единственным пригодным для постоянного проживания помещением для него и членов его семьи.")
+        p6 = doc.add_paragraph("В собственности Должника находится недвижимое имущество, являющееся единственным пригодным для постоянного проживания помещением для него и членов его семьи.")
         p6_format = p6.paragraph_format
         p6_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         p6_format.first_line_indent = Cm(1)
