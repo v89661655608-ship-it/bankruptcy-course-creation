@@ -59,12 +59,17 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     conn = None
     try:
+        print(f'[DEBUG] Action: {action}')
+        print(f'[DEBUG] Body data: {body_data}')
+        
         conn = psycopg2.connect(dsn)
+        print('[DEBUG] Database connected')
         
         if action == 'list':
             return list_users(conn)
         elif action == 'delete':
             user_id = body_data.get('user_id')
+            print(f'[DEBUG] Deleting user_id: {user_id}')
             if not user_id:
                 return {
                     'statusCode': 400,
@@ -82,15 +87,19 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
     
     except Exception as e:
+        print(f'[ERROR] Exception occurred: {str(e)}')
+        import traceback
+        traceback.print_exc()
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': str(e)}),
+            'body': json.dumps({'error': str(e), 'type': type(e).__name__}),
             'isBase64Encoded': False
         }
     finally:
         if conn:
             conn.close()
+            print('[DEBUG] Database connection closed')
 
 
 def list_users(conn) -> Dict[str, Any]:
@@ -138,15 +147,20 @@ def list_users(conn) -> Dict[str, Any]:
 def delete_user(conn, user_id: int) -> Dict[str, Any]:
     '''Безопасное удаление пользователя и всех связанных данных'''
     
+    print(f'[DEBUG] Starting delete_user for ID: {user_id}')
+    
+    # Используем autocommit для Simple Query Protocol
+    conn.autocommit = True
+    
     with conn.cursor() as cur:
         # Проверяем, не является ли пользователь админом
-        cur.execute(
-            'SELECT is_admin FROM t_p19166386_bankruptcy_course_cr.users WHERE id = %s',
-            (user_id,)
-        )
+        query = f"SELECT is_admin FROM t_p19166386_bankruptcy_course_cr.users WHERE id = {user_id}"
+        print(f'[DEBUG] Executing query: {query}')
+        cur.execute(query)
         result = cur.fetchone()
         
         if not result:
+            print(f'[DEBUG] User not found: {user_id}')
             return {
                 'statusCode': 404,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
@@ -155,6 +169,7 @@ def delete_user(conn, user_id: int) -> Dict[str, Any]:
             }
         
         if result[0]:  # is_admin = True
+            print(f'[DEBUG] Cannot delete admin user: {user_id}')
             return {
                 'statusCode': 403,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
@@ -162,66 +177,53 @@ def delete_user(conn, user_id: int) -> Dict[str, Any]:
                 'isBase64Encoded': False
             }
         
+        print(f'[DEBUG] Starting cascade delete for user: {user_id}')
+        
         # Удаляем связанные данные в правильном порядке (от дочерних к родительским)
         
         # 1. Токены сброса пароля
-        cur.execute(
-            'DELETE FROM t_p19166386_bankruptcy_course_cr.password_reset_tokens WHERE user_id = %s',
-            (user_id,)
-        )
+        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.password_reset_tokens WHERE user_id = {user_id}")
+        print(f'[DEBUG] Deleted password_reset_tokens')
         
         # 2. Реакции на сообщения поддержки (сначала реакции, потом сами сообщения)
-        cur.execute('''
+        cur.execute(f"""
             DELETE FROM t_p19166386_bankruptcy_course_cr.support_message_reactions 
             WHERE message_id IN (
                 SELECT id FROM t_p19166386_bankruptcy_course_cr.support_messages 
-                WHERE user_id = %s
+                WHERE user_id = {user_id}
             )
-        ''', (user_id,))
+        """)
+        print(f'[DEBUG] Deleted support_message_reactions')
         
         # 3. Сообщения поддержки
-        cur.execute(
-            'DELETE FROM t_p19166386_bankruptcy_course_cr.support_messages WHERE user_id = %s',
-            (user_id,)
-        )
+        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.support_messages WHERE user_id = {user_id}")
+        print(f'[DEBUG] Deleted support_messages')
         
         # 4. Токены чата
-        cur.execute(
-            'DELETE FROM t_p19166386_bankruptcy_course_cr.chat_tokens WHERE user_id = %s',
-            (user_id,)
-        )
+        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.chat_tokens WHERE user_id = {user_id}")
+        print(f'[DEBUG] Deleted chat_tokens')
         
         # 5. Пул токенов чата
-        cur.execute(
-            'DELETE FROM t_p19166386_bankruptcy_course_cr.chat_tokens_pool WHERE user_id = %s',
-            (user_id,)
-        )
+        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.chat_tokens_pool WHERE user_id = {user_id}")
+        print(f'[DEBUG] Deleted chat_tokens_pool')
         
         # 6. Доступ к чату
-        cur.execute(
-            'DELETE FROM t_p19166386_bankruptcy_course_cr.chat_access WHERE user_id = %s',
-            (user_id,)
-        )
+        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.chat_access WHERE user_id = {user_id}")
+        print(f'[DEBUG] Deleted chat_access')
         
         # 7. Прогресс пользователя
-        cur.execute(
-            'DELETE FROM t_p19166386_bankruptcy_course_cr.user_progress WHERE user_id = %s',
-            (user_id,)
-        )
+        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.user_progress WHERE user_id = {user_id}")
+        print(f'[DEBUG] Deleted user_progress')
         
         # 8. Покупки пользователя
-        cur.execute(
-            'DELETE FROM t_p19166386_bankruptcy_course_cr.user_purchases WHERE user_id = %s',
-            (user_id,)
-        )
+        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.user_purchases WHERE user_id = {user_id}")
+        print(f'[DEBUG] Deleted user_purchases')
         
         # 9. Наконец, удаляем самого пользователя
-        cur.execute(
-            'DELETE FROM t_p19166386_bankruptcy_course_cr.users WHERE id = %s',
-            (user_id,)
-        )
+        cur.execute(f"DELETE FROM t_p19166386_bankruptcy_course_cr.users WHERE id = {user_id}")
+        print(f'[DEBUG] Deleted user')
         
-        conn.commit()
+        print(f'[DEBUG] User {user_id} successfully deleted')
         
         return {
             'statusCode': 200,
