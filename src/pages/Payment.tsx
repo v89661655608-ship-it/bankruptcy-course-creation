@@ -95,7 +95,7 @@ export default function Payment() {
     setIsProcessing(true);
 
     try {
-      const returnUrl = `${window.location.origin}/payment`;
+      const returnUrl = `${window.location.origin}/payment/success?product=${serviceType}`;
       const result = await payment.createPayment(
         user.id, 
         currentService.price, 

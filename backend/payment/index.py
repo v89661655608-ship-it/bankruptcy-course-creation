@@ -234,6 +234,8 @@ def create_payment(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
         expires_interval = "1 month"
     elif product_type == 'combo':
         expires_interval = "3 months"
+    elif product_type == 'consultation':
+        expires_interval = "1 day"
     else:
         expires_interval = "3 months"
     
@@ -249,15 +251,20 @@ def create_payment(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
     finally:
         conn.close()
     
+    response_body = {
+        'payment_id': payment_response['id'],
+        'purchase_id': purchase_id,
+        'confirmation_url': payment_response['confirmation']['confirmation_url'],
+        'status': payment_response['status']
+    }
+    
+    if product_type == 'consultation':
+        response_body['product_type'] = 'consultation'
+    
     return {
         'statusCode': 200,
         'headers': headers,
-        'body': json.dumps({
-            'payment_id': payment_response['id'],
-            'purchase_id': purchase_id,
-            'confirmation_url': payment_response['confirmation']['confirmation_url'],
-            'status': payment_response['status']
-        })
+        'body': json.dumps(response_body)
     }
 
 def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
@@ -357,6 +364,13 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
                     (new_chat_expires, current_product_type, int(user_id))
                 )
                 print(f"[WEBHOOK] Set chat_expires_at = {new_chat_expires}, purchased_product = {current_product_type} for user {user_id}")
+            elif current_product_type == 'consultation':
+                # Для консультации только обновляем purchased_product (не создаем пароль, не даем доступ)
+                cur.execute(
+                    "UPDATE users SET purchased_product = %s WHERE id = %s",
+                    (current_product_type, int(user_id))
+                )
+                print(f"[WEBHOOK] Set purchased_product = {current_product_type} for user {user_id}")
             
             conn.commit()
             
@@ -378,30 +392,41 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
             payment_id=payment_id
         )
         
-        # Отправляем письмо с доступом для всех типов продуктов
+        # Отправляем письмо с доступом (для консультации - без пароля)
         print(f"[WEBHOOK] Sending credentials to {user['email']} for product_type={current_product_type}")
-        conn_main = get_db_connection()
-        try:
-            with conn_main.cursor(cursor_factory=RealDictCursor) as cur:
-                temp_password = str(uuid.uuid4())[:8]
-                temp_password_hash = bcrypt.hashpw(temp_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-                
-                cur.execute(
-                    "UPDATE users SET password_hash = %s WHERE id = %s",
-                    (temp_password_hash, int(user_id))
-                )
-                conn_main.commit()
-                
-                print(f"[WEBHOOK] Password updated, sending email with password: {temp_password}")
-                send_course_credentials_email(
-                    user_email=user['email'],
-                    user_name=user['full_name'],
-                    password=temp_password,
-                    product_type=current_product_type
-                )
-                print(f"[WEBHOOK] Email sent successfully!")
-        finally:
-            conn_main.close()
+        
+        if current_product_type == 'consultation':
+            # Для консультации отправляем письмо без создания пароля
+            send_consultation_confirmation_email(
+                user_email=user['email'],
+                user_name=user['full_name'],
+                amount=amount_value
+            )
+            print(f"[WEBHOOK] Consultation confirmation email sent!")
+        else:
+            # Для остальных продуктов создаем пароль и отправляем доступ
+            conn_main = get_db_connection()
+            try:
+                with conn_main.cursor(cursor_factory=RealDictCursor) as cur:
+                    temp_password = str(uuid.uuid4())[:8]
+                    temp_password_hash = bcrypt.hashpw(temp_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                    
+                    cur.execute(
+                        "UPDATE users SET password_hash = %s WHERE id = %s",
+                        (temp_password_hash, int(user_id))
+                    )
+                    conn_main.commit()
+                    
+                    print(f"[WEBHOOK] Password updated, sending email with password: {temp_password}")
+                    send_course_credentials_email(
+                        user_email=user['email'],
+                        user_name=user['full_name'],
+                        password=temp_password,
+                        product_type=current_product_type
+                    )
+                    print(f"[WEBHOOK] Email sent successfully!")
+            finally:
+                conn_main.close()
     
     return {
         'statusCode': 200,
@@ -866,6 +891,91 @@ def send_course_credentials_email(user_email: str, user_name: str, password: str
         print(f"[EMAIL] Successfully sent course credentials to {user_email}")
     except Exception as e:
         print(f"[EMAIL] Error sending course credentials to {user_email}: {e}")
+        import traceback
+        print(f"[EMAIL] Traceback: {traceback.format_exc()}")
+
+def send_consultation_confirmation_email(user_email: str, user_name: str, amount: float):
+    smtp_host = os.environ.get('SMTP_HOST')
+    smtp_port = int(os.environ.get('SMTP_PORT', 465))
+    smtp_user = os.environ.get('SMTP_USER')
+    smtp_password = os.environ.get('SMTP_PASSWORD')
+    
+    if not all([smtp_host, smtp_user, smtp_password]):
+        return
+    
+    whatsapp_url = 'https://wa.me/79261200206'
+    subject = 'Оплата консультации подтверждена — bankrot-kurs.ru'
+    
+    html_body = f'''
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 28px;">✅ Оплата получена!</h1>
+    </div>
+    
+    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+        <p style="font-size: 16px; margin-bottom: 20px;">Здравствуйте, <strong>{user_name}</strong>!</p>
+        
+        <p style="font-size: 16px; margin-bottom: 20px;">Спасибо за оплату консультации! Ваш платёж на сумму <strong>{amount:.2f} ₽</strong> успешно получен.</p>
+        
+        <div style="background: linear-gradient(135deg, #e8f4fd 0%, #dcf8c6 100%); padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #25D366;">
+            <h2 style="margin-top: 0; color: #128C7E; font-size: 20px;">💬 Следующий шаг</h2>
+            
+            <p style="margin: 15px 0; font-size: 16px;">
+                Для записи на консультацию свяжитесь со мной в WhatsApp:
+            </p>
+            
+            <div style="text-align: center; margin: 25px 0;">
+                <a href="{whatsapp_url}" style="display: inline-block; background: #25D366; color: white; padding: 15px 40px; text-decoration: none; border-radius: 25px; font-weight: bold; font-size: 18px;">
+                    📱 Написать в WhatsApp
+                </a>
+            </div>
+            
+            <p style="font-size: 14px; color: #666; margin-top: 20px;">
+                Или перейдите по ссылке: <a href="{whatsapp_url}" style="color: #25D366; text-decoration: none; font-weight: bold;">{whatsapp_url}</a>
+            </p>
+        </div>
+        
+        <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #ffc107;">
+            <p style="margin: 0; font-size: 14px; color: #856404;">
+                <strong>ℹ️ Важно:</strong> Напишите мне в WhatsApp, чтобы мы договорились об удобном времени для консультации.
+            </p>
+        </div>
+        
+        <p style="font-size: 14px; color: #666; margin-top: 30px;">
+            Если у вас возникнут вопросы, просто ответьте на это письмо или напишите мне в WhatsApp.
+        </p>
+        
+        <p style="text-align: center; margin-top: 30px; font-size: 14px; color: #999;">
+            С уважением,<br>
+            <strong>Валентина Голосова</strong><br>
+            Арбитражный управляющий<br>
+            <a href="{whatsapp_url}" style="color: #25D366; text-decoration: none;">📱 WhatsApp</a>
+        </p>
+    </div>
+</body>
+</html>
+    '''
+    
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = smtp_user
+        msg['To'] = user_email
+        
+        msg.attach(MIMEText(html_body, 'html', 'utf-8'))
+        
+        print(f"[EMAIL] Sending consultation confirmation to {user_email}")
+        with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+        print(f"[EMAIL] Successfully sent consultation confirmation to {user_email}")
+    except Exception as e:
+        print(f"[EMAIL] Error sending consultation confirmation to {user_email}: {e}")
         import traceback
         print(f"[EMAIL] Traceback: {traceback.format_exc()}")
 

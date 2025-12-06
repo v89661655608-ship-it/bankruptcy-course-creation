@@ -35,7 +35,7 @@ export default function TestPayment() {
           name: name,
           amount: amount,
           product_type: productType,
-          return_url: window.location.origin
+          return_url: `${window.location.origin}/payment/success?product=${productType}`
         })
       });
 
