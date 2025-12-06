@@ -327,8 +327,16 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
                     ('completed', payment_id, int(user_id))
                 )
             
-            # Обновляем chat_expires_at для пользователя при покупке chat/combo
-            if current_product_type in ['chat', 'combo']:
+            # Обновляем purchased_product для всех типов продуктов
+            if current_product_type == 'course':
+                # Для курса обновляем только purchased_product
+                cur.execute(
+                    "UPDATE users SET purchased_product = %s WHERE id = %s",
+                    (current_product_type, int(user_id))
+                )
+                print(f"[WEBHOOK] Set purchased_product = {current_product_type} for user {user_id}")
+            elif current_product_type in ['chat', 'combo']:
+                # Для чата и комбо обновляем chat_expires_at и purchased_product
                 cur.execute(
                     "SELECT chat_expires_at FROM users WHERE id = %s",
                     (int(user_id),)
@@ -347,7 +355,7 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
                     "UPDATE users SET chat_expires_at = %s, purchased_product = %s WHERE id = %s",
                     (new_chat_expires, current_product_type, int(user_id))
                 )
-                print(f"[WEBHOOK] Set chat_expires_at = {new_chat_expires} for user {user_id}")
+                print(f"[WEBHOOK] Set chat_expires_at = {new_chat_expires}, purchased_product = {current_product_type} for user {user_id}")
             
             conn.commit()
             

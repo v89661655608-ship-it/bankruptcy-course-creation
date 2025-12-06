@@ -32,6 +32,7 @@ interface User {
   is_admin: boolean;
   created_at: string;
   chat_expires_at: string | null;
+  course_expires_at: string | null;
   purchased_product: string | null;
   password_changed_by_user: boolean;
 }
@@ -218,7 +219,8 @@ export default function AdminUsers() {
                     <TableHead>Email</TableHead>
                     <TableHead>ФИО</TableHead>
                     <TableHead>Продукт</TableHead>
-                    <TableHead>Подписка</TableHead>
+                    <TableHead>Курс</TableHead>
+                    <TableHead>Чат</TableHead>
                     <TableHead>Регистрация</TableHead>
                     <TableHead>Роль</TableHead>
                     <TableHead className="text-right">Действия</TableHead>
@@ -226,7 +228,8 @@ export default function AdminUsers() {
                 </TableHeader>
                 <TableBody>
                   {users.map((user) => {
-                    const subscriptionStatus = getSubscriptionStatus(user.chat_expires_at);
+                    const courseStatus = getSubscriptionStatus(user.course_expires_at);
+                    const chatStatus = getSubscriptionStatus(user.chat_expires_at);
                     return (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">
@@ -247,8 +250,13 @@ export default function AdminUsers() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={subscriptionStatus.variant}>
-                            {subscriptionStatus.text}
+                          <Badge variant={courseStatus.variant}>
+                            {courseStatus.text}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={chatStatus.variant}>
+                            {chatStatus.text}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">

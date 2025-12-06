@@ -108,16 +108,23 @@ def list_users(conn) -> Dict[str, Any]:
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         query = '''
             SELECT 
-                id,
-                email,
-                full_name,
-                is_admin,
-                created_at,
-                chat_expires_at,
-                purchased_product,
-                password_changed_by_user
-            FROM t_p19166386_bankruptcy_course_cr.users
-            ORDER BY created_at DESC
+                u.id,
+                u.email,
+                u.full_name,
+                u.is_admin,
+                u.created_at,
+                u.chat_expires_at,
+                u.purchased_product,
+                u.password_changed_by_user,
+                (
+                    SELECT MAX(up.expires_at) 
+                    FROM t_p19166386_bankruptcy_course_cr.user_purchases up 
+                    WHERE up.user_id = u.id 
+                    AND up.payment_status = 'completed'
+                    AND up.product_type IN ('course', 'combo')
+                ) as course_expires_at
+            FROM t_p19166386_bankruptcy_course_cr.users u
+            ORDER BY u.created_at DESC
         '''
         
         cur.execute(query)
@@ -132,6 +139,7 @@ def list_users(conn) -> Dict[str, Any]:
                 'is_admin': user['is_admin'],
                 'created_at': user['created_at'].isoformat() if user['created_at'] else None,
                 'chat_expires_at': user['chat_expires_at'].isoformat() if user['chat_expires_at'] else None,
+                'course_expires_at': user['course_expires_at'].isoformat() if user.get('course_expires_at') else None,
                 'purchased_product': user['purchased_product'],
                 'password_changed_by_user': user['password_changed_by_user']
             })
