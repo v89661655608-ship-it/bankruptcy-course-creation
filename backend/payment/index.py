@@ -397,12 +397,18 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
         
         if current_product_type == 'consultation':
             # Для консультации отправляем письмо без создания пароля
-            send_consultation_confirmation_email(
-                user_email=user['email'],
-                user_name=user['full_name'],
-                amount=amount_value
-            )
-            print(f"[WEBHOOK] Consultation confirmation email sent!")
+            try:
+                print(f"[WEBHOOK] About to call send_consultation_confirmation_email for {user['email']}")
+                send_consultation_confirmation_email(
+                    user_email=user['email'],
+                    user_name=user['full_name'],
+                    amount=amount_value
+                )
+                print(f"[WEBHOOK] ✅ Consultation confirmation email sent successfully!")
+            except Exception as email_error:
+                print(f"[WEBHOOK] ❌ FAILED to send consultation email: {email_error}")
+                import traceback
+                print(f"[WEBHOOK] Email error traceback: {traceback.format_exc()}")
         else:
             # Для остальных продуктов создаем пароль и отправляем доступ
             conn_main = get_db_connection()
