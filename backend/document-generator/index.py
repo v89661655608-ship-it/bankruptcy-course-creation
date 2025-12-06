@@ -2183,8 +2183,14 @@ def generate_debt_discharge_motion_document(
         p_format.line_spacing = 1.0
         return p
     
-    # Склоняем ФИО в родительный падеж
+    # Склоняем ФИО и название суда в родительный падеж
     full_name_genitive = decline_full_name_genitive(full_name)
+    court_name_genitive = decline_court_name_genitive(court_name)
+    
+    # Вводный абзац с номером дела
+    add_body_paragraph(f"В производстве {court_name_genitive} находится дело № {case_number} по заявлению {full_name_genitive} о признании несостоятельным (банкротом).")
+    
+    doc.add_paragraph()
     
     # Основной текст
     add_body_paragraph(f"Судебное заседание по рассмотрению отчета финансового управляющего назначено на {formatted_date} г.")
