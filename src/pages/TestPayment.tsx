@@ -141,6 +141,20 @@ export default function TestPayment() {
                 )}
                 Оплатить 3₽ (Чат)
               </Button>
+
+              <Button 
+                onClick={() => createPayment(1, 'consultation')}
+                disabled={loading}
+                size="lg"
+                className="w-full text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                {loading ? (
+                  <Icon name="Loader2" className="animate-spin mr-2" size={20} />
+                ) : (
+                  <span className="mr-2">👨‍💼</span>
+                )}
+                Оплатить 1₽ (Консультация 9999₽ - тест)
+              </Button>
             </div>
 
             <div className="p-4 bg-muted rounded-lg text-sm text-muted-foreground">
