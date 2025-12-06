@@ -62,13 +62,13 @@ const PaymentForm = () => {
       ]
     },
     test: {
-      title: 'Тестовая оплата комбо (проверка вебхука)',
+      title: 'Тестовая оплата курса (проверка всей системы)',
       price: 1,
       features: [
-        'Проверка работы системы',
-        'Тестовая оплата 1₽',
-        'Проверка вебхука ЮKassa',
-        'Тип продукта: combo'
+        'Доступ к курсу на 3 месяца',
+        'Все материалы и шаблоны',
+        'Тестовая оплата 1₽ вместо 3900₽',
+        'Проверка: оплата → письмо → доступ к курсу'
       ]
     }
   };
@@ -149,7 +149,7 @@ const PaymentForm = () => {
           email,
           name,
           amount: currentProduct.price,
-          product_type: productType === 'test' ? 'combo' : productType,
+          product_type: productType === 'test' ? 'course' : productType,
           return_url: returnUrl
         })
       });
