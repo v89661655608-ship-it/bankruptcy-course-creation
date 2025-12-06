@@ -33,6 +33,26 @@ def verify_admin(headers: Dict[str, str]) -> Optional[Dict[str, Any]]:
     except:
         return None
 
+def verify_user(headers: Dict[str, str]) -> Optional[Dict[str, Any]]:
+    '''Verify any authenticated user (not just admin)'''
+    auth_token = headers.get('X-Auth-Token') or headers.get('x-auth-token')
+    if not auth_token:
+        return None
+    
+    # Allow admin_session_token for admin panel access
+    if auth_token == 'admin_session_token':
+        return {'is_admin': True, 'id': 0, 'email': 'admin@session'}
+    
+    try:
+        jwt_secret = os.environ.get('JWT_SECRET')
+        if not jwt_secret:
+            return None
+        
+        payload = jwt.decode(auth_token, jwt_secret, algorithms=['HS256'])
+        return payload
+    except:
+        return None
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     Business: Upload files (PDF, videos, documents) to S3 storage and save metadata to database
@@ -54,14 +74,25 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     headers = event.get('headers', {})
-    admin_user = verify_admin(headers)
     
-    if not admin_user:
-        return {
-            'statusCode': 401,
-            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Unauthorized'})
-        }
+    # For GET requests, allow any authenticated user
+    if method == 'GET':
+        user = verify_user(headers)
+        if not user:
+            return {
+                'statusCode': 401,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'Unauthorized'})
+            }
+    else:
+        # For POST/DELETE, require admin
+        admin_user = verify_admin(headers)
+        if not admin_user:
+            return {
+                'statusCode': 401,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'Unauthorized - Admin access required'})
+            }
     
     database_url = os.environ.get('DATABASE_URL')
     if not database_url:
