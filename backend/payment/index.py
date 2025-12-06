@@ -373,14 +373,20 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
                 print(f"[WEBHOOK] Set purchased_product = {current_product_type} for user {user_id}")
             
             conn.commit()
-            
+    finally:
+        conn.close()
+    
+    # Получаем данные пользователя для отправки письма
+    conn_user = get_db_connection()
+    try:
+        with conn_user.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 "SELECT u.email, u.full_name FROM users u WHERE u.id = %s",
                 (int(user_id),)
             )
             user = cur.fetchone()
     finally:
-        conn.close()
+        conn_user.close()
     
     if user:
         amount_value = float(payment.get('amount', {}).get('value', 0))
@@ -405,10 +411,36 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
                     amount=amount_value
                 )
                 print(f"[WEBHOOK] ✅ Consultation confirmation email sent successfully!")
+                
+                # Log successful email send
+                conn_log = get_db_connection()
+                try:
+                    with conn_log.cursor() as cur:
+                        cur.execute(
+                            "INSERT INTO email_logs (user_id, email, email_type, status, payment_id) VALUES (%s, %s, %s, %s, %s)",
+                            (int(user_id), user['email'], 'consultation_confirmation', 'success', payment_id)
+                        )
+                        conn_log.commit()
+                finally:
+                    conn_log.close()
+                    
             except Exception as email_error:
                 print(f"[WEBHOOK] ❌ FAILED to send consultation email: {email_error}")
                 import traceback
-                print(f"[WEBHOOK] Email error traceback: {traceback.format_exc()}")
+                error_trace = traceback.format_exc()
+                print(f"[WEBHOOK] Email error traceback: {error_trace}")
+                
+                # Log failed email send
+                conn_log = get_db_connection()
+                try:
+                    with conn_log.cursor() as cur:
+                        cur.execute(
+                            "INSERT INTO email_logs (user_id, email, email_type, status, error_message, payment_id) VALUES (%s, %s, %s, %s, %s, %s)",
+                            (int(user_id), user['email'], 'consultation_confirmation', 'failed', f"{email_error}\n{error_trace}", payment_id)
+                        )
+                        conn_log.commit()
+                finally:
+                    conn_log.close()
         else:
             # Для остальных продуктов создаем пароль и отправляем доступ
             conn_main = get_db_connection()
