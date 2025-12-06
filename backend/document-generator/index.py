@@ -214,12 +214,16 @@ def decline_full_name_genitive(full_name: str) -> str:
     surname, name, patronymic = parts
     
     # Склонение фамилии
-    if surname.endswith('ов') or surname.endswith('ев') or surname.endswith('ин') or surname.endswith('ын'):
+    if surname.endswith('ова') or surname.endswith('ева') or surname.endswith('ина') or surname.endswith('ына'):
+        # Женские фамилии: Петрова -> Петровой, Иванова -> Ивановой
+        surname_declined = surname[:-1] + 'ой'
+    elif surname.endswith('ая'):
+        surname_declined = surname[:-2] + 'ой'
+    elif surname.endswith('ов') or surname.endswith('ев') or surname.endswith('ин') or surname.endswith('ын'):
+        # Мужские фамилии: Петров -> Петрова, Иванов -> Иванова
         surname_declined = surname + 'а'
     elif surname.endswith('ский') or surname.endswith('цкий'):
         surname_declined = surname[:-2] + 'ого'
-    elif surname.endswith('ая'):
-        surname_declined = surname[:-2] + 'ой'
     elif surname.endswith('а'):
         surname_declined = surname[:-1] + 'ы'
     else:
@@ -1620,6 +1624,7 @@ def generate_attachment_motion_document(
     add_header_paragraph(f"тел. {phone}")
     add_header_paragraph(f"e-mail: {email}")
     add_header_paragraph("")
+    add_header_paragraph(f"Номер дела: {case_number}")
     add_header_paragraph("")
     
     doc.add_paragraph()
@@ -1648,10 +1653,8 @@ def generate_attachment_motion_document(
     
     # Основной текст
     add_body_paragraph(f"В производстве {court_name} находится дело № {case_number} по заявлению {full_name_genitive} о признании несостоятельным (банкротом).")
-    
-    doc.add_paragraph()
-    
-    add_body_paragraph("Должник просит приобщить к материалам дела документы:")
+    add_body_paragraph("Согласно статье 41 АПК РФ лица, участвующие в деле, вправе, в том числе, представлять доказательства, заявлять ходатайства.")
+    add_body_paragraph("На основании изложенного, Должник просит приобщить к материалам дела следующие документы:")
     
     doc.add_paragraph()
     
