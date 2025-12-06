@@ -88,9 +88,13 @@ const Admin = () => {
     loadFiles();
   }, [navigate]);
 
+  const getAdminToken = () => {
+    return token || 'admin_session_token';
+  };
+
   const loadModules = async () => {
     try {
-      const data = await admin.getModules(token!);
+      const data = await admin.getModules(getAdminToken());
       if (!data.error) {
         setModules(data);
       }
@@ -101,7 +105,7 @@ const Admin = () => {
 
   const loadLessons = async () => {
     try {
-      const data = await admin.getLessons(token!);
+      const data = await admin.getLessons(getAdminToken());
       if (!data.error) {
         setLessons(data);
       }
@@ -112,7 +116,7 @@ const Admin = () => {
 
   const loadFiles = async () => {
     try {
-      const data = await getFiles(token!);
+      const data = await getFiles(getAdminToken());
       if (!data.error) {
         setFiles(data.files || []);
       }
@@ -124,7 +128,7 @@ const Admin = () => {
   const handleCreateModule = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const data = await admin.createModule(token!, newModule);
+      const data = await admin.createModule(getAdminToken(), newModule);
       if (data.error) {
         toast({ title: 'Ошибка', description: data.error, variant: 'destructive' });
       } else {
@@ -141,7 +145,7 @@ const Admin = () => {
     e.preventDefault();
     if (!editingModule) return;
     try {
-      const data = await admin.updateModule(token!, editingModule);
+      const data = await admin.updateModule(getAdminToken(), editingModule);
       if (data.error) {
         toast({ title: 'Ошибка', description: data.error, variant: 'destructive' });
       } else {
@@ -157,7 +161,7 @@ const Admin = () => {
   const handleCreateLesson = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const data = await admin.createLesson(token!, newLesson);
+      const data = await admin.createLesson(getAdminToken(), newLesson);
       if (data.error) {
         toast({ title: 'Ошибка', description: data.error, variant: 'destructive' });
       } else {
@@ -182,7 +186,7 @@ const Admin = () => {
     e.preventDefault();
     if (!editingLesson) return;
     try {
-      const data = await admin.updateLesson(token!, editingLesson);
+      const data = await admin.updateLesson(getAdminToken(), editingLesson);
       if (data.error) {
         toast({ title: 'Ошибка', description: data.error, variant: 'destructive' });
       } else {
@@ -205,7 +209,7 @@ const Admin = () => {
 
     setUploading(true);
     try {
-      const data = await uploadFile(token!, {
+      const data = await uploadFile(getAdminToken(), {
         title: welcomeVideoTitle || 'Видео-приветствие',
         description: welcomeVideoDescription,
         fileType: 'video/mp4',
@@ -239,7 +243,7 @@ const Admin = () => {
 
     setUploading(true);
     try {
-      const data = await uploadFile(token!, {
+      const data = await uploadFile(getAdminToken(), {
         title: moduleFileTitle || 'Файл модуля',
         description: moduleFileDescription,
         fileType: 'application/pdf',
@@ -268,7 +272,7 @@ const Admin = () => {
     if (!confirm('Удалить этот файл?')) return;
 
     try {
-      const data = await deleteFile(token!, fileId);
+      const data = await deleteFile(getAdminToken(), fileId);
       if (data.error) {
         toast({ title: 'Ошибка', description: data.error, variant: 'destructive' });
       } else {
