@@ -296,8 +296,8 @@ def generate_docx_document(
     
     court_name = additional.get('courtName', auto_court['name'])
     court_address = additional.get('courtAddress', auto_court['address'])
-    phone = additional.get('phone', 'Место для ввода текста.')
-    email = additional.get('email', 'Место для ввода текста.')
+    phone = personal.get('phone', 'Место для ввода текста.')
+    email = personal.get('email', 'Место для ввода текста.')
     
     # Шапка документа с форматированием
     def add_header_paragraph(text):
@@ -322,7 +322,7 @@ def generate_docx_document(
     add_header_paragraph(f"выдан: {passport.get('issuedBy', 'Место для ввода текста.')}")
     add_header_paragraph(f"дата выдачи: {passport.get('issueDate', 'Место для ввода текста.')}")
     add_header_paragraph(f"код подразделения: {passport.get('code', 'Место для ввода текста.')}")
-    add_header_paragraph(f"тел. 8 {phone}")
+    add_header_paragraph(f"тел. {phone}")
     add_header_paragraph(f"e-mail: {email}")
     add_header_paragraph("")
     add_header_paragraph("")
@@ -681,8 +681,8 @@ def generate_pdf_document(
     
     court_name = additional.get('courtName', auto_court['name'])
     court_address = additional.get('courtAddress', auto_court['address'])
-    phone = additional.get('phone', 'Место для ввода текста.')
-    email = additional.get('email', 'Место для ввода текста.')
+    phone = personal.get('phone', 'Место для ввода текста.')
+    email = personal.get('email', 'Место для ввода текста.')
     
     c.drawString(2*cm, y, f"В {court_name}")
     y -= 0.5*cm
