@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<form id="emailForm">
+    <input type="email" id="email" value="golosova1989@internet.ru" />
+    <input type="text" id="name" value="Валентина" />
+    <input type="number" id="amount" value="1" />
+    <button type="submit">Send Test Email</button>
+</form>
+
+<div id="result"></div>
+
+<script>
+document.getElementById('emailForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const name = document.getElementById('name').value;
+    const amount = document.getElementById('amount').value;
+    
+    try {
+        const response = await fetch('https://functions.poehali.dev/114e3ead-bfe6-4d0c-a445-e65c05ec5a37', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                name: name,
+                amount: parseFloat(amount)
+            })
+        });
+        
+        const result = await response.json();
+        document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+    } catch (error) {
+        document.getElementById('result').innerHTML = '<pre>Error: ' + error.message + '</pre>';
+    }
+});
+</script>
+</body>
+</html>
