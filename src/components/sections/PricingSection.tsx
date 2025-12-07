@@ -43,8 +43,8 @@ export default function PricingSection() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-          <Card className="border-2 hover:border-accent transition-all hover:shadow-2xl">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto place-items-center md:place-items-stretch">
+          <Card className="border-2 hover:border-accent transition-all hover:shadow-2xl w-full max-w-sm md:max-w-none">
             <CardContent className="pt-12 pb-12">
               <div className="text-center mb-8">
                 <Badge className="mb-4 bg-primary/10 text-primary">Самостоятельно</Badge>
@@ -119,7 +119,7 @@ export default function PricingSection() {
             </CardContent>
           </Card>
 
-          <Card className="border-2 hover:border-purple-500 transition-all hover:shadow-2xl">
+          <Card className="border-2 hover:border-purple-500 transition-all hover:shadow-2xl w-full max-w-sm md:max-w-none">
             <CardContent className="pt-12 pb-12">
               <div className="text-center mb-8">
                 <Badge className="mb-4 bg-purple-100 text-purple-700">Только чат</Badge>
@@ -198,7 +198,7 @@ export default function PricingSection() {
             </CardContent>
           </Card>
 
-          <Card className="border-4 border-green-500 hover:shadow-2xl transition-all relative bg-gradient-to-br from-green-50 to-white">
+          <Card className="border-4 border-green-500 hover:shadow-2xl transition-all relative bg-gradient-to-br from-green-50 to-white w-full max-w-sm md:max-w-none">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
               <Badge className="bg-green-500 text-white font-bold px-4 py-1 text-xs sm:text-sm sm:px-6 whitespace-nowrap">🔥 Выгода 1 900 ₽</Badge>
             </div>
@@ -279,7 +279,7 @@ export default function PricingSection() {
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-amber-400 hover:border-amber-500 transition-all hover:shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50 relative">
+          <Card className="border-2 border-amber-400 hover:border-amber-500 transition-all hover:shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50 relative w-full max-w-sm md:max-w-none">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
               <div className="bg-amber-500 text-white rounded-full p-2 shadow-lg">
                 <Icon name="Crown" size={24} />
