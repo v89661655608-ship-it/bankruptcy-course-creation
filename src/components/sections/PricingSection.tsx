@@ -205,8 +205,8 @@ export default function PricingSection() {
             <CardContent className="pt-12 pb-12">
               <div className="text-center mb-8">
                 <Badge className="mb-4 bg-green-100 text-green-700 border-green-300">Комбо-пакет</Badge>
-                <div className="text-xl text-muted-foreground line-through mb-2">7 899 ₽</div>
-                <div className="text-6xl font-bold mb-2 text-green-600">5 999 ₽</div>
+                <div className="text-sm text-muted-foreground line-through mb-1">7 899 ₽</div>
+                <div className="text-5xl font-bold mb-2 text-green-600 whitespace-nowrap">5 999 ₽</div>
                 <p className="text-muted-foreground">курс + месяц поддержки персонального юриста</p>
               </div>
 
