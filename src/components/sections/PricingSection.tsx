@@ -209,7 +209,7 @@ export default function PricingSection() {
                   <span className="text-xl text-muted-foreground line-through whitespace-nowrap">7 899 ₽</span>
                   <span className="text-4xl font-bold text-green-600 whitespace-nowrap">5 999 ₽</span>
                 </div>
-                <p className="text-muted-foreground">Курс + Месяц чата</p>
+                <p className="text-muted-foreground">курс + месяц поддержки персонального юриста</p>
               </div>
 
               <Separator className="mb-8" />
