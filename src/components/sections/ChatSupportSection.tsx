@@ -64,8 +64,8 @@ export default function ChatSupportSection({ user }: ChatSupportSectionProps) {
           </Card>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 justify-items-center md:justify-items-stretch">
-          <Card className="border-2 border-purple-200 shadow-xl hover:shadow-2xl transition-all w-full max-w-[calc(100vw-2rem)] md:max-w-none">
+        <div className="grid md:grid-cols-2 gap-8 px-4 md:px-0">
+          <Card className="border-2 border-purple-200 shadow-xl hover:shadow-2xl transition-all w-full mx-auto max-w-sm md:max-w-none">
             <CardContent className="pt-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
@@ -155,7 +155,7 @@ export default function ChatSupportSection({ user }: ChatSupportSectionProps) {
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-blue-200 shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-blue-50 to-indigo-50 w-full max-w-[calc(100vw-2rem)] md:max-w-none">
+          <Card className="border-2 border-blue-200 shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-blue-50 to-indigo-50 w-full mx-auto max-w-sm md:max-w-none">
             <CardContent className="pt-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
