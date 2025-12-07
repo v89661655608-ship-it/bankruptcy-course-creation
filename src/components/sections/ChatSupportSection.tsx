@@ -12,8 +12,8 @@ export default function ChatSupportSection({ user }: ChatSupportSectionProps) {
   const navigate = useNavigate();
 
   return (
-    <section id="support" className="py-20 px-4 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
-      <div className="container mx-auto max-w-6xl">
+    <section id="support" className="py-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
+      <div className="mx-auto max-w-6xl px-4">
         <div className="text-center mb-16">
           <Badge className="mb-4 bg-purple-100 text-purple-700 text-base px-4 py-1">
             Профессиональная поддержка
