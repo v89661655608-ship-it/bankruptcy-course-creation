@@ -61,38 +61,43 @@ export default function VideoSection() {
             </div>
           </div>
           
-          <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl group">
-            <video 
-              ref={videoRef}
-              className="w-full h-full object-cover"
-              controls
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="auto"
-              onPlay={() => {
-                setIsPlaying(true);
-                setShowPlayButton(false);
-              }}
-              onPause={() => setIsPlaying(false)}
-            >
-              <source src="https://storage.yandexcloud.net/poehalidev-user-files/%D0%A1%D0%B0%D0%B9%D1%82.MOV" type="video/quicktime" />
-              <source src="https://storage.yandexcloud.net/poehalidev-user-files/%D0%A1%D0%B0%D0%B9%D1%82.MOV" type="video/mp4" />
-              Ваш браузер не поддерживает видео.
-            </video>
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-black/10 via-transparent to-black/10"></div>
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/10 via-transparent to-black/10"></div>
-            {showPlayButton && (
-              <div 
-                className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors cursor-pointer"
-                onClick={handlePlayClick}
+          <div>
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl group">
+              <video 
+                ref={videoRef}
+                className="w-full h-full object-cover"
+                controls
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                onPlay={() => {
+                  setIsPlaying(true);
+                  setShowPlayButton(false);
+                }}
+                onPause={() => setIsPlaying(false)}
               >
-                <div className="bg-white/90 rounded-full p-6 group-hover:scale-110 transition-transform">
-                  <Icon name="Play" size={48} className="text-primary" />
+                <source src="https://storage.yandexcloud.net/poehalidev-user-files/%D0%A1%D0%B0%D0%B9%D1%82.MOV" type="video/quicktime" />
+                <source src="https://storage.yandexcloud.net/poehalidev-user-files/%D0%A1%D0%B0%D0%B9%D1%82.MOV" type="video/mp4" />
+                Ваш браузер не поддерживает видео.
+              </video>
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-black/10 via-transparent to-black/10"></div>
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/10 via-transparent to-black/10"></div>
+              {showPlayButton && (
+                <div 
+                  className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors cursor-pointer"
+                  onClick={handlePlayClick}
+                >
+                  <div className="bg-white/90 rounded-full p-6 group-hover:scale-110 transition-transform">
+                    <Icon name="Play" size={48} className="text-primary" />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 italic">
+              *не является офертой, автор оставляет за собой право изменить цены, актуальные цены в карточке оплаты и в договоре оферты
+            </p>
           </div>
         </div>
       </div>
