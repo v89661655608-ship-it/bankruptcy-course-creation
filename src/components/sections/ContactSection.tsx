@@ -17,7 +17,7 @@ export default function ContactSection() {
             variant="outline" 
             size="lg" 
             className="gap-2"
-            onClick={() => window.open('https://t.me/crashbusiness', '_blank')}
+            onClick={() => window.open('https://t.me/bankrot_support_chat_bot', '_blank')}
           >
             <Icon name="Send" size={20} />
             Telegram

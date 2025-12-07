@@ -237,7 +237,7 @@ export default function ChatSupportSection({ user }: ChatSupportSectionProps) {
               <Button 
                 variant="outline" 
                 className="w-full h-12 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold text-base transition-all"
-                onClick={() => window.open('https://t.me/crashbusiness', '_blank')}
+                onClick={() => window.open('https://t.me/bankrot_support_chat_bot', '_blank')}
               >
                 <Icon name="Send" size={20} className="mr-2" />
                 Связаться для консультации

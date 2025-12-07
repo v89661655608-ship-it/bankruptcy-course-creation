@@ -127,12 +127,12 @@ export default function Requisites() {
                   <div>
                     <div className="font-semibold">Telegram</div>
                     <a 
-                      href="https://t.me/crashbusiness" 
+                      href="https://t.me/bankrot_support_chat_bot" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-accent hover:underline"
                     >
-                      @crashbusiness
+                      @bankrot_support_chat_bot
                     </a>
                   </div>
                 </div>
