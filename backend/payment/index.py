@@ -412,6 +412,14 @@ def handle_webhook(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
                 )
                 print(f"[WEBHOOK] ✅ Consultation confirmation email sent successfully!")
                 
+                # Отправляем дубликат администратору
+                send_admin_consultation_notification(
+                    user_email=user['email'],
+                    user_name=user['full_name'],
+                    amount=amount_value,
+                    payment_id=payment_id
+                )
+                
                 # Log successful email send
                 conn_log = get_db_connection()
                 try:
@@ -1122,6 +1130,82 @@ def send_admin_notification(user_email: str, user_name: str, amount: float, paym
         )
     except Exception as e:
         pass
+
+def send_admin_consultation_notification(user_email: str, user_name: str, amount: float, payment_id: str):
+    smtp_host = os.environ.get('SMTP_HOST')
+    smtp_port = int(os.environ.get('SMTP_PORT', 465))
+    smtp_user = os.environ.get('SMTP_USER')
+    smtp_password = os.environ.get('SMTP_PASSWORD')
+    
+    if not all([smtp_host, smtp_user, smtp_password]):
+        return
+    
+    admin_email = 'melni-v@yandex.ru'
+    subject = f'💰 Новая оплата консультации — {amount:.0f} ₽'
+    
+    html_body = f'''
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 24px;">💰 Новая оплата консультации</h1>
+    </div>
+    
+    <div style="background: #f9f9f9; padding: 25px; border-radius: 0 0 8px 8px;">
+        <div style="background: white; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+            <h2 style="margin-top: 0; color: #128C7E; font-size: 18px;">Данные клиента:</h2>
+            <p style="margin: 10px 0;"><strong>Имя:</strong> {user_name}</p>
+            <p style="margin: 10px 0;"><strong>Email:</strong> {user_email}</p>
+            <p style="margin: 10px 0;"><strong>Сумма:</strong> {amount:.2f} ₽</p>
+            <p style="margin: 10px 0; font-size: 12px; color: #666;"><strong>Payment ID:</strong> {payment_id}</p>
+        </div>
+        
+        <div style="background: #dcf8c6; padding: 15px; border-radius: 6px; border-left: 4px solid #25D366;">
+            <p style="margin: 0; font-size: 14px;">
+                ✅ Клиент оплатил консультацию. Свяжитесь с ним для записи.
+            </p>
+        </div>
+        
+        <p style="text-align: center; margin-top: 20px; font-size: 12px; color: #999;">
+            {datetime.now().strftime('%d.%m.%Y %H:%M')}
+        </p>
+    </div>
+</body>
+</html>
+    '''
+    
+    text_body = f'''
+Новая оплата консультации
+
+Данные клиента:
+Имя: {user_name}
+Email: {user_email}
+Сумма: {amount:.2f} ₽
+Payment ID: {payment_id}
+
+Клиент оплатил консультацию. Свяжитесь с ним для записи.
+
+{datetime.now().strftime('%d.%m.%Y %H:%M')}
+    '''
+    
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = smtp_user
+        msg['To'] = admin_email
+        
+        msg.attach(MIMEText(text_body, 'plain', 'utf-8'))
+        msg.attach(MIMEText(html_body, 'html', 'utf-8'))
+        
+        with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+        print(f"[ADMIN_NOTIFICATION] ✅ Sent consultation notification to {admin_email}")
+    except Exception as e:
+        print(f"[ADMIN_NOTIFICATION] ❌ Failed to send notification: {e}")
 
 def register_in_chat_system(email: str, amount: float):
     '''Call external chat-bankrot.ru webhook to register combo purchase and get token'''
