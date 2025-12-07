@@ -50,7 +50,7 @@ export default function HeroSection({ user, scrollToSection }: HeroSectionProps)
                 <div>
                   <p className="text-xs sm:text-sm text-muted-foreground mb-1">Полный комплект</p>
                   <p className="text-2xl sm:text-3xl font-bold text-primary whitespace-nowrap">5 999 ₽</p>
-                  <p className="text-xs text-muted-foreground">курс + месяц чата</p>
+                  <p className="text-xs text-muted-foreground">курс + месяц поддержки персонального юриста</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs sm:text-sm text-muted-foreground mb-1">Вместо юриста за</p>
