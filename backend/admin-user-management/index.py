@@ -204,6 +204,7 @@ def delete_user(conn, user_id: int) -> Dict[str, Any]:
             ('chat_access', f"DELETE FROM t_p19166386_bankruptcy_course_cr.chat_access WHERE user_id = {user_id}"),
             ('user_progress', f"DELETE FROM t_p19166386_bankruptcy_course_cr.user_progress WHERE user_id = {user_id}"),
             ('user_purchases', f"DELETE FROM t_p19166386_bankruptcy_course_cr.user_purchases WHERE user_id = {user_id}"),
+            ('email_logs', f"DELETE FROM t_p19166386_bankruptcy_course_cr.email_logs WHERE user_id = {user_id}"),
         ]
         
         for table_name, query in tables_to_delete:
