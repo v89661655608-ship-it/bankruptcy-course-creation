@@ -49,7 +49,7 @@ export default function HeroSection({ user, scrollToSection }: HeroSectionProps)
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm text-muted-foreground mb-1">Полный комплект</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-primary whitespace-nowrap">5 999 ₽</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-primary whitespace-nowrap">4 999 ₽</p>
                   <p className="text-xs text-muted-foreground">курс + месяц поддержки<br />персонального юриста</p>
                 </div>
                 <div className="text-right">

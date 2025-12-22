@@ -200,13 +200,13 @@ export default function PricingSection() {
 
           <Card className="border-4 border-green-500 hover:shadow-2xl transition-all relative bg-gradient-to-br from-green-50 to-white w-full max-w-sm md:max-w-none">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <Badge className="bg-green-500 text-white font-bold px-4 py-1 text-xs sm:text-sm sm:px-6 whitespace-nowrap">🔥 Выгода 1 900 ₽</Badge>
+              <Badge className="bg-green-500 text-white font-bold px-4 py-1 text-xs sm:text-sm sm:px-6 whitespace-nowrap">🔥 Выгода 900 ₽</Badge>
             </div>
             <CardContent className="pt-12 pb-12">
               <div className="text-center mb-8">
                 <Badge className="mb-4 bg-green-100 text-green-700 border-green-300">Комбо-пакет</Badge>
-                <div className="text-sm text-muted-foreground line-through mb-1">7 899 ₽</div>
-                <div className="text-5xl font-bold mb-2 text-green-600 whitespace-nowrap">5 999 ₽</div>
+                <div className="text-sm text-muted-foreground line-through mb-1">5 899 ₽</div>
+                <div className="text-5xl font-bold mb-2 text-green-600 whitespace-nowrap">4 999 ₽</div>
                 <p className="text-muted-foreground">курс + месяц поддержки персонального юриста</p>
               </div>
 
@@ -272,7 +272,7 @@ export default function PricingSection() {
               </div>
 
               <p className="text-sm text-muted-foreground text-center mt-4">
-                🔥 Самый популярный пакет! Экономия 1 900 ₽
+                🔥 Самый популярный пакет! Экономия 900 ₽
               </p>
             </CardContent>
           </Card>
