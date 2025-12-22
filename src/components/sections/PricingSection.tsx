@@ -48,7 +48,7 @@ export default function PricingSection() {
             <CardContent className="pt-12 pb-12">
               <div className="text-center mb-8">
                 <Badge className="mb-4 bg-primary/10 text-primary">Самостоятельно</Badge>
-                <div className="text-5xl font-bold mb-2 text-primary">3 900 ₽</div>
+                <div className="text-5xl font-bold mb-2 text-primary">1 900 ₽</div>
                 <p className="text-muted-foreground">Доступ на 3 месяца</p>
               </div>
 

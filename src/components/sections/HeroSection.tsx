@@ -38,7 +38,7 @@ export default function HeroSection({ user, scrollToSection }: HeroSectionProps)
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button onClick={() => user ? navigate('/dashboard') : navigate('/payment')} size="lg" className="bg-accent hover:bg-accent/90 text-primary font-semibold text-lg px-8 py-6">
-                {user ? 'Получить доступ' : 'Получить курс за 3 900 ₽'}
+                {user ? 'Получить доступ' : 'Получить курс за 1 900 ₽'}
               </Button>
               <Button onClick={() => scrollToSection("program")} variant="outline" size="lg" className="text-lg px-8 py-6">
                 Узнать больше
